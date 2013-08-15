@@ -29,5 +29,5 @@ various resources including yum, koji, git, fedora, and more.
 
 Pass --help to gem_dependency_checker.rb to see complete command line usage.
 More information on each utility can be found in the header contents. The
-[http://ascii.io/a/4488](following) [http://ascii.io/a/4489](asciicasts)
+[following](http://ascii.io/a/4488) [asciicasts](http://ascii.io/a/4489)
 demonstrate the utilities in action.
