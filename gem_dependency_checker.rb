@@ -170,6 +170,36 @@ def check_git(name)
   end
 end
 
+def check_bodhi(name)
+  # TODO
+end
+
+def check_rhn(name)
+  # TODO
+end
+
+def check_yum(name)
+  # TODO
+end
+
+def check_apt(name)
+  # TODO
+end
+
+def check_bugzilla(name)
+  # TODO
+end
+
+def check_all(name, version=nil)
+  check_local(name, version)
+  check_fedora(name)
+  check_koji(name)
+  check_git(name)
+  puts ""
+end
+
+##########################################################
+
 def check_gem(name, version=nil)
   $processed ||= []
   return if $processed.include?(name)
@@ -179,11 +209,7 @@ def check_gem(name, version=nil)
   $indent += 1
   print "#{" " * $indent}#{name} #{version}".bold.yellow
 
-  check_local(name, version)
-  check_fedora(name)
-  check_koji(name)
-  check_git(name)
-  puts ""
+  check_all(name, version)
 
   # TODO the rubygem specfetcher isn't terribly efficient,
   #      we may be able to optimize / write one of our own
@@ -211,19 +237,8 @@ def check_gemfile(gemfile)
     req     = d.requirement
 
     print "#{name} #{req}".bold.yellow
-    check_local(name, req)
-    check_fedora(name)
-    check_git(name)
-    check_koji(name)
-
-    # TODO:
-    #check_bodhi(name)
-    #check_rhn(name)
-    puts ""
+    check_all(name, req)
   }
-end
-
-def check_bundler()
 end
 
 $local_db = Gem::Specification.all
