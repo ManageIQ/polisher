@@ -171,6 +171,21 @@ def check_git(name)
 end
 
 def check_bodhi(name)
+  if $conf[:check_bodhi]
+    # we use the fedora pkgwat api to get the builds as thats a frontend for bodhi
+    updates = Pkgwat.get_updates("rubygem-#{name}", 'all', 'all') # TODO set timeout
+    updates.reject! { |u|
+      u['stable_version'] == 'None' &&
+      u['testing_version'] == "None"
+    }
+
+    if updates.empty?
+      print " no updates found".red
+    else
+      print " #{updates.size} updates found".green
+      print " (#{updates.collect { |u| u['release'] }.join(', ')})".green
+    end
+  end
   # TODO
 end
 
@@ -195,6 +210,7 @@ def check_all(name, version=nil)
   check_fedora(name)
   check_koji(name)
   check_git(name)
+  check_bodhi(name)
   puts ""
 end
 
