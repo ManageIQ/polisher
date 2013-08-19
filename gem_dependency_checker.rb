@@ -15,13 +15,13 @@ require 'pkgwat'
 require 'tmpdir'
 require 'git'
 require 'xmlrpc/client'
-require 'gemnasium/parser'
 
 XMLRPC::Config::ENABLE_NIL_PARSER = true
 
 ##########################################################
 
 $conf = { :gemfile             => './Gemfile',
+          :bundler             => false,
           :gemspec             => nil,
           :gemname             => nil,
           :gemversion          => nil,
@@ -44,6 +44,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on('--gemspec file', 'Location of the gemspec to parse') do |g|
     $conf[:gemspec] = g
+  end
+
+  opts.on('--bundler', 'Use bundler to process the gemfile (note this eval\'s the Gemfile') do
+    $conf[:bundler] = true
   end
 
   opts.on('--gem name', 'Name of the rubygem to check') do |g|
@@ -214,12 +218,40 @@ def check_gemfile(gemfile)
   }
 end
 
+def check_bundler()
+end
+
 $local_db = Gem::Specification.all
 
 if $conf[:gemname]
   check_gem($conf[:gemname], $conf[:gem_version])
 
+elsif $conf[:bundler]
+  require 'bundler'
+  $gems = []
+
+  # override bundler's gem registration
+  module Bundler
+    class Dsl
+      alias :old_gem :gem
+      def gem(name, *args)
+        $gems << [name, args.first] # name,version
+        old_gem(name, *args)
+    end
+    end
+  end
+
+  path,g = File.split($conf[:gemfile])
+  Dir.chdir(path) {
+    Bundler::Definition.build(g, nil, false)
+  }
+
+  $gems.each { |n,v|
+    check_gem(n, v)
+  }
+
 else
+  require 'gemnasium/parser'
   parser = $conf[:gemspec] ? Gemnasium::Parser.gemspec(File.read($conf[:gemspec])) :
                              Gemnasium::Parser.gemfile(File.read($conf[:gemfile]))
   check_gemfile(parser)
