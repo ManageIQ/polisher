@@ -25,6 +25,7 @@ $conf = { :gemfile             => './Gemfile',
           :gemspec             => nil,
           :gemname             => nil,
           :gemversion          => nil,
+          :devel_deps          => false,
           :highlight_missing   => false,
           :check_fedora        => false,
           :check_git           => false,
@@ -56,6 +57,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on('--gem-version version', 'Version of the rubygem to check (optional)') do |v|
     $conf[:gemversion] = v
+  end
+
+  opts.on('--[no-]devel', 'Include development dependencies') do |d|
+    $conf[:devel_deps] = d
   end
 
   opts.on('-m', '--[no-]missing', 'Highlight missing packages') do |m|
@@ -189,7 +194,7 @@ def check_gem(name, version=nil)
   unless s[-2].nil? || s[-2].last.nil? || s[-2].last[0].nil?
     deps = s[-2].last[0].dependencies
     deps.each do |d|
-      if d.type == :development
+      if d.type == :development && $conf[:devel_deps] == false
         puts "#{" " * $indent} skipping devel dependency #{d.name}"
       else
         check_gem(d.name, d.requirements_list.last.to_s)
