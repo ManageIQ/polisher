@@ -31,7 +31,8 @@ $conf = { :gemfile             => './Gemfile',
           :check_git           => false,
           :check_koji          => false,
           :koji_tag            => 'dist-rawhide',
-          :check_rhn           => false}
+          :check_rhn           => false,
+          :check_yum           => false}
 
 optparse = OptionParser.new do |opts|
   opts.on('-h', '--help', 'Display this help screen') do
@@ -89,6 +90,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on('-r', '--rhn [url]', 'Check RHN for packages') do |r|
     $conf[:check_rhn] = r || 'TODO'
+  end
+
+  opts.on('-y', '--yum', 'Check yum for packages') do |y|
+    $conf[:check_yum] = y
   end
 end
 
@@ -186,7 +191,6 @@ def check_bodhi(name)
       print " (#{updates.collect { |u| u['release'] }.join(', ')})".green
     end
   end
-  # TODO
 end
 
 def check_rhn(name)
@@ -194,7 +198,15 @@ def check_rhn(name)
 end
 
 def check_yum(name)
-  # TODO
+  if $conf[:check_yum]
+    out=`/usr/bin/yum search rubygem-#{name} 2> /dev/null`
+    if out =~ /.*No Matches found.*/
+      print " no yum matches".red
+    else
+      matches = out.lines.to_a.reject { |l| l !~ /rubygem-#{name}.*/ }
+      print " #{matches.size} yum matches found".green
+    end
+  end
 end
 
 def check_apt(name)
@@ -211,6 +223,7 @@ def check_all(name, version=nil)
   check_koji(name)
   check_git(name)
   check_bodhi(name)
+  check_yum(name)
   puts ""
 end
 
