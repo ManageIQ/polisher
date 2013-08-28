@@ -144,12 +144,20 @@ def check_fedora(name)
   end
 end
 
-def check_koji(name)
+def check_koji(name, version)
   if $conf[:check_koji]
     $x ||= XMLRPC::Client.new($conf[:check_koji], '/kojihub')
     $last_event ||= $x.call('getLastEvent')['id']
     # FIXME pkg may need ruby193 or other prefix
-    avail = $x.call('getLatestBuilds', $conf[:koji_tag], $last_event, "rubygem-#{name}").size > 0
+    nbuilds = $x.call('getLatestBuilds', $conf[:koji_tag], $last_event, "rubygem-#{name}")
+    pbuilds =
+      if version
+        dep = Gem::Dependency.new(name, version)
+        nbuilds.select { |b| dep.match?(name, b['version']) }
+      else
+        nbuilds
+      end
+    avail = nbuilds.size > 0
     
     if avail
       print " is available in koji".green
@@ -227,7 +235,7 @@ end
 def check_all(name, version=nil)
   check_local(name, version)
   check_fedora(name)
-  check_koji(name)
+  check_koji(name, version)
   check_git(name)
   check_bodhi(name)
   check_yum(name)
