@@ -32,7 +32,8 @@ $conf = { :gemfile             => './Gemfile',
           :check_koji          => false,
           :koji_tag            => 'dist-rawhide',
           :check_rhn           => false,
-          :check_yum           => false}
+          :check_yum           => false,
+          :check_bugzilla      => false}
 
 optparse = OptionParser.new do |opts|
   opts.on('-h', '--help', 'Display this help screen') do
@@ -94,6 +95,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on('-y', '--yum', 'Check yum for packages') do |y|
     $conf[:check_yum] = y
+  end
+
+  opts.on('-b', '--bugzilla', 'Check bugzilla for bugs filed against package') do |b|
+    $conf[:check_bugzilla] = b
   end
 end
 
@@ -214,7 +219,9 @@ def check_apt(name)
 end
 
 def check_bugzilla(name)
-  # TODO
+  if $conf[:check_bugzilla]
+    # TODO
+  end
 end
 
 def check_all(name, version=nil)
@@ -224,6 +231,7 @@ def check_all(name, version=nil)
   check_git(name)
   check_bodhi(name)
   check_yum(name)
+  check_bugzilla(name)
   puts ""
 end
 
