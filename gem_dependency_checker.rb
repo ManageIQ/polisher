@@ -167,13 +167,33 @@ def check_koji(name, version)
   end
 end
 
-def check_git(name)
+# utility method to extract required rpm spec metadata
+def rpm_spec_metadata(path)
+  metadata = {}
+  contents = File.read(path)
+  contents.each_line { |l|
+    if l =~ /^Name:\s*rubygem-(.*)$/
+      metadata[:name] = $1.strip
+    elsif l =~ /^Version:\s*(.*)$/
+      metadata[:version] = $1.strip
+    end
+  }
+  metadata
+end
+
+def check_git(name, version)
   if $conf[:check_git]
     avail = true
+    dep = version ? Gem::Dependency.new(name, version) : nil
     Dir.mktmpdir { |dir|
       Dir.chdir(dir) { |path|
         begin
           g = Git.clone("#{$conf[:check_git]}rubygem-#{name}.git", name)
+
+          if version
+            rpm_spec = rpm_spec_metadata("./#{name}/rubygem-#{name}.spec")
+            avail = dep.match?(name, rpm_spec[:version])
+          end
         rescue => e
           avail = false
         end
@@ -236,7 +256,7 @@ def check_all(name, version=nil)
   check_local(name, version)
   check_fedora(name)
   check_koji(name, version)
-  check_git(name)
+  check_git(name, version)
   check_bodhi(name)
   check_yum(name)
   check_bugzilla(name)
