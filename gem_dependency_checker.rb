@@ -326,7 +326,8 @@ elsif $conf[:bundler]
     class Dsl
       alias :old_gem :gem
       def gem(name, *args)
-        $gems << [name, args.first] # name,version
+        version = args.first.is_a?(Hash) ? nil : args.first
+        $gems << [name, version]
         old_gem(name, *args)
     end
     end
