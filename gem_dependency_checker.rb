@@ -78,7 +78,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('-k', '--koji [url]', 'Check koji for packages') do |k|
-    $conf[:check_koji] = k || 'koji.fedoraproject.org'
+    $conf[:check_koji] = k || 'koji.fedoraproject.org/kojihub'
   end
 
   opts.on('-t', '--koji-tag tag', 'Koji tag to query') do |t|
@@ -146,7 +146,8 @@ end
 
 def check_koji(name, version)
   if $conf[:check_koji]
-    $x ||= XMLRPC::Client.new($conf[:check_koji], '/kojihub')
+    $u ||= $conf[:check_koji].split('/')
+    $x ||= XMLRPC::Client.new($u[0..-2].join('/'), '/' + $u.last)
     $last_event ||= $x.call('getLastEvent')['id']
     # FIXME pkg may need ruby193 or other prefix
     nbuilds = $x.call('getLatestBuilds', $conf[:koji_tag], $last_event, "rubygem-#{name}")
