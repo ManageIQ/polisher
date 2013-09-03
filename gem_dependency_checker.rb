@@ -157,7 +157,7 @@ def check_koji(name, version)
       else
         nbuilds
       end
-    avail = nbuilds.size > 0
+    avail = pbuilds.size > 0
     
     if avail
       print " is available in koji".green
