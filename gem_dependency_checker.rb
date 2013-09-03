@@ -136,6 +136,8 @@ def check_local(name, version)
       print " is missing locally".red
     end
   end
+
+  nil
 end
 
 def check_fedora(name)
@@ -147,6 +149,8 @@ def check_fedora(name)
       print " is not available in fedora".red
     end
   end
+
+  nil
 end
 
 def check_koji(name, version)
@@ -167,10 +171,13 @@ def check_koji(name, version)
     
     if avail
       print " is available in koji".green
+      return pbuilds.first['version']
     else
       print " is not available in koji".red
     end
   end
+
+  nil
 end
 
 # utility method to extract required rpm spec metadata
@@ -189,16 +196,17 @@ end
 
 def check_git(name, version)
   if $conf[:check_git]
-    avail = true
+    avail = true ; git_version = nil
     dep = version ? Gem::Dependency.new(name, version) : nil
     Dir.mktmpdir { |dir|
       Dir.chdir(dir) { |path|
         begin
           g = Git.clone("#{$conf[:check_git]}rubygem-#{name}.git", name)
+          rpm_spec = rpm_spec_metadata("./#{name}/rubygem-#{name}.spec")
+          git_version = rpm_spec[:version]
 
           if version
-            rpm_spec = rpm_spec_metadata("./#{name}/rubygem-#{name}.spec")
-            avail = dep.match?(name, rpm_spec[:version])
+            avail = dep.match?(name, git_version)
           end
         rescue => e
           avail = false
@@ -208,10 +216,13 @@ def check_git(name, version)
 
     if avail
       print " is available in git".green
+      return git_version
     else
       print " is not available in git".red
     end
   end
+
+  nil
 end
 
 def check_bodhi(name)
@@ -230,6 +241,8 @@ def check_bodhi(name)
       print " (#{updates.collect { |u| u['release'] }.join(', ')})".green
     end
   end
+
+  nil
 end
 
 def check_rhn(name)
@@ -246,6 +259,8 @@ def check_yum(name)
       print " #{matches.size} yum matches found".green
     end
   end
+
+  nil
 end
 
 def check_apt(name)
@@ -256,17 +271,29 @@ def check_bugzilla(name)
   if $conf[:check_bugzilla]
     # TODO
   end
+
+  nil
 end
 
 def check_all(name, version=nil)
-  check_local(name, version)
-  check_fedora(name)
-  check_koji(name, version)
-  check_git(name, version)
-  check_bodhi(name)
-  check_yum(name)
-  check_bugzilla(name)
+  lv = check_local(name, version)
+  fv = check_fedora(name)
+  kv = check_koji(name, version)
+  gv = check_git(name, version)
+  bhv = check_bodhi(name)
+  yv = check_yum(name)
+  bzv = check_bugzilla(name)
   puts ""
+
+  version = nil ; counter = {}
+  [lv, fv, kv, gv, bhv, yv, bzv].each { |v|
+    unless v.nil?
+      counter[v] ||= 0
+      counter[v]  += 1
+      version = v if version.nil? || counter[v] > counter[version]
+    end
+  }
+  version
 end
 
 ##########################################################
@@ -280,21 +307,27 @@ def check_gem(name, version=nil)
   $indent += 1
   print "#{" " * $indent}#{name} #{version}".bold.yellow
 
-  check_all(name, version)
+  checked_version = check_all(name, version)
 
   # TODO the rubygem specfetcher isn't terribly efficient,
   #      we may be able to optimize / write one of our own
-  d = $conf[:gemversion] ? Gem::Dependency.new(name, version) :
-                           Gem::Dependency.new(name)
+  d = version ? Gem::Dependency.new(name, version) :
+                Gem::Dependency.new(name)
   s = Gem::SpecFetcher.fetcher.fetch_with_errors(d, true, true, true)
+  s = s.collect { |s1| s1.collect { |s2| s2.first if s2.is_a?(Array) } }.flatten
+  s.compact!
 
-  unless s[-2].nil? || s[-2].last.nil? || s[-2].last[0].nil?
-    deps = s[-2].last[0].dependencies
+  unless s.empty?
+    matched = s.find { |s| s.version.to_s == checked_version }
+    matched = s.first if matched.nil?
+
+    deps = matched.dependencies
     deps.each do |d|
       if d.type == :development && $conf[:devel_deps] == false
         puts "#{" " * $indent} skipping devel dependency #{d.name}"
       else
         check_gem(d.name, d.requirements_list.last.to_s)
+        # TODO if requirement not found, attempt to search for package and list all/lastest avail versions?
       end
     end
   end
