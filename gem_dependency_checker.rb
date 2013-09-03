@@ -17,6 +17,7 @@ require 'git'
 require 'xmlrpc/client'
 
 XMLRPC::Config::ENABLE_NIL_PARSER = true
+XMLRPC::Config::ENABLE_NIL_CREATE = true
 
 ##########################################################
 
@@ -157,9 +158,8 @@ def check_koji(name, version)
   if $conf[:check_koji]
     $u ||= $conf[:check_koji].split('/')
     $x ||= XMLRPC::Client.new($u[0..-2].join('/'), '/' + $u.last)
-    $last_event ||= $x.call('getLastEvent')['id']
-    # FIXME pkg may need ruby193 or other prefix
-    nbuilds = $x.call('getLatestBuilds', $conf[:koji_tag], $last_event, "#{$conf[:rpm_prefix]}#{name}")
+    #$last_event ||= $x.call('getLastEvent')['id']
+    nbuilds = $x.call('listTagged', $conf[:koji_tag], nil, false, nil, false, "#{$conf[:rpm_prefix]}#{name}")
     pbuilds =
       if version
         dep = Gem::Dependency.new(name, version)
