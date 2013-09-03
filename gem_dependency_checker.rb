@@ -26,6 +26,7 @@ $conf = { :gemfile             => './Gemfile',
           :gemname             => nil,
           :gemversion          => nil,
           :devel_deps          => false,
+          :rpm_prefix          => 'rubygem-',
           :highlight_missing   => false,
           :check_fedora        => false,
           :check_git           => false,
@@ -65,6 +66,10 @@ optparse = OptionParser.new do |opts|
     $conf[:devel_deps] = d
   end
 
+  opts.on('-r', '--rpm-prefix [prefix]', 'Prefix to add to gem package name when looking up in rpm resources') do |p|
+    $conf[:rpm_prefix] = p
+  end
+
   opts.on('-m', '--[no-]missing', 'Highlight missing packages') do |m|
     $conf[:highlight_missing] = m
   end
@@ -89,7 +94,7 @@ optparse = OptionParser.new do |opts|
     $conf[:check_bodhi] = r || 'https://admin.fedoraproject.org/updates/'
   end
 
-  opts.on('-r', '--rhn [url]', 'Check RHN for packages') do |r|
+  opts.on('--rhn [url]', 'Check RHN for packages') do |r|
     $conf[:check_rhn] = r || 'TODO'
   end
 
@@ -150,7 +155,7 @@ def check_koji(name, version)
     $x ||= XMLRPC::Client.new($u[0..-2].join('/'), '/' + $u.last)
     $last_event ||= $x.call('getLastEvent')['id']
     # FIXME pkg may need ruby193 or other prefix
-    nbuilds = $x.call('getLatestBuilds', $conf[:koji_tag], $last_event, "rubygem-#{name}")
+    nbuilds = $x.call('getLatestBuilds', $conf[:koji_tag], $last_event, "#{$conf[:rpm_prefix]}#{name}")
     pbuilds =
       if version
         dep = Gem::Dependency.new(name, version)
