@@ -1,11 +1,11 @@
 #!/usr/bin/ruby
 # gem rpm updater
 #
-# Will checkout an existing gem rpm from fedora,
+# Will checkout an existing gem rpm from distgit,
 # and update to the latest version found on http://rubygems.org
 #
 # Usage: 
-#   gem_rpm_updater.rb <gem_name>
+#   gem_rpm_updater.rb -n <gem_name>
 #
 # Licensed under the MIT License
 # Copyright (C) 2013 Red Hat, Inc.
@@ -16,27 +16,69 @@ require 'json'
 require 'optparse'
 require 'nokogiri'
 
-#######################################################3
+ORIG_DIR = Dir.pwd
 
-# read package/user name from command line
-user = nil
-gems = []
-optparse = OptionParser.new do|opts|
-  opts.on('-n', '--name GEM', 'gem name' ) do |n|
-    gems << n
+#######################################################
+
+# read various options from the command line
+def parse_options
+  $conf = { :dir            => ORIG_DIR,
+            :user           => nil,
+            :gems           =>  [],
+            :package_list   =>
+                'https://admin.fedoraproject.org/pkgdb/users/packages/',
+            :pkg_command    => '/usr/bin/fedpkg',
+            :git_command    => '/usr/bin/git',
+            :sed_command    => '/usr/bin/sed',
+            :md5sum_command => '/usr/bin/md5sum',
+            :build_command   => '/usr/bin/koji',
+            :build_target   => 'rawhide'}
+  
+  optparse = OptionParser.new do|opts|
+    opts.on('-n', '--name GEM', 'gem name' ) do |n|
+      $conf[:gems] << n
+    end
+  
+    opts.on('-u', '--user USER', 'fedora user name' ) do |u|
+      $conf[:user] = u
+    end
+
+    opts.on('-d', '--dir path', 'Directory to cd to before checking out / manipulating packages' ) do |p|
+      $conf[:dir] = p
+    end
+  
+    opts.on('-p', '--package-list location',
+            'Location which to retreive list of gems to update' ) do |l|
+      $conf[:package_list] = l
+    end
+  
+    opts.on('-c', '--pkg-command cmd',
+            'Command to use to perform package operations' ) do |c|
+      $conf[:pkg_command] = c
+    end
+
+    opts.on('-b', '--build-command cmd',
+            'Command to use to build packages' ) do |c|
+      $conf[:build_command] = c
+    end
+
+    opts.on('-t', '--build-target target',
+            'Target to build packages against' ) do |t|
+      $conf[:build_target] = t
+    end
+  
+    opts.on('-h', '--help', 'display this screen' ) do
+      puts opts
+      exit
+    end
   end
-  opts.on('-u', '--user USER', 'fedora user name' ) do |u|
-    user = u
-  end
-  opts.on('-h', '--help', 'display this screen' ) do
-    puts opts
-    exit
-  end
+  
+  optparse.parse!
 end
-optparse.parse!
 
-unless user.nil?
-  curl = Curl::Easy.new("https://admin.fedoraproject.org/pkgdb/users/packages/#{user}")
+# retrieve gems a user maintains from fedora
+def load_user_gems
+  curl = Curl::Easy.new("#{$conf[:package_list]}#{$conf[:user]}")
   curl.http_get
   packages = curl.body_str
   gems += Nokogiri::HTML(packages).xpath("//a[@class='PackageName']").
@@ -44,27 +86,12 @@ unless user.nil?
                                    collect { |i| i.text.gsub(/rubygem-/, '') }
 end
 
-if gems.empty?
-  puts "must specify a gem name or fedora user name!".red
-  exit 1
-end
-
-orig_dir = Dir.pwd
-
-gems.each { |gem_name|
-  puts "Updating #{gem_name}".bold.green
-  Dir.chdir orig_dir
-
-  # TODO allow specifying version to update to as 2nd argument
-  
-  rpm_name = "rubygem-#{gem_name}"
-  
-  # assumes fedpkg is present
-  # TODO detect if directory exists, if so skip checkout (perhaps just pull?)
-  # TODO at some point use fedora api
+# retrieve the existing gem package
+def download_gem_package(rpm_name)
+  puts "Updating #{rpm_name}".bold.green
   unless File.directory? rpm_name
     puts "Cloning fedora package".green
-    `fedpkg clone #{rpm_name}`
+    `#{$conf[:pkg_command]} clone #{rpm_name}`
   end
   
   # cd into working directory
@@ -72,18 +99,24 @@ gems.each { |gem_name|
 
   if File.exists? 'dead.package'
     puts "Dead package detected, skipping".red
-    next 
+    return false
   end
   
   # checkout the latest rawhide
   # TODO allow other branches to be specified
-  `git checkout master`
-  `git reset HEAD~ --hard` # BE CAREFUL!
-  `git pull`
+  `#{$conf[:git_command]} checkout master`
+  `#{$conf[:git_command]} reset HEAD~ --hard` # BE CAREFUL!
+  `#{$conf[:git_command]} pull`
   
+  true
+end
+
+# retrieve gem from rubygems.org
+def download_gem(gem_name)
   # grab the gem from rubygems
   puts "Grabbing gem".green
-  spec  = Curl::Easy.http_get("https://rubygems.org/api/v1/gems/#{gem_name}.json").body_str
+  gem_path = "https://rubygems.org/api/v1/gems/#{gem_name}.json"
+  spec  = Curl::Easy.http_get(gem_path).body_str
   specj = JSON.parse(spec)
   
   # extract version out of it
@@ -96,42 +129,87 @@ gems.each { |gem_name|
   curl.http_get
   gem = curl.body_str
   File.open("#{gem_name}-#{version}.gem", "w") { |f| f.write gem }
-  
+
+  version
+end
+
+# update spec to new version
+def update_spec(rpm_name, version)
   # substitute version in spec file
   puts "Updating spec file to version #{version}".green
-  `sed -i "s/Version.*/Version: #{version}/" #{rpm_name}.spec`
-  `sed -i "s/^Release.*/Release: 1%{?dist}/" #{rpm_name}.spec`
-  
+  `#{$conf[:sed_command]} -i "s/Version.*/Version: #{version}/" #{rpm_name}.spec`
+  `#{$conf[:sed_command]} -i "s/^Release.*/Release: 1%{?dist}/" #{rpm_name}.spec`
+  # TODO also need to add a spec changelog message
+end
+
+# build the package
+def build_package(rpm_name, version)
   # build srpm
   puts "Building srpm".green
-  `fedpkg srpm`
+  `#{$conf[:pkg_command]} srpm`
   
-  # attempt to build packages against rawhide w/ koji
-  puts "Building srpm in rawhide via koji".green
-  puts "koji build --scratch rawhide #{rpm_name}-#{version}-1.*.src.rpm".green
-  puts `koji build --scratch rawhide #{rpm_name}-#{version}-1.*.src.rpm`.blue
-  
+  # attempt to build packages
+  puts "Building srpm in #{$conf[:build_target]} via #{$conf[:build_command]}".green
+  puts "#{$conf[:build_command]} build --scratch #{$conf[:build_target]} \
+        #{rpm_name}-#{version}-1.*.src.rpm".green
+  puts `#{$conf[:build_command]} build --scratch #{$conf[:build_target]} \
+        #{rpm_name}-#{version}-1.*.src.rpm`.blue
   # TODO if build fails, spit out error, exit
-  
+end
+
+# check the %check section of the spec
+def check_tests(rpm_name)
   # warn user if tests are not run (no check section)
-  has_check = open("#{rpm_name}.spec", "r") { |f| f.lines.find { |line| line.include?("%check") } }
-  puts "Warning: no %check section in spec, manually verify functionality!".bold.red unless has_check
+  has_check = open("#{rpm_name}.spec", "r") { |f|
+                f.lines.find { |line| line.include?("%check") }
+              }
+  puts "Warning: no %check section in spec,\
+        manually verify functionality!".bold.red unless has_check
   
-  # update sources and gitignore files
-  `md5sum #{gem_name}-#{version}.gem > sources`
+end
+
+# update sources and gitignore files
+def update_sources(gem_name, version)
+  `#{$conf[:md5sum_command]} #{gem_name}-#{version}.gem > sources`
   File.open(".gitignore", "w") { |f| f.write "#{gem_name}-#{version}.gem" }
-  
-  # TODO also need to add a spec changelog message
-  
+end
+
+# commit changes to local branch / stage push
+def commit_changes(rpm_name, version)
   # git add spec, git commit w/ message
-  `git add #{rpm_name}.spec sources .gitignore`
+  `#{$conf[:git_command]} add #{rpm_name}.spec sources .gitignore`
   #`git add #{gem_name}-#{version}.gem`
-  `git commit -m 'updated to #{version}'`
+  `#{$conf[:git_command]} commit -m 'updated to #{version}'`
   
   # spit out command to push the package to fedora,
   # build it against koji, and submit it to bodhi
-  puts "#{gem_name} commit complete".green
+  puts "#{rpm_name} commit complete".green
+
+  puts "Push commit with: git push".blue
+  puts "Build and tag official rpms with: #{$conf[:pkg_command]} build".blue
+end
+
+##############################################################################
+  
+parse_options
+
+load_user_gems unless $conf[:user].nil? || $conf[:package_list].nil?
+
+if $conf[:gems].empty?
+  puts "must specify a gem name or user name!".red
+  exit 1
+end
+
+# iterate over gems
+$conf[:gems].each { |gem_name|
+  Dir.chdir $conf[:dir]
+  rpm_name = "rubygem-#{gem_name}"
+  next unless download_gem_package(rpm_name)
+  version = download_gem(gem_name)
+  # $conf[:gems] += download_deps(gem_name) # TODO
+  update_spec(rpm_name, version)
+  build_package(rpm_name, version)
+  check_tests(rpm_name)
+  update_sources(gem_name, version)
+  commit_changes(rpm_name, version)
 }
-puts "Push commit to fedora with: git push".blue
-puts "Build and tag official rpms with: koji build".blue
-#puts "Submit updates via: https://admin.fedoraproject.org/updates".blue # uneeded for rawhide
