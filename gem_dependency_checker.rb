@@ -5,6 +5,9 @@
 # available in various locations including koji,
 # git, fedora, bodhi, rhn, etc.
 #
+# User is responsible for establishing authorization session
+# before invoking this script
+#
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 ###########################################################
@@ -15,6 +18,8 @@ require 'pkgwat'
 require 'tmpdir'
 require 'git'
 require 'xmlrpc/client'
+require 'curb'
+require 'json'
 
 XMLRPC::Config::ENABLE_NIL_PARSER = true
 XMLRPC::Config::ENABLE_NIL_CREATE = true
@@ -35,7 +40,9 @@ $conf = { :gemfile             => './Gemfile',
           :koji_tag            => 'dist-rawhide',
           :check_rhn           => false,
           :check_yum           => false,
-          :check_bugzilla      => false}
+          :check_bugzilla      => false,
+          :check_errata        => false,
+          :errata_advisory     => nil}
 
 optparse = OptionParser.new do |opts|
   opts.on('-h', '--help', 'Display this help screen') do
@@ -105,6 +112,14 @@ optparse = OptionParser.new do |opts|
 
   opts.on('-b', '--bugzilla', 'Check bugzilla for bugs filed against package') do |b|
     $conf[:check_bugzilla] = b
+  end
+
+  opts.on('-e', '--errata [url]', 'Check packages filed in errata') do |e|
+    $conf[:check_errata] = e || nil
+  end
+
+  opts.on('-a', '--advisory [number]', 'Errata advisory to check') do |a|
+    $conf[:errata_advisory] = a || nil
   end
 end
 
@@ -275,6 +290,40 @@ def check_bugzilla(name)
   nil
 end
 
+def check_errata(name, version)
+  if $conf[:check_errata] && $conf[:errata_advisory]
+    unless $advisory_json
+      c = Curl::Easy.new $conf[:check_errata] + $conf[:errata_advisory] + '/builds'
+      c.ssl_verify_peer = false
+      c.ssl_verify_host = false
+      c.http_auth_types = :negotiate
+      c.userpwd = ':'
+      c.get
+      $advisory_json = JSON.parse c.body_str
+    end
+
+    dep = Gem::Dependency.new(name, version)
+    matched = false
+
+    $advisory_json.each { |tag, builds|
+      builds.each { |build|
+        pkg,meta = *build.flatten
+        if pkg =~ /^#{$conf[:rpm_prefix]}#{name}-([^-]*)-.*$/
+          if dep.match?(name, $1)
+            matched = true
+            print "found in errata advisory".green
+            break
+          end
+        end
+      }
+    }
+
+    print "no matching errata advisory builds found".red unless matched
+  end
+
+  nil
+end
+
 def check_all(name, version=nil)
   lv = check_local(name, version)
   fv = check_fedora(name)
@@ -283,10 +332,11 @@ def check_all(name, version=nil)
   bhv = check_bodhi(name)
   yv = check_yum(name)
   bzv = check_bugzilla(name)
+  erv = check_errata(name, version)
   puts ""
 
   version = nil ; counter = {}
-  [lv, fv, kv, gv, bhv, yv, bzv].each { |v|
+  [lv, fv, kv, gv, bhv, yv, bzv, erv].each { |v|
     unless v.nil?
       counter[v] ||= 0
       counter[v]  += 1
@@ -319,7 +369,10 @@ def check_gem(name, version=nil)
 
   unless s.empty?
     matched = s.find { |s| s.version.to_s == checked_version }
-    matched = s.first if matched.nil?
+    if matched.nil?
+      matched = s.first
+      # TODO puts " #{checked_version} not found, using first match from rubygems #{matched}"
+    end
 
     deps = matched.dependencies
     deps.each do |d|
