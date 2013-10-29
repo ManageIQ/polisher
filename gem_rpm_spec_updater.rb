@@ -13,9 +13,14 @@
 require 'curb'
 require 'json'
 require 'colored'
+require 'tempfile'
+require 'pathname'
+require 'rubygems/installer'
+require 'active_support/core_ext'
 
 AUTHOR = "#{ENV['USER']} <#{ENV['USER']}@localhost.localdomain>"
 
+COMMENT_MATCHER             = /^\s*#.*/
 GEM_NAME_MATCHER            = /^%global\s*gem_name\s(.*)$/
 SPEC_NAME_MATCHER           = /^Name:\s*rubygem-(.*)$/
 SPEC_VERSION_MATCHER        = /^Version:\s*(.*)$/
@@ -23,8 +28,19 @@ SPEC_RELEASE_MATCHER        = /^Release:\s*(.*)$/
 SPEC_REQUIRES_MATCHER       = /^Requires:\s*(.*)$/
 SPEC_BUILD_REQUIRES_MATCHER = /^BuildRequires:\s*(.*)$/
 SPEC_GEM_REQ_MATCHER        = /^.*\s*rubygem\((.*)\)$/
-SPEC_SUBPACKAGE_MATCHER     = /^%package.*$/
+SPEC_SUBPACKAGE_MATCHER     = /^%package\s(.*)$/
 SPEC_CHANGELOG_MATCHER      = /^%changelog$/
+SPEC_FILES_MATCHER          = /^%files$/
+SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
+
+FILE_MACRO_MATCHERS         =
+  [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
+   /^%verify\s/,  /^%docdir.*/,  /^%dir\s/,
+   /^%defattr.*/, /^%exclude\s/, /^%{gem_instdir}/]
+
+FILE_MACRO_REPLACEMENTS =
+  {"%{_bindir}"    => '/bin',
+   "%{gem_libdir}" => '/lib'}
 
 $spec_file = ARGV.shift
 $version   = ARGV.shift
@@ -33,11 +49,16 @@ $version   = ARGV.shift
 def parse_spec
   in_subpackage = false
   in_changelog  = false
+  in_files      = false
+  subpkg_name   = nil
   $spec = {:contents => File.read($spec_file)}
   $spec[:contents].each_line { |l|
+    if l =~ COMMENT_MATCHER
+      ;
+
     # TODO support optional gem prefix
-    if l =~ GEM_NAME_MATCHER
-       $spec[:gem_name] = $1.strip
+    elsif l =~ GEM_NAME_MATCHER
+      $spec[:gem_name] = $1.strip
       $spec[:gem_name] = $1.strip
 
     elsif l =~ SPEC_NAME_MATCHER &&
@@ -51,6 +72,7 @@ def parse_spec
       $spec[:release] = $1.strip
 
     elsif l =~ SPEC_SUBPACKAGE_MATCHER
+      subpkg_name = $1.strip
       in_subpackage = true
 
     elsif l =~ SPEC_REQUIRES_MATCHER &&
@@ -66,11 +88,25 @@ def parse_spec
     elsif l =~ SPEC_CHANGELOG_MATCHER
       in_changelog = true
 
+    elsif l =~ SPEC_FILES_MATCHER
+      subpkg_name = nil
+      in_files = true
+
+    elsif l =~ SPEC_SUBPKG_FILES_MATCHER
+      subpkg_name = $1.strip
+      in_files = true
+
     elsif in_changelog
       $spec[:changelog] ||= ""
       $spec[:changelog] << l
 
-    # TODO parse files
+    elsif in_files
+      tgt = subpkg_name.nil? ? $spec[:gem_name] : subpkg_name
+      $spec[:files] ||= {}
+      $spec[:files][tgt] ||= []
+
+      sl = unrpmize_file(l.strip)
+      $spec[:files][tgt] << sl unless sl.blank?
     end
   }
 
@@ -79,16 +115,54 @@ def parse_spec
   $spec[:changelog_entries].collect! { |c| c.strip }.compact!
 end
 
-# Retrieve gem from rubygems.org
-def get_gem
+# Remove various possible rpm file list prefixes
+def unrpmize_file(f)
+  fmm = FILE_MACRO_MATCHERS
+  fmr = FILE_MACRO_REPLACEMENTS
+  f = fmm.inject(f) { |file, matcher| file.gsub(matcher, '') }
+  f = fmr.keys.inject(f) { |file, r| file.gsub(Regexp.new(r), fmr[r]) }
+  f
+end
+
+# Prep a file to be included in a rpm spec
+def rpmize_file(f)
+  fmr = FILE_MACRO_REPLACEMENTS.invert
+  fmr.keys.inject(f) { |file, r| file.gsub(r, fmr[r]) }
+end
+
+# Retrieve gem metadata from rubygems.org
+def get_gem_metadata
   # TODO if $version specified, retrieve that
-  gem_path = "https://rubygems.org/api/v1/gems/#{$spec[:gem_name]}.json"
-  spec  = Curl::Easy.http_get(gem_path).body_str
+  gem_json_path = "https://rubygems.org/api/v1/gems/#{$spec[:gem_name]}.json"
+  spec  = Curl::Easy.http_get(gem_json_path).body_str
   specj = JSON.parse(spec)
   $version = specj['version'] if $version.nil?
   # TODO track versions & write to spec
   $deps = specj['dependencies']['runtime'].collect { |d| d['name'] }
   $dev_deps = specj['dependencies']['development'].collect { |d| d['name'] }
+end
+
+# Retrieve gem contents from rubygems.org
+def get_gem_contents
+  gem_path = "https://rubygems.org/gems/#{$spec[:gem_name]}-#{$version}.gem"
+  curl = Curl::Easy.new(gem_path)
+  curl.follow_location = true
+  curl.http_get
+  gemf = curl.body_str
+
+  tgem = Tempfile.new($spec[:gem_name])
+  tgem.write gemf
+  tgem.close
+
+  $files = []
+  pkg = Gem::Installer.new tgem.path, :unpack => true
+  Dir.mktmpdir { |dir|
+    pkg.unpack dir
+    Pathname(dir).find do |path|
+      pathstr = path.to_s.gsub(dir, '')
+      $files << pathstr unless pathstr.blank?
+    end
+  }
 end
 
 # Update spec depedendencies
@@ -120,6 +194,24 @@ def update_deps
                            $dev_deps.collect { |r| "rubygem(#{r})" }
 end
 
+# Update spec files
+def update_files
+  to_add = $files
+  $spec[:files].each { |pkg,spec_files|
+    ($files & to_add).each { |gem_file|
+      # skip files already included in spec or in dir in spec
+      has_file = spec_files.any? { |sf|
+                   gem_file.gsub(sf,'') != gem_file
+                 }
+
+      to_add.delete(gem_file)
+      to_add << rpmize_file(gem_file) if !has_file
+    }
+  }
+
+  $spec[:new_files] = to_add
+end
+
 # Update spec metadata
 def update_spec
   # update to new version
@@ -132,7 +224,8 @@ def update_spec
   # update requires/buildrequires
   update_deps
 
-  # TODO add any new files, remove any old ones
+  # add any new files, remove any old ones
+  update_files
 
   # add changelog entry
   changelog_entry = <<EOS
@@ -160,6 +253,7 @@ def generate_spec
   tp   = rp < brp ? rp : brp
 
   pp   = $spec[:contents].index SPEC_SUBPACKAGE_MATCHER
+  pp   = -1 if pp.nil?
 
   lrp  = $spec[:contents].rindex SPEC_REQUIRES_MATCHER, pp
   lbrp = $spec[:contents].rindex SPEC_BUILD_REQUIRES_MATCHER, pp
@@ -168,15 +262,23 @@ def generate_spec
   ltpn = $spec[:contents].index "\n", ltp
 
   $spec[:contents].slice!(tp...ltpn)
-  $spec[:contents].insert rp,
+  $spec[:contents].insert tp,
     ($spec[:requires].collect { |r| "Requires: #{r}" } +
      $spec[:build_requires].collect { |r| "BuildRequires: #{r}" }).join("\n")
+
+  # add new files
+   fp = $spec[:contents].index SPEC_FILES_MATCHER
+  lfp = $spec[:contents].index SPEC_SUBPKG_FILES_MATCHER, fp + 1
+  lfp = $spec[:contents].index SPEC_CHANGELOG_MATCHER if lfp.nil?
+
+  $spec[:contents].insert lfp - 1, $spec[:new_files].join("\n") + "\n"
 
   # return new contents
   $spec[:contents]
 end
 
 parse_spec
-get_gem
+get_gem_metadata
+get_gem_contents
 update_spec
 puts generate_spec.yellow.bold
