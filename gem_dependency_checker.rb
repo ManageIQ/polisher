@@ -415,7 +415,7 @@ elsif $conf[:bundler]
         version = args.first.is_a?(Hash) ? nil : args.first
         $gems << [name, version]
         old_gem(name, *args)
-    end
+      end
     end
   end
 
