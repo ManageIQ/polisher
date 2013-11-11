@@ -1,13 +1,13 @@
 #!/usr/bin/ruby
-# gem rpm spec updater
+# Ruby RPM Spec Updater
 #
 # Simple tool to update the rpm spec of a packaged gem
-# the latest version from rubygems.
+# or ruby app.
 #
-# Use should specify the location of the rpm spec to
-# manipulate and optionally a sepifier restricting the
-# version to update to or the location of the gem/gemspec/gemfile
-# source which parse and use.
+# User should specify the location of the rpm spec to
+# manipulate. Script takes an additional option to specify
+# the version of the gem to update to or the location of
+# the gem/gemspec/gemfile source which parse and use.
 #
 # Usage: 
 #   gem_spec_updater.rb <path-to-spec> <optional-source-or-version>
