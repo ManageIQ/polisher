@@ -2,16 +2,22 @@
 # gem rpm spec updater
 #
 # Simple tool to update the rpm spec of a packaged gem
-# to a specified version or the latest version from rubygems
+# the latest version from rubygems.
+#
+# Use should specify the location of the rpm spec to
+# manipulate and optionally a sepifier restricting the
+# version to update to or the location of the gem/gemspec/gemfile
+# source which parse and use.
 #
 # Usage: 
-#   gem_spec_updater.rb <path-to-spec> <optional-version>
+#   gem_spec_updater.rb <path-to-spec> <optional-source-or-version>
 #
 # Licensed under the MIT License
 # Copyright (C) 2013 Red Hat, Inc.
 
 require 'curb'
 require 'json'
+require 'bundler'
 require 'colored'
 require 'tempfile'
 require 'pathname'
@@ -42,8 +48,27 @@ FILE_MACRO_REPLACEMENTS =
   {"%{_bindir}"    => '/bin',
    "%{gem_libdir}" => '/lib'}
 
+# Same bundler override as in gem_dependency_checker,
+# possibly move some of this stuff out to an external
+# gem/rpm management gem
+module Bundler
+  class << self
+    attr_accessor :bundler_gems
+  end
+
+  class Dsl
+    alias :old_gem :gem
+    def gem(name, *args)
+      Bundler.bundler_gems ||= []
+      version = args.first.is_a?(Hash) ? nil : args.first
+      Bundler.bundler_gems << [name, version]
+      old_gem(name, *args)
+    end
+  end
+end
+
 $spec_file = ARGV.shift
-$version   = ARGV.shift
+$source    = ARGV.shift
 
 # Parse RPM spec into metadata hash
 def parse_spec
@@ -67,6 +92,7 @@ def parse_spec
 
     elsif l =~ SPEC_VERSION_MATCHER
       $spec[:version] = $1.strip
+      $version = $spec[:version]
 
     elsif l =~ SPEC_RELEASE_MATCHER
       $spec[:release] = $1.strip
@@ -130,16 +156,76 @@ def rpmize_file(f)
   fmr.keys.inject(f) { |file, r| file.gsub(r, fmr[r]) }
 end
 
-# Retrieve gem metadata from rubygems.org
-def get_gem_metadata
-  # TODO if $version specified, retrieve that
-  gem_json_path = "https://rubygems.org/api/v1/gems/#{$spec[:gem_name]}.json"
-  spec  = Curl::Easy.http_get(gem_json_path).body_str
-  specj = JSON.parse(spec)
-  $version = specj['version'] if $version.nil?
-  # TODO track versions & write to spec
-  $deps = specj['dependencies']['runtime'].collect { |d| d['name'] }
+# Return bool indicating if specified file is a gem
+def is_file_gem?(path)
+  File.extname(path) == ".gem"
+end
+
+# Return bool indicating if specified file is a gemspec
+def is_file_gemspec?(path)
+  File.extname(path) == ".gemspec"
+end
+
+# Return bool indicating if specified file is a Gemfile
+def is_file_gemfile?(path)
+  File.basename(path) == "Gemfile"
+end
+
+def parse_gem(gem_path)
+  # TODO
+end
+
+def parse_gemspec(gemspec_path)
+  gemspec = Gem::Specification.load(gemspec_path)
+  $version  = gemspec.version
+  $deps     = gemspec.runtime_dependencies.collect { |dep| dep.name }
+  $dev_deps = gemspec.development_dependencies.collect { |dep| dep.name }
+end
+
+def parse_rubygems_metadata(metadata)
+  specj     = JSON.parse(metadata)
+  $version  = specj['version']
+  $deps     = specj['dependencies']['runtime'].collect { |d| d['name'] }
   $dev_deps = specj['dependencies']['development'].collect { |d| d['name'] }
+end
+
+def parse_gemfile(gemfile_path)
+  path,g = File.split(gemfile_path)
+  Dir.chdir(path){
+    Bundler::Definition.build(g, nil, false)
+  }
+  $deps     = Bundler.bundler_gems.collect { |n,v| n }
+  $dev_deps = []
+puts $deps
+end
+
+# Retrieve gem metadata from rubygems.org
+def get_upstream_metadata
+  if $source
+    if File.file?($source)
+      if is_file_gem?($source)
+        parse_gem($source)
+
+      elsif is_file_gemspec?($source)
+        parse_gemspec($source)
+
+      elsif is_file_gemfile?($source)
+        parse_gemfile($source)
+
+      end
+
+    else
+      $version = $source
+      # TODO assume $source is a verison specifier, retrieve
+      # gem from rubygems corresponding to version & parse
+    end
+
+  else
+    gem_json_path = "https://rubygems.org/api/v1/gems/#{$spec[:gem_name]}.json"
+    spec  = Curl::Easy.http_get(gem_json_path).body_str
+    parse_rubygems_metadata(spec)
+
+  end
 end
 
 # Retrieve gem contents from rubygems.org
@@ -163,6 +249,15 @@ def get_gem_contents
       $files << pathstr unless pathstr.blank?
     end
   }
+end
+
+# Retrieve contents from upstream source
+def get_upstream_contents
+  if $source && is_file_gemfile?($source)
+    $files = []
+  else
+    get_gem_contents
+  end
 end
 
 # Update spec depedendencies
@@ -278,7 +373,7 @@ def generate_spec
 end
 
 parse_spec
-get_gem_metadata
-get_gem_contents
+get_upstream_metadata
+get_upstream_contents
 update_spec
 puts generate_spec.yellow.bold
