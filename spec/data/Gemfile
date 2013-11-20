@@ -1,0 +1,5 @@
+source :rubygems
+
+# only this really need to be present on the system
+gem 'rubygems'
+gem 'cinch'
