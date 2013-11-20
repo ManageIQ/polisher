@@ -1,33 +1,39 @@
-gem_dependency_checker
+Polisher
 ======================
-Check gem related dependencies against your platform with ease!
+Ruby Post-Publishing Processor - Polish your Ruby projects with ease!
 
 <pre>
  .77                                                                 7.         
   +$                                                                 =~         
 +?ZZZII                                                           .Z$$$$$$      
 $~~:,.$Z                                                           $~~:,.7      
- ?~:,, .............................................................=~:,,.      
+ ?~:,, .......................................redmine...............=~:,,.      
   ~::,..rails.......................................................~~:,.      
   ~~:,, .........rack................json...........................=~:,,      
   =~::,.....................sass............activerecord..............~::,.     
    ~~:,.=....eruby...................................................~~:,.~    
-   +~:,,.................haml.........................................?~::,.    
+   +~:,,.................haml......................eventmachine.......?~::,.    
     ~::,. ........................rspec................................~~:,.:   
     =~:,,:.........................................bundler.............~~:,,    
-     ~I7I..........rvm.................................................,~7?II   
+     ~I7I..........rvm..................rake...........................,~7?II   
     $$$$$$$O                                                           $$$$$$$$ 
      .ZO7Z,                                                             .+ZIZ.  
         7                                                                  7    
         $I                                                                 ZI   
 </pre>
 
-gem_dependency_checker is a set of small utilities that provides platform specific
-mechanisms to lookup and query gem dependencies. Primarily meant to be invoked from
-the command line these tools lookup gem, gemspec, and gemfile dependencies against
-various resources including yum, koji, git, fedora, and more.
+Polisher is a Ruby module and set of utilities aimed to assisting the post-publishing
+packaging process for Ruby gems and applications.
 
-Pass --help to gem_dependency_checker.rb to see complete command line usage.
-More information on each utility can be found in the header contents. The
-[following](http://ascii.io/a/4488) [asciicasts](http://ascii.io/a/4489)
-demonstrate the utilities in action.
+Provided are a series of tools geared towards querying rubygems.org and other upstream
+ruby sources for metadata as well as downstream sources such as the Fedora and Debian
+distributions to cross reference various supported stacks vendored by each.
+
+Also prodivided are tools to integrate and hook into various build and install workflows
+used by both upstream and downstream developers to synergize operations and streamline
+the packaging and support process.
+
+The project is still in its early / conceptual stages, and all are welcome to assist
+shaping its direction. See documentation and spec suite for specific usage.
+
+Polisher is Licensed under the MIT License, Copyright (C) 2013 Red Hat, Inc.
