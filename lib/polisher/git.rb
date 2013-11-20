@@ -14,6 +14,7 @@ module Polisher
     BUILD_CMD  = '/usr/bin/koji'
     BUILD_TGT  = 'rawhide'
     MD5SUM_CMD = '/usr/bin/md5sum'
+    SED_CMD    = '/usr/bin/sed'
     RPM_PREFIX = 'rubygem-'
 
     def initialize(args={})
@@ -34,12 +35,14 @@ module Polisher
     end
 
     def self.clone(name)
-      unless File.directory? name
-        `#{PKG_CMD} clone #{name}`
+      rpm_name = "#{RPM_PREFIX}#{name}"
+
+      unless File.directory? rpm_name
+        `#{PKG_CMD} clone #{rpm_name}`
       end
       
       # cd into working directory
-      Dir.chdir name
+      Dir.chdir rpm_name
 
       if File.exists? 'dead.package'
         raise Exception, "Dead package detected"
@@ -55,9 +58,11 @@ module Polisher
     end
 
     def update_to(gem)
-      # TODO update rpmspec
-      `#{MD5SUM_CMD} #{gem_name}-#{version}.gem > sources`
-      File.open(".gitignore", "w") { |f| f.write "#{self.name}-#{self.version}.gem" }
+      # TODO use Polisher::RPMSpec to update spec
+      `#{SED_CMD} -i "s/Version.*/Version: #{gem.version}/" #{spec}`
+      `#{SED_CMD} -i "s/Release:.*/Release: 1%{?dist}/" #{spec}`
+      `#{MD5SUM_CMD} #{gem.name}-#{gem.version}.gem > sources`
+      File.open(".gitignore", "w") { |f| f.write "#{gem.name}-#{gem.version}.gem" }
     end
 
     def build
@@ -70,7 +75,7 @@ module Polisher
     end
 
     def has_check?
-      open("#{RPM_PREFIX}#{self.name}.spec", "r") do |spec|
+      open(spec, "r") do |spec|
         spec.lines.any? { |line| line.include?("%check") }
       end 
     end

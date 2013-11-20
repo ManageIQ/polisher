@@ -52,13 +52,16 @@ module Polisher
       self.new metadata
     end
 
-    def refresh_files
+    def download_gem
       gem_path = "https://rubygems.org/gems/#{@name}-#{@version}.gem"
       curl = Curl::Easy.new(gem_path)
       curl.follow_location = true
       curl.http_get
       gemf = curl.body_str
+    end
 
+    def refresh_files
+      gemf = download_gem
       tgem = Tempfile.new(@name)
       tgem.write gemf
       tgem.close

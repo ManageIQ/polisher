@@ -16,6 +16,9 @@ require 'json'
 require 'optparse'
 require 'nokogiri'
 
+require 'polisher/git'
+require 'polisher/gem'
+
 ORIG_DIR = Dir.pwd
 
 # read various options from the command line
@@ -44,27 +47,27 @@ end
  
  optparse.parse!
 
-Polisher::Fedora.gems_owned_by(conf[:user]) unless $conf[:user].nil?
+conf[:gems] += Polisher::Fedora.gems_owned_by(conf[:user]) unless conf[:user].nil?
 
 if conf[:gems].empty?
   puts "must specify a gem name or user name!".red
   exit 1
 end
 
+Dir.mkdir conf[:dir] unless File.directory?(conf[:dir])
+Dir.chdir conf[:dir]
+
 # iterate over gems
 conf[:gems].each do |gem_name|
-  Dir.mkdir conf[:dir] unless File.directory?(conf[:dir])
-  Dir.chdir conf[:dir]
-  rpm_name = "rubygem-#{gem_name}"
-
   pkg =
     begin
-      Polisher::GitPackage.clone(rpm_name)
-    rescue
+      Polisher::GitPackage.clone(gem_name)
+    rescue => e
       next
     end
 
-  gem = Polisher::Gem.new :name => gem_name
+  gem = Polisher::Gem.retrieve gem_name
+  File.write("#{gem.name}-#{gem.version}.gem", gem.download_gem)
   pkg.update_to(gem)
   # TODO append gem dependencies to conf[:gems] list
 
@@ -72,7 +75,7 @@ conf[:gems].each do |gem_name|
 
   unless pkg.has_check?
     puts "Warning: no %check section in spec,\
-          manually verify functionality!".bold.red unless has_check
+          manually verify functionality!".bold.red
   end
 
   pkg.commit
