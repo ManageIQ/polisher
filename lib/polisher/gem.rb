@@ -10,6 +10,8 @@ require 'pathname'
 require 'rubygems/installer'
 require 'active_support/core_ext'
 
+require 'polisher/version_checker'
+
 module Polisher
   class Gem
     attr_accessor :name
@@ -24,6 +26,11 @@ module Polisher
       @deps     = args[:deps]     || []
       @dev_deps = args[:dev_deps] || []
       @files    = args[:files]    || []
+    end
+
+    def self.local_versions_for(name)
+      @local_db ||= ::Gem::Specification.all
+      @local_db.select { |s| s.name == name }.collect { |s| s.version }
     end
 
     def self.parse(args={})
@@ -85,6 +92,33 @@ module Polisher
       gem  = self.parse spec
       gem.refresh_files
       gem
+    end
+
+    # Retreive available versions of gem,
+    # optionally w/ versions of deps & dev_deps, recursively
+    def versions(args={})
+      recursive = args[:recursive]
+      dev_deps  = args[:dev_deps]
+
+      versions = { self.name => Polisher::VersionChecker.versions_for(self.name) }
+      if recursive
+        self.deps.each { |dep|
+          unless versions.has_key?(dep)
+            gem = Polisher::Gem.retrieve(dep)
+            versions.merge! gem.versions
+          end
+        }
+
+        if dev_deps
+          self.dev_deps.each { |dep|
+            unless versions.has_key?(dep)
+              gem = Polisher::Gem.retrieve(dep)
+              versions.merge! gem.versions
+            end
+          }
+        end
+      end
+      versions
     end
   end # class Gem
 end # module Polisher

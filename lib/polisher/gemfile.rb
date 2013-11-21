@@ -3,7 +3,12 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
+# Supporting both bundler based parsing
+# and gemnasuim based parsing
 require 'bundler'
+require 'gemnasium/parser'
+
+require 'polisher/version_checker'
 
 # Override bundler's gem registration
 module Bundler
@@ -28,6 +33,8 @@ end
 
 module Polisher
   class Gemfile
+    include VersionedDependencies
+
     # always nil, for interface compatability
     attr_accessor :version
 
@@ -57,5 +64,14 @@ module Polisher
       self.new metadata
     end
 
+    def self.gemnasium_parse(path)
+      parser = Gemnasium::Parser.gemfile(File.read(path))
+      metadata = {:deps => [], :dev_deps => []}
+      parser.dependencies.each { |dep|
+        metadata[:deps] << dep.name
+      }
+
+      self.new metadata
+    end
   end # class Gemfile
 end # module Polisher

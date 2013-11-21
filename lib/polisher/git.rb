@@ -3,19 +3,24 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
+# TODO use ruby git api and others
+
+require 'polisher/rpmspec'
+
 module Polisher
   class GitPackage
     attr_accessor :name
     attr_accessor :version
 
     # TODO these should be to be configurable
-    PKG_CMD    = '/usr/bin/fedpkg'
-    GIT_CMD    = '/usr/bin/git'
-    BUILD_CMD  = '/usr/bin/koji'
-    BUILD_TGT  = 'rawhide'
-    MD5SUM_CMD = '/usr/bin/md5sum'
-    SED_CMD    = '/usr/bin/sed'
-    RPM_PREFIX = 'rubygem-'
+    PKG_CMD      = '/usr/bin/fedpkg'
+    GIT_CMD      = '/usr/bin/git'
+    BUILD_CMD    = '/usr/bin/koji'
+    BUILD_TGT    = 'rawhide'
+    MD5SUM_CMD   = '/usr/bin/md5sum'
+    SED_CMD      = '/usr/bin/sed'
+    RPM_PREFIX   = 'rubygem-'
+    DIST_GIT_URL = 'git://pkgs.fedoraproject.org/'
 
     def initialize(args={})
       @name    = args[:name]
@@ -85,6 +90,21 @@ module Polisher
       `#{GIT_CMD} add #{spec} sources .gitignore`
       #`git add #{gem_name}-#{version}.gem`
       `#{GIT_CMD} commit -m 'updated to #{self.version}'`
+    end
+
+    def self.version_for(name)
+      rpm_name = "#{RPM_PREFIX}#{name}"
+      version = nil
+
+      Dir.mktmpdir do |dir|
+        Dir.chdir(dir) do |path|
+          `#{GIT_CMD} clone #{DIST_GIT_URL}#{rpm_name}.git .`
+          spec = Polisher::RPMSpec.parse(File.read("#{rpm_name}.spec"))
+          version = spec.version
+        end
+      end
+
+      version
     end
   end # class GitPackage
 end # module Polisher
