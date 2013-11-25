@@ -7,13 +7,15 @@ require 'pkgwat'
 
 module Polisher
   class Bodhi
-    def self.versions_for(name)
+    def self.versions_for(name, &bl)
       # fedora pkgwat provides a frontend to bodhi
       updates = Pkgwat.get_updates("rubygem-#{name}", 'all', 'all') # TODO set timeout
       updates.reject! { |u|
         u['stable_version'] == 'None' && u['testing_version'] == "None"
       }
-      updates.collect { |u| u['release'] }
+      versions = updates.collect { |u| u['stable_version'] }
+      bl.call(:bodhi, name, versions) unless(bl.nil?) 
+      versions
     end
   end
 end

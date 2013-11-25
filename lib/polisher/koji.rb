@@ -9,25 +9,38 @@ XMLRPC::Config::ENABLE_NIL_CREATE = true
 
 module Polisher
   class Koji
-    # TODO parameterize
     KOJI_URL = 'koji.fedoraproject.org/kojihub'
-    KOJI_TAG = 'rawhide'
+    KOJI_TAG = 'f21'
+
+    def self.koji_url(value=nil)
+      @koji_url ||= KOJI_URL
+      @koji_url   = value unless value.nil?
+      @koji_url
+    end
+
+    def self.koji_tag(value=nil)
+      @koji_tag ||= KOJI_TAG
+      @koji_tag   = value unless value.nil?
+      @koji_tag
+    end
 
     def self.client
       @client ||= begin
-        url = KOJI_URL.split('/')
+        url = self.koji_url.split('/')
         XMLRPC::Client.new(url[0..-2].join('/'),
                            "/#{url.last}")
       end
     end
 
-    def self.versions_for(name)
+    def self.versions_for(name, &bl)
       # koji xmlrpc call
       builds =
         self.client.call('listTagged',
-          KOJI_TAG, nil, false, nil, false,
+          self.koji_tag, nil, false, nil, false,
           "rubygem-#{name}")
-      builds.collect { |b| b['version'] }
+      versions = builds.collect { |b| b['version'] }
+      bl.call(:koji, name, versions) unless(bl.nil?) 
+      versions
     end
   end
 end

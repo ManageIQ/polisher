@@ -12,21 +12,20 @@ require 'polisher/yum'
 
 module Polisher
   class VersionChecker
-    def self.versions_for(name)
-      gem_versions   = Gem.local_versions_for(name)
-      fedora_version = Fedora.version_for(name)
-      koji_versions  = Koji.versions_for(name)
-      git_version    = GitPackage.version_for(name)
-      bodhi_version  = Bodhi.versions_for(name)
-      yum_version    = Yum.version_for(name)
-      #errata_version  = Errata.version_for('url?', name)
+    def self.versions_for(name, &bl)
+      gem_versions    = Gem.local_versions_for(name, &bl)
+      fedora_versions = Fedora.versions_for(name, &bl)
+      koji_versions   = Koji.versions_for(name, &bl)
+      git_version     = GitPackage.version_for(name, &bl)
+      yum_version     = Yum.version_for(name, &bl)
+      #bodhi_version   = Bodhi.versions_for(name, &bl)
+      #errata_version  = Errata.version_for('url?', name, &bl)
 
       {:gem    => gem_versions,
        :koji   => koji_versions,
+       :fedora => fedora_versions,
        :git    => [git_version],
-       :yum    => [yum_version],
-       :bodhi  => [bodhi_version],
-       :fedora => [fedora_version]}
+       :yum    => [yum_version]}
     end
 
     def self.version_for(name)
@@ -36,11 +35,11 @@ module Polisher
   end
 
   module VersionedDependencies
-    def dependency_versions
+    def dependency_versions(&bl)
       versions = {}
       self.deps.each do |dep|
         gem = Polisher::Gem.retrieve(dep)
-        versions.merge!(gem.versions(:recursive => true, :dev_deps => true))
+        versions.merge!(gem.versions(:recursive => true, :dev_deps => true, &bl))
       end
       versions
     end

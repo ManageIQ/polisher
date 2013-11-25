@@ -55,7 +55,11 @@ module Polisher
       path,g = File.split(path)
       Dir.chdir(path){
         Bundler.init_gems
-        Bundler::Definition.build(g, nil, false)
+        begin
+          Bundler::Definition.build(g, nil, false)
+        rescue Bundler::GemfileNotFound
+          raise ArgumentError, "invalid gemfile: #{path}"
+        end
       }
       metadata = {}
       metadata[:deps]     = Bundler.bundler_gems.collect { |n,v| n }

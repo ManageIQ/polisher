@@ -21,20 +21,23 @@ module Polisher
       @curl
     end
 
-    def self.versions_for(advisory_url, name)
+    def self.versions_for(advisory_url, name, &bl)
       url    = "#{advisory_url}/builds"
       result = self.client(url).get
       json   = JSON.parse result.body_str
-      json.collect { |tag, builds|
-        builds.collect { |build|
-          pkg,meta = *build.flatten
-          if pkg =~ /^rubygem-#{name}-([^-]*)-.*$/
-            $1
-          else
-            nil
-          end
-        }
-      }.flatten.compact
+      versions =
+        json.collect { |tag, builds|
+          builds.collect { |build|
+            pkg,meta = *build.flatten
+            if pkg =~ /^rubygem-#{name}-([^-]*)-.*$/
+              $1
+            else
+              nil
+            end
+          }
+        }.flatten.compact
+      bl.call(:errata, name, versions) unless(bl.nil?) 
+      versions
     end
   end
 end

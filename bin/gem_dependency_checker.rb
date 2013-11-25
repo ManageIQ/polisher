@@ -110,34 +110,48 @@ if conf[:gemfile].nil? &&
    end
 end
 
-def print_dep(dep, tgt_versions)
-  print dep
-  tgt_versions.each { |tgt,versions|
-    print "#{tgt}: #{versions.join(',')}; "
-  }
-  print "\n"
+def print_dep(tgt, dep, versions)
+  # XXX little bit hacky but works for now
+  @last_dep ||= nil
+  if @last_dep != dep
+    puts "\n#{dep}".blue.bold
+    @last_dep = dep
+  end
+
+  if versions.nil? || versions.empty? ||
+     versions.size == 1 && versions[0].nil?
+    print " #{tgt.to_s.red.bold} "
+  else
+    print " #{tgt.to_s.green.bold}: #{versions.join(', ').yellow}"
+  end
 end
 
 # FIXME need to toggle what gets checked
 # based on cmd line flags
 
-# TODO instead of iterating over results w/ 'each' specify block to call w/ each during
-
 if conf[:gemname]
   gem = Polisher::Gem.retrieve(conf[:gemname])
-  gem.versions(:recursive => true, :dev_deps => true).each do |dep, tgt_versions|
-    print_dep(dep, tgt_versions)
+  gem.versions(:recursive => true, :dev_deps => true) do |tgt, dep, versions|
+    print_dep(tgt, dep, versions)
   end
 
 elsif conf[:gemfile]
-  gemfile = Polisher::Gemfile.parse(conf[:gemfile])
-  gemfile.dependency_versions do |dep, tgt_versions|
-    print_dep(dep, tgt_versions)
+  gemfile = nil
+
+  begin
+    gemfile = Polisher::Gemfile.parse(conf[:gemfile])
+  rescue => e
+    puts "Runtime err #{e}".red
+    exit 1
+  end
+
+  gemfile.dependency_versions do |tgt, dep, versions|
+    print_dep(tgt, dep, versions)
   end
 
 elsif conf[:gemspec]
   gemspec = Polisher::Gemspec.parse(conf[:gemspec])
-  gemspec.dependency_versions do |dep, tgt_versions|
-    print_dep(dep, tgt_versions)
+  gemspec.dependency_versions do |tgt, dep, versions|
+    print_dep(tgt, dep, versions)
   end
 end

@@ -92,18 +92,23 @@ module Polisher
       `#{GIT_CMD} commit -m 'updated to #{self.version}'`
     end
 
-    def self.version_for(name)
+    def self.version_for(name, &bl)
       rpm_name = "#{RPM_PREFIX}#{name}"
       version = nil
 
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do |path|
-          `#{GIT_CMD} clone #{DIST_GIT_URL}#{rpm_name}.git .`
-          spec = Polisher::RPMSpec.parse(File.read("#{rpm_name}.spec"))
-          version = spec.version
+          version = nil
+          `#{GIT_CMD} clone #{DIST_GIT_URL}#{rpm_name}.git . >& /dev/null`
+          begin
+            spec = Polisher::RPMSpec.parse(File.read("#{rpm_name}.spec"))
+            version = spec.version
+          rescue => e
+          end
         end
       end
 
+      bl.call(:git, name, [version]) unless(bl.nil?) 
       version
     end
   end # class GitPackage

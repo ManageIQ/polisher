@@ -19,9 +19,14 @@ module Polisher
                                collect { |i| i.text.gsub(/rubygem-/, '') }
     end
 
-    def self.version_for(name)
-      pkg = Pkgwat.get_package("rubygem-#{name}")
-      pkg['version']
+    def self.versions_for(name, &bl)
+      # XXX bug w/ python-pkgwat, some html content
+      # is being returned w/ versions, need to look into
+      versions = Pkgwat.get_versions(name)
+      versions.reject! { |pkg| pkg['stable_version'] == "None" }
+      versions = versions.collect { |pkg| pkg['stable_version'] }
+      bl.call(:fedora, name, versions) unless(bl.nil?) 
+      versions
     end
   end # class Fedora
 end # module Polisher

@@ -28,9 +28,11 @@ module Polisher
       @files    = args[:files]    || []
     end
 
-    def self.local_versions_for(name)
+    def self.local_versions_for(name, &bl)
       @local_db ||= ::Gem::Specification.all
-      @local_db.select { |s| s.name == name }.collect { |s| s.version }
+      versions = @local_db.select { |s| s.name == name }.collect { |s| s.version }
+      bl.call(:local_gem, name, versions) unless(bl.nil?) 
+      versions
     end
 
     def self.parse(args={})
@@ -96,16 +98,19 @@ module Polisher
 
     # Retreive available versions of gem,
     # optionally w/ versions of deps & dev_deps, recursively
-    def versions(args={})
+    def versions(args={}, &bl)
       recursive = args[:recursive]
       dev_deps  = args[:dev_deps]
 
-      versions = { self.name => Polisher::VersionChecker.versions_for(self.name) }
+      versions  = args[:versions] || {}
+      versions.merge!({ self.name => Polisher::VersionChecker.versions_for(self.name, &bl) })
+      args[:versions] = versions
+
       if recursive
         self.deps.each { |dep|
           unless versions.has_key?(dep)
             gem = Polisher::Gem.retrieve(dep)
-            versions.merge! gem.versions
+            versions.merge! gem.versions(args, &bl)
           end
         }
 
@@ -113,7 +118,7 @@ module Polisher
           self.dev_deps.each { |dep|
             unless versions.has_key?(dep)
               gem = Polisher::Gem.retrieve(dep)
-              versions.merge! gem.versions
+              versions.merge! gem.versions(args, &bl)
             end
           }
         end
