@@ -1,0 +1,28 @@
+- polisher/
+  - use linux_admin to run commands
+- polisher/git.rb#update_to
+  - use polisher/rpmspec to update spec
+- polisher/rpmspec.rb
+  - better conversion of new data to rpmspec format
+- bin/gem_dependency_checker
+  - filter search targets by command line flags
+  - better formatting of results
+- bin/binary_gem_resolver.rb
+  - flush out analysis / lookup of dependencies
+    available on the local platform
+  - refactor / extract generic components into
+    polisher library
+
+- Flush out documentation, for both API and cmd line
+- Add gemspec / Gemfile
+- Round of specs, test all modules & edge cases
+- Push updated polisher gem to rubygems
+
+- Ideas:
+  - Tool to extract/package vendored dependencies during
+    gem -> rpm conversion / update process
+  - Tool to convert Gemfile + RPM in various locations
+    to yum repository which satisfies gemfile
+  - Tools to trigger automatic builds / updates of gem
+    rpms on upstream releases
+  - ...
