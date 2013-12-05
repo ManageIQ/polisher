@@ -51,6 +51,10 @@ module Polisher
       @files    = []
     end
 
+    # Parse the specified gemfile & return new Gemfile instance from metadata
+    # 
+    # @param [String] path to gemfile to parse
+    # @return [Polisher::Gemfile] gemfile instantiated from parsed metadata
     def self.parse(path)
       path,g = File.split(path)
       Dir.chdir(path){
@@ -68,6 +72,11 @@ module Polisher
       self.new metadata
     end
 
+    # Parse the specified gemfile using gemnasium
+    # (uses regular expressions so that the gemfile doesn't have to be run)
+    #
+    # @param [String] path to gemfile to parse
+    # @return [Polisher::Gemfile] gemfile instantiated from parsed metadata
     def self.gemnasium_parse(path)
       parser = Gemnasium::Parser.gemfile(File.read(path))
       metadata = {:deps => [], :dev_deps => []}

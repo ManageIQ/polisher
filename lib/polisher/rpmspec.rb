@@ -37,6 +37,7 @@ module Polisher
       @metadata = metadata
     end
 
+    # Dispatch all missing methods to lookup calls in rpm spec metadata
     def method_missing(method, *args, &block)
       # proxy to metadata
       if @metadata.has_key?(method)
@@ -47,6 +48,10 @@ module Polisher
       end
     end
 
+    # Parse the specified rpm spec and return new RPMSpec instance from metadata
+    #
+    # @param [String] string contents of spec to parse
+    # @return [Polisher::RPMSpec] spec instantiated from rpmspec metadata
     def self.parse(spec)
       in_subpackage = false
       in_changelog  = false
@@ -118,6 +123,9 @@ module Polisher
       self.new meta
     end
 
+    # Update RPMSpec metadata to new gem
+    #
+    # @param [Polisher::Gem] new_source new gem to update rpmspec to
     def update_to(new_source)
       update_deps_from(new_source)
       update_files_from(new_source)
@@ -196,6 +204,9 @@ EOS
 
     public
 
+    # Return properly formatted rpmspec as string
+    # 
+    # @return [String] string representation of rpm spec
     def to_string
       contents = @metadata[:contents]
 

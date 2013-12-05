@@ -12,18 +12,21 @@ module Polisher
     KOJI_URL = 'koji.fedoraproject.org/kojihub'
     KOJI_TAG = 'f21'
 
+    # Get/Set the koji url
     def self.koji_url(value=nil)
       @koji_url ||= KOJI_URL
       @koji_url   = value unless value.nil?
       @koji_url
     end
 
+    # Get/Set the koji tag to use
     def self.koji_tag(value=nil)
       @koji_tag ||= KOJI_TAG
       @koji_tag   = value unless value.nil?
       @koji_tag
     end
 
+    # Retrieve shared instance of xmlrpc client to use
     def self.client
       @client ||= begin
         url = self.koji_url.split('/')
@@ -32,6 +35,11 @@ module Polisher
       end
     end
 
+    # Retrieve list of the version of the specified package in koji
+    #
+    # @param [String] name name of package to lookup
+    # @param [Callable] bl optional block to invoke with versions retrieved
+    # @return [String] versions retrieved, or nil if none found
     def self.versions_for(name, &bl)
       # koji xmlrpc call
       builds =

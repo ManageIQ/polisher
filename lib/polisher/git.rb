@@ -27,18 +27,25 @@ module Polisher
       @version = args[:version]
     end
 
+    # Return full rpm name of package containing optional prefix
     def rpm_name
       "#{RPM_PREFIX}#{self.name}"
     end
 
+    # Return full srpm file name of package
     def srpm
       "#{rpm_name}-#{self.version}-1.*.src.rpm"
     end
 
+    # Return full spec file name
     def spec
       "#{rpm_name}.spec"
     end
 
+    # Clone git package
+    #
+    # @param [String] name name of package to clone
+    # @return [Polisher::GitPackage] git package instance representing cloned package
     def self.clone(name)
       rpm_name = "#{RPM_PREFIX}#{name}"
 
@@ -62,6 +69,9 @@ module Polisher
       self.new :name => name
     end
 
+    # Update the locally cloned package to the specified gem version
+    #
+    # @param [Polisher::Gem] gem instance of gem containing metadata to update to
     def update_to(gem)
       # TODO use Polisher::RPMSpec to update spec
       `#{SED_CMD} -i "s/Version.*/Version: #{gem.version}/" #{spec}`
@@ -70,6 +80,7 @@ module Polisher
       File.open(".gitignore", "w") { |f| f.write "#{gem.name}-#{gem.version}.gem" }
     end
 
+    # Build the locally cloned package using the configured build command
     def build
       # build srpm
       `#{PKG_CMD} srpm`
@@ -79,12 +90,16 @@ module Polisher
       # TODO if build fails, spit out error, exit
     end
 
+    # Return boolean indicating if package spec has a %check section
+    #
+    # @return [Boolean] true/false depending on whether or not spec has %check
     def has_check?
       open(spec, "r") do |spec|
         spec.lines.any? { |line| line.include?("%check") }
       end 
     end
 
+    # Command the local package to the local git repo
     def commit
       # git add spec, git commit w/ message
       `#{GIT_CMD} add #{spec} sources .gitignore`
@@ -92,6 +107,11 @@ module Polisher
       `#{GIT_CMD} commit -m 'updated to #{self.version}'`
     end
 
+    # Retrieve list of the version of the specified package in git
+    #
+    # @param [String] name name of package to lookup
+    # @param [Callable] bl optional block to invoke with version retrieved
+    # @return [String] version retrieved, or nil if none found
     def self.version_for(name, &bl)
       rpm_name = "#{RPM_PREFIX}#{name}"
       version = nil

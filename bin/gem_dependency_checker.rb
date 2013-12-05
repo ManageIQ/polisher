@@ -5,6 +5,8 @@
 # available in various locations including koji,
 # git, fedora, bodhi, rhn, etc.
 #
+# Pass -h to the script to see command line option details
+#
 # User is responsible for establishing authorization session
 # before invoking this script
 #

@@ -8,6 +8,11 @@ require 'polisher/gemfile'
 
 module Polisher
   class Upstream
+    # Parse the specified upstream source, automatically
+    # dispatches to correct upstream parser depending on
+    # format of specified source
+    #
+    # @returns instance of class representing parsed source
     def self.parse(source)
       if source.gem?
         Polisher::Gem.parse(:gem => source)

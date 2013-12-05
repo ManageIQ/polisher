@@ -10,7 +10,7 @@
 # the gem/gemspec/gemfile source which parse and use.
 #
 # Usage: 
-#   gem_spec_updater.rb <path-to-spec> <optional-source-or-version>
+#   ruby_rpm_spec_updater.rb <path-to-spec> <optional-source-or-version>
 #
 # Licensed under the MIT License
 # Copyright (C) 2013 Red Hat, Inc.

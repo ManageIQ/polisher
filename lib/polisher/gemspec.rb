@@ -17,6 +17,10 @@ module Polisher
       @deps     = args[:deps]
     end
 
+    # Parse the specified gemspec & return new Gemspec instance from metadata
+    #
+    # @param [String] path to gemspec to parse
+    # @return [Polisher::Gemspec] gemspec instantiated from parsed metadata
     def self.parse(path)
       parser = Gemnasium::Parser.gemspec(File.read(path))
       metadata = {:deps => [], :dev_deps => []}
