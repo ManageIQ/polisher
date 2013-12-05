@@ -1,5 +1,8 @@
 - polisher/
   - use linux_admin to run commands
+  - minimize gem deps, add optional requirements that get pulled-in/activated
+    when certain functionality is invoked (for ex pkgwat is only needed when
+    querying fedora)
 - polisher/git.rb#update_to
   - use polisher/rpmspec to update spec
 - polisher/rpmspec.rb
@@ -13,7 +16,7 @@
     polisher library
 
 - Flush out documentation, for both API and cmd line
-- Add gemspec / Gemfile
+- Add Gemfile
 - Round of specs, test all modules & edge cases
 - Push updated polisher gem to rubygems
 
