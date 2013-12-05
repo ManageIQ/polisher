@@ -3,8 +3,6 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
-require 'gemnasium/parser'
-
 require 'polisher/version_checker'
 
 module Polisher

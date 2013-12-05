@@ -32,7 +32,6 @@ Gem::Specification.new do |s|
   s.add_dependency('active_support')
   s.add_dependency('i18n')
   s.add_dependency('bundler')
-  s.add_dependency('gemnasium')
   s.add_dependency('pkgwat')
   s.add_dependency('colored')
   s.add_development_dependency('rspec', '>= 2.0.0')
