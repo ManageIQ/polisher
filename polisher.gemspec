@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
   s.add_dependency('json')
   s.add_dependency('curb')
   s.add_dependency('active_support')
+  s.add_dependency('i18n')
   s.add_dependency('bundler')
   s.add_dependency('gemnasium')
   s.add_dependency('pkgwat')
