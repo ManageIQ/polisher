@@ -10,3 +10,8 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = 'specs/**/*_spec.rb'
   spec.rspec_opts = ['--backtrace', '-fd', '-c']
 end
+
+desc "build the polisher gem"
+task :build do
+  system "gem build polisher.gemspec"
+end
