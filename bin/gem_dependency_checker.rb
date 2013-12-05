@@ -110,6 +110,15 @@ if conf[:gemfile].nil? &&
    end
 end
 
+targets = []
+targets << Polisher::VersionChecker::GEM_TARGET    if conf[:check_gem]
+targets << Polisher::VersionChecker::KOJI_TARGET   if conf[:check_koji]
+targets << Polisher::VersionChecker::FEDORA_TARGET if conf[:check_fedora]
+targets << Polisher::VersionChecker::GIT_TARGET    if conf[:check_git]
+targets << Polisher::VersionChecker::YUM_TARGET    if conf[:check_yum]
+targets  = Polisher::VersionChecker::ALL_TARGETS   if targets.empty?
+Polisher::VersionChecker.check targets
+
 def print_dep(tgt, dep, versions)
   # XXX little bit hacky but works for now
   @last_dep ||= nil
@@ -125,9 +134,6 @@ def print_dep(tgt, dep, versions)
     print " #{tgt.to_s.green.bold}: #{versions.join(', ').yellow}"
   end
 end
-
-# FIXME need to toggle what gets checked
-# based on cmd line flags
 
 if conf[:gemname]
   gem = Polisher::Gem.retrieve(conf[:gemname])

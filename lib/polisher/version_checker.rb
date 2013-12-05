@@ -12,20 +12,52 @@ require 'polisher/yum'
 
 module Polisher
   class VersionChecker
+    GEM_TARGET    = :gem
+    KOJI_TARGET   = :koji
+    FEDORA_TARGET = :fedora
+    GIT_TARGET    = :git
+    YUM_TARGET    = :yum
+    ALL_TARGETS   = [GEM_TARGET, KOJI_TARGET, FEDORA_TARGET,
+                     GIT_TARGET, YUM_TARGET]
+
+    def self.check(target)
+      @check_list ||= []
+      if target.is_a?(Array)
+        target.each { |t| self.check(t) }
+        return
+      end
+
+      @check_list << target
+    end
+
     def self.versions_for(name, &bl)
-      gem_versions    = Gem.local_versions_for(name, &bl)
-      fedora_versions = Fedora.versions_for(name, &bl)
-      koji_versions   = Koji.versions_for(name, &bl)
-      git_version     = GitPackage.version_for(name, &bl)
-      yum_version     = Yum.version_for(name, &bl)
+      @check_list ||= ALL_TARGETS
+      versions = {}
+
+      if @check_list.include?(GEM_TARGET)
+        versions.merge! :gem => Gem.local_versions_for(name, &bl)
+      end
+
+      if @check_list.include?(FEDORA_TARGET)
+        versions.merge! :fedora => Fedora.versions_for(name, &bl)
+      end
+
+      if @check_list.include?(KOJI_TARGET)
+        versions.merge! :koji => Koji.versions_for(name, &bl)
+      end
+
+      if @check_list.include?(GIT_TARGET)
+        versions.merge! :git => [GitPackage.version_for(name, &bl)]
+      end
+
+      if @check_list.include?(YUM_TARGET)
+        versions.merge! :yum => [Yum.version_for(name, &bl)]
+      end
+
       #bodhi_version   = Bodhi.versions_for(name, &bl)
       #errata_version  = Errata.version_for('url?', name, &bl)
 
-      {:gem    => gem_versions,
-       :koji   => koji_versions,
-       :fedora => fedora_versions,
-       :git    => [git_version],
-       :yum    => [yum_version]}
+      versions
     end
 
     def self.version_for(name)

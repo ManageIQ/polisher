@@ -5,7 +5,6 @@
 - polisher/rpmspec.rb
   - better conversion of new data to rpmspec format
 - bin/gem_dependency_checker
-  - filter search targets by command line flags
   - better formatting of results
 - bin/binary_gem_resolver.rb
   - flush out analysis / lookup of dependencies
