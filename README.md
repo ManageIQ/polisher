@@ -41,22 +41,51 @@ install the latest release and all dependencies simply run:
     gem install polisher
 
 See the bin/ directory for all executables available, pass '-h' to any to
-see specific command line options. A few select utilities are highlighted below
+see specific command line options. To run any command from a local git checkout 
+of polisher, run the following beforehand:
+
+    export RUBYLIB='lib'
+
+A few select utilities are highlighted below.
 
 ### gem_dependency_checker
 
 A utility to cross reference rubygems and bundler gemfiles against various downstream
 resources including the koji build system, distgit (as used by Fedora), and more.
 
+For example to check a specified ruby app for compatability in koji and yum:
+
+    gem_dependency_checker.rb --gemfile ~/myapp/Gemfile -k -y
+
 ### git_gem_updater
 
 A script that clones a rubygem maintained by distgit and update it to the latest
 version of the package available on rubygems (or the specified version if given).
+A scratch built will be run and if all goes will a commit staged so that the end
+user just has to 'git push' the updated package to the distro.
+
+Simply specify the name of the gem to update like so:
+
+    git_gem_updater.rb -n rails
+
+Alternatively if "-u" is specified with a Fedora username, all the packages the
+user owns will be checked out and updated.
 
 ### ruby_rpm_spec_updater
 
 A tool to update a given ruby gem or application based rpm spec to the specified
-new source (as specified by a gem, gemspec, or gemfile)
+new source (as specified by a gem, gemspec, or gemfile).
+
+Simply pass it the location of the spec to update, and optionally a upstream
+source which to update from and the utility will print out the updated spec
+to STDOUT.
+
+    ruby_rpm_spec_updater.rb ~/rpmbuild/SPECS/rubygem-rails.spec rails-5.0.0.gem
+
+### Other
+
+There are various other tools and utilities provided and in conceptual phases.
+See the bin dir and TODO document for more detailed listing. 
 
 ### polisher
 
