@@ -3,6 +3,8 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
+require 'active_support/core_ext'
+
 require 'polisher/core'
 
 module Polisher

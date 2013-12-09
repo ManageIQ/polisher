@@ -5,6 +5,7 @@
 
 # TODO use ruby git api and others
 
+require 'tmpdir'
 require 'polisher/rpmspec'
 
 module Polisher
