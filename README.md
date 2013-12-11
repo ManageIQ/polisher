@@ -33,10 +33,35 @@ Polisher also includes utilities to integrate and hook into various build and in
 used by both upstream and downstream developers to synergize operations and streamline
 the packaging and support process.
 
+## Dependencies
+
+Polisher is made available through [rubygems](http://rubygems.org/gems/polisher).
+
+Polisher dependends on the 'curb' rubygem which in return depends on the curl-devel
+headers. The user should install those and the development tools for their platform
+or install the curb gem packaged by their distribution like so:
+
+   # install the ruby & curl headers & development tools...
+   yum install ruby-devel libcurl-devel
+   yum group install "Development Tools"
+
+   # ... or install the gem manually
+   yum install rubygem-curb
+
+Replace the 'yum install' commands with the corresponding ones on alternate platforms.
+
+Various polisher subcomponents depend on various command line utilities, these include:
+
+* /usr/bin/git - to checkout git repos
+* /usr/bin/koji - to query and build against koji
+* /usr/bin/yum - to query yum
+* /usr/bin/sed - to manipulated metadata
+* /usr/bin/md5sum - to generate required metadata
+* /usr/bin/fedpkg - to query fedora
+
 ## Installation
 
-Polisher is made available through [rubygems](http://rubygems.org/gems/polisher). To
-install the latest release and all dependencies simply run:
+To install the latest release and all ruby dependencies simply run:
 
     gem install polisher
 
