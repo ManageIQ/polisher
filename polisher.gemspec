@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.date          = %q{2013-12-05}
   s.description   = %q{Ruby Project Post-Publishing Processor}
   s.summary       = %q{General API and utility scripts to manipulate and query ruby gems and projects after being published}
-  s.homepage      = %q{http://github.com/ManageIQ/polisher}
+  s.homepage      = %q{https://github.com/ManageIQ/polisher}
   s.licenses      = ["MIT"]
 
   s.name          = GEM_NAME
