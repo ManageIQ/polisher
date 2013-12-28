@@ -14,8 +14,8 @@ Gem::Specification.new do |s|
   s.author        = authors_hash.keys
   s.email         = authors_hash.values
   s.date          = %q{2013-12-05}
-  s.description   = %q{Ruby Project Post-Publishing Processor}
-  s.summary       = %q{General API and utility scripts to manipulate and query ruby gems and projects after being published}
+  s.summary       = %q{Ruby Project Post-Publishing Processor}
+  s.description   = %q{General API and utility scripts to manipulate and query ruby gems and projects after being published}
   s.homepage      = %q{https://github.com/ManageIQ/polisher}
   s.licenses      = ["MIT"]
 
