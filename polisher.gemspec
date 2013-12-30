@@ -5,6 +5,7 @@ PKG_VERSION = '0.5.1'
 
 PKG_FILES =
   Dir.glob('{lib,spec}/**/*.rb') +
+  Dir.glob('spec/data/*') +
   ['LICENSE', 'Rakefile', 'README.md']
 
 Gem::Specification.new do |s|
