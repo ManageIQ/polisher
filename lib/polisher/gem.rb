@@ -5,6 +5,7 @@
 
 require 'curb'
 require 'json'
+require 'yaml'
 require 'tempfile'
 require 'pathname'
 require 'rubygems/installer'
@@ -14,6 +15,9 @@ require 'polisher/version_checker'
 
 module Polisher
   class Gem
+    GEM_CMD      = '/usr/bin/gem'
+
+    attr_accessor :spec
     attr_accessor :name
     attr_accessor :version
     attr_accessor :deps
@@ -21,6 +25,7 @@ module Polisher
     attr_accessor :files
 
     def initialize(args={})
+      @spec     = args[:spec]
       @name     = args[:name]
       @version  = args[:version]
       @deps     = args[:deps]     || []
@@ -51,19 +56,35 @@ module Polisher
 
       if args.is_a?(String)
         specj     = JSON.parse(args)
-        metadata[:name]     = specj['name']
-        metadata[:version]  = specj['version']
-        metadata[:deps]     = specj['dependencies']['runtime'].collect { |d| d['name'] }
-        metadata[:dev_deps] = specj['dependencies']['development'].collect { |d| d['name'] }
+        metadata[:spec]    = specj
+        metadata[:name]    = specj['name']
+        metadata[:version] = specj['version']
+
+        metadata[:deps] =
+          specj['dependencies']['runtime'].collect { |d|
+            ::Gem::Dependency.new d['name'], *d['requirements'].split(',')
+          }
+
+        metadata[:dev_deps] =
+          specj['dependencies']['development'].collect { |d|
+            ::Gem::Dependency.new d['name'], d['requirements']
+          }
 
       elsif args.has_key?(:gemspec)
         gemspec  = ::Gem::Specification.load(args[:gemspec])
-        metadata[:name]     = gemspec.name
-        metadata[:version]  = gemspec.version.to_s
-        metadata[:deps]     =
-          gemspec.dependencies.select { |dep| dep.type == :runtime }.collect { |dep| dep.name }
+        metadata[:spec]    = gemspec # TODO to json
+        metadata[:name]    = gemspec.name
+        metadata[:version] = gemspec.version.to_s
+
+        metadata[:deps] =
+          gemspec.dependencies.select { |dep|
+            dep.type == :runtime
+          }.collect { |dep| dep }
+
         metadata[:dev_deps] =
-          gemspec.dependencies.select { |dep| dep.type == :development }.collect { |dep| dep.name }
+          gemspec.dependencies.select { |dep|
+            dep.type == :development
+          }.collect { |dep| dep }
 
       elsif args.has_key?(:gem)
         # TODO
@@ -80,6 +101,27 @@ module Polisher
       curl.follow_location = true
       curl.http_get
       gemf = curl.body_str
+    end
+
+    # Refresh the gem spec
+    def refresh_spec
+      gemf = download_gem
+      tgem = Tempfile.new(@name)
+      tgem.write gemf
+      tgem.close
+
+      @spec = YAML.load `#{GEM_CMD} specification #{tgem.path}`
+
+      # update deps, dev_deps
+      @deps =
+        @spec.dependencies.select { |dep|
+          dep.type == :runtime
+        }.collect { |dep| dep }
+
+      @dev_deps =
+        @spec.dependencies.select { |dep|
+          dep.type == :development
+        }.collect { |dep| dep }
     end
 
     # Retrieve the list of files in the gem
@@ -115,7 +157,7 @@ module Polisher
       gem
     end
 
-    # Retreive versions of gem available on rubygems.org
+    # Retreive versions of gem available in all configured targets (optionally recursively)
     #
     # @param [Hash] args hash of options to configure retrieval
     # @option args [Boolean] :recursive indicates if versions of dependencies
@@ -134,16 +176,16 @@ module Polisher
 
       if recursive
         self.deps.each { |dep|
-          unless versions.has_key?(dep)
-            gem = Polisher::Gem.retrieve(dep)
+          unless versions.has_key?(dep.name)
+            gem = Polisher::Gem.retrieve(dep.name)
             versions.merge! gem.versions(args, &bl)
           end
         }
 
         if dev_deps
           self.dev_deps.each { |dep|
-            unless versions.has_key?(dep)
-              gem = Polisher::Gem.retrieve(dep)
+            unless versions.has_key?(dep.name)
+              gem = Polisher::Gem.retrieve(dep.name)
               versions.merge! gem.versions(args, &bl)
             end
           }

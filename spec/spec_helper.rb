@@ -12,7 +12,9 @@ module Polisher
       :name     => 'mysql',
       :version  => '2.9.1',
       :deps     => [],
-      :dev_deps => ['rdoc', 'rake-compiler', 'hoe']
+      :dev_deps => [::Gem::Dependency.new('rdoc', '~> 3.10', :development),
+                    ::Gem::Dependency.new('rake-compiler', '~> 0.8.1', :development),
+                    ::Gem::Dependency.new('hoe', '~> 3.5', :development)]
     }
 
     GEM_JSON = {
@@ -20,7 +22,13 @@ module Polisher
       :json     => File.read("#{SPEC_DIR}/data/rails.json"),
       :name     => 'rails',
       :version  => '4.0.1',
-      :deps     => ["actionmailer", "actionpack", "activerecord", "activesupport", "bundler", "railties", "sprockets-rails"],
+      :deps     => [::Gem::Dependency.new("actionmailer", '= 4.0.1'),
+                    ::Gem::Dependency.new("actionpack", '= 4.0.1'),
+                    ::Gem::Dependency.new("activerecord", '= 4.0.1'),
+                    ::Gem::Dependency.new("activesupport", '= 4.0.1'),
+                    ::Gem::Dependency.new("bundler", "< 2.0", ">= 1.3.0"),
+                    ::Gem::Dependency.new("railties", '= 4.0.1'),
+                    ::Gem::Dependency.new("sprockets-rails", '~> 2.0.0')],
       :dev_deps => []
     }
 
@@ -31,7 +39,9 @@ module Polisher
       :contents => File.read("#{SPEC_DIR}/data/rspec-2.12.0.gem"),
       :name     => 'rspec',
       :version  => '2.12.0',
-      :deps     => ['rspec-core', 'rspec-expectations', 'rspec-mocks'],
+      :deps     => [::Gem::Dependency.new('rspec-core', '~> 2.14.0'),
+                    ::Gem::Dependency.new('rspec-expectations', '~> 2.14.0'),
+                    ::Gem::Dependency.new('rspec-mocks', '~> 2.14.0')],
       :dev_deps => [],
       :files    => ['/License.txt', '/README.md', '/lib', '/lib/rspec', '/lib/rspec/version.rb', '/lib/rspec.rb']
     }
