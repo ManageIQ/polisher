@@ -18,7 +18,7 @@ module Polisher
     SPEC_RELEASE_MATCHER        = /^Release:\s*(.*)$/
     SPEC_REQUIRES_MATCHER       = /^Requires:\s*(.*)$/
     SPEC_BUILD_REQUIRES_MATCHER = /^BuildRequires:\s*(.*)$/
-    SPEC_GEM_REQ_MATCHER        = /^.*\s*rubygem\((.*)\)$/
+    SPEC_GEM_REQ_MATCHER        = /^.*\s*rubygem\((.*)\)(\s*(.*))?$/
     SPEC_SUBPACKAGE_MATCHER     = /^%package\s(.*)$/
     SPEC_CHANGELOG_MATCHER      = /^%changelog$/
     SPEC_FILES_MATCHER          = /^%files$/
@@ -146,8 +146,10 @@ module Polisher
       @metadata[:requires].each { |r|
         if r !~ SPEC_GEM_REQ_MATCHER
           non_gem_requires << r
-        elsif !new_source.deps.include?($1)
+        elsif !new_source.deps.any? { |d| d.name == $1 }
           extra_gem_requires << r
+        #else
+        #  spec_version = $2
         end
       }
 
@@ -155,18 +157,30 @@ module Polisher
       @metadata[:build_requires].each { |r|
         if r !~ SPEC_GEM_REQ_MATCHER
           non_gem_brequires << r
-        elsif !new_source.dev_deps.include?($1)
+        elsif !new_source.deps.any? { |d| d.name == $1 }
           extra_gem_brequires << r
+        #else
+        #  spec_version = $2
         end
       }
 
+      # TODO detect if req is same as @version, swap out w/ %{version} macro ?
+
       @metadata[:requires] =
         non_gem_requires + extra_gem_requires +
-        new_source.deps.collect { |r| "rubygem(#{r})" }
+        new_source.deps.collect { |r|
+          r.requirement.to_s.split(',').collect { |req|
+           "rubygem(#{r.name}) #{req}"
+          }
+        }.flatten
 
       @metadata[:build_requires] =
         non_gem_brequires + extra_gem_brequires +
-        new_source.dev_deps.collect { |r| "rubygem(#{r})" }
+        new_source.dev_deps.collect { |r|
+          r.requirement.to_s.split(',').collect { |req|
+            "rubygem(#{r.name}) #{req}"
+          }
+        }.flatten
     end
 
     def update_files_from(new_source)

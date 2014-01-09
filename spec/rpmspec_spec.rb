@@ -73,11 +73,13 @@ module Polisher
       it "updates dependencies from gem" do
         spec = Polisher::RPMSpec.new :requires => ['rubygem(rake)', 'rubygem(activerecord)'],
                                      :build_requires => []
-        gem  = Polisher::Gem.new :deps => ['rake', 'rails'], :dev_deps => ['rspec']
+        gem  = Polisher::Gem.new :deps => [::Gem::Dependency.new('rake'),
+                                           ::Gem::Dependency.new('rails', '~> 10')],
+                                 :dev_deps => [::Gem::Dependency.new('rspec', :development)]
 
         spec.update_to(gem)
-        spec.requires.should == ['rubygem(activerecord)', 'rubygem(rake)', 'rubygem(rails)']
-        spec.build_requires.should == ['rubygem(rspec)']
+        spec.requires.should == ['rubygem(activerecord)', 'rubygem(rake) >= 0', 'rubygem(rails) ~> 10']
+        spec.build_requires.should == ['rubygem(rspec) >= 0']
       end
 
       it "adds new files from gem" do
