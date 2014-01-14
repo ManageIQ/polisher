@@ -1,7 +1,8 @@
 # -*- encoding: utf-8 -*-
 
-GEM_NAME    = 'polisher'
-PKG_VERSION = '0.5.1'
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'polisher/version'
 
 PKG_FILES =
   Dir.glob('{lib,spec}/**/*.rb') +
@@ -14,14 +15,14 @@ Gem::Specification.new do |s|
 
   s.author        = authors_hash.keys
   s.email         = authors_hash.values
-  s.date          = %q{2013-12-05}
+  s.date          = %q{2014-01-14}
   s.summary       = %q{Ruby Project Post-Publishing Processor}
   s.description   = %q{General API and utility scripts to manipulate and query ruby gems and projects after being published}
   s.homepage      = %q{https://github.com/ManageIQ/polisher}
   s.licenses      = ["MIT"]
 
-  s.name          = GEM_NAME
-  s.version       = PKG_VERSION
+  s.name          = 'polisher'
+  s.version       = Polisher::VERSION
   s.files         = PKG_FILES
   s.executables   = ['binary_gem_resolver.rb', 'gem_dependency_checker.rb',
                      'git_gem_updater.rb', 'ruby_rpm_spec_updater.rb']
