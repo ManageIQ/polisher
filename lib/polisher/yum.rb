@@ -3,7 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
-require 'pkgwat'
+require 'awesome_spawn'
 
 module Polisher
   class Yum
@@ -16,7 +16,9 @@ module Polisher
     # @returns [String] version of gem in yum or nil if not found
     def self.version_for(name, &bl)
       version = nil
-      out=`#{YUM_CMD} info rubygem-#{name} 2> /dev/null`
+      result  = AwesomeSpawn.run "#{YUM_CMD} info rubygem-#{name}"
+      out = result.output
+
       if out.include?("Version")
         version = out.lines.to_a.find { |l| l =~ /^Version.*/ }
         version = version.split(':').last.strip
