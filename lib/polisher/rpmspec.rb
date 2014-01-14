@@ -3,6 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
+require 'gem2rpm'
 require 'active_support/core_ext'
 
 require 'polisher/core'
@@ -170,7 +171,10 @@ module Polisher
         non_gem_requires + extra_gem_requires +
         new_source.deps.collect { |r|
           r.requirement.to_s.split(',').collect { |req|
-           "rubygem(#{r.name}) #{req}"
+           expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
+           expanded.collect { |e|
+             "rubygem(#{r.name}) #{e.first} #{e.last}"
+           }
           }
         }.flatten
 

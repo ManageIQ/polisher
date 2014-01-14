@@ -3,7 +3,10 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
+require 'spec_helper'
+
 require 'polisher/rpmspec'
+require 'polisher/gem'
 
 module Polisher
   describe RPMSpec do
@@ -78,7 +81,8 @@ module Polisher
                                  :dev_deps => [::Gem::Dependency.new('rspec', :development)]
 
         spec.update_to(gem)
-        spec.requires.should == ['rubygem(activerecord)', 'rubygem(rake) >= 0', 'rubygem(rails) ~> 10']
+          spec.requires.should == ['rubygem(activerecord)', 'rubygem(rake) >= 0',
+                                   'rubygem(rails) => 10', 'rubygem(rails) < 11']
         spec.build_requires.should == ['rubygem(rspec) >= 0']
       end
 
