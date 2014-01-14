@@ -8,6 +8,9 @@ require 'pkgwat'
 module Polisher
   class Bodhi
     def self.versions_for(name, &bl)
+      # XXX issue w/ retreiving packages from pkgwat causing issues:
+      # https://github.com/fedora-infra/fedora-packages/issues/55
+
       # fedora pkgwat provides a frontend to bodhi
       updates = Pkgwat.get_updates("rubygem-#{name}", 'all', 'all') # TODO set timeout
       updates.reject! { |u|
