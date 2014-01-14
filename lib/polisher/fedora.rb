@@ -6,18 +6,24 @@
 require 'curb'
 require 'pkgwat'
 
+require 'polisher/bodhi'
+
 module Polisher
   class Fedora
     PACKAGE_LIST = 'https://admin.fedoraproject.org/pkgdb/users/packages/'
+
+    def self.client
+      @client ||= Curl::Easy.new
+    end
 
     # Retrieve list of gems owned by the specified user
     #
     # @param [String] user Fedora username to lookup
     # @return [Array<String>] list of gems which the user owns/has access to
     def self.gems_owned_by(user)
-      curl = Curl::Easy.new("#{PACKAGE_LIST}}#{user}")
-      curl.http_get
-      packages = curl.body_str
+      client.url = "#{PACKAGE_LIST}#{user}"
+      client.http_get
+      packages = client.body_str
       # TODO instantiate Polisher::Gem instances & return
       Nokogiri::HTML(packages).xpath("//a[@class='PackageName']").
                                select { |i| i.text =~ /rubygem-.*/ }.
@@ -31,13 +37,10 @@ module Polisher
     # @param [Callable] bl optional callback to invoke with versions retrieved
     # @return [Array<String>] list of versions in Fedora
     def self.versions_for(name, &bl)
-      # XXX bug w/ python-pkgwat, some html content
-      # is being returned w/ versions, need to look into
-      versions = Pkgwat.get_versions(name)
-      versions.reject! { |pkg| pkg['stable_version'] == "None" }
-      versions = versions.collect { |pkg| pkg['stable_version'] }
-      bl.call(:fedora, name, versions) unless(bl.nil?) 
-      versions
+      # simply dispatch to bodhi to get latest updates
+      Polisher::Bodhi.versions_for name do |target,name,versions|
+        bl.call(:fedora, name, versions) unless(bl.nil?) 
+      end
     end
   end # class Fedora
 end # module Polisher
