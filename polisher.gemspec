@@ -35,5 +35,6 @@ Gem::Specification.new do |s|
   s.add_dependency('bundler')
   s.add_dependency('pkgwat')
   s.add_dependency('colored')
+  s.add_dependency('awesome_spawn')
   s.add_development_dependency('rspec', '>= 2.0.0')
 end

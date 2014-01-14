@@ -6,6 +6,7 @@
 # TODO use ruby git api and others
 
 require 'tmpdir'
+require 'awesome_spawn'
 require 'polisher/rpmspec'
 
 module Polisher
@@ -51,7 +52,7 @@ module Polisher
       rpm_name = "#{RPM_PREFIX}#{name}"
 
       unless File.directory? rpm_name
-        `#{PKG_CMD} clone #{rpm_name}`
+        AwesomeSpawn.run "#{PKG_CMD} clone #{rpm_name}"
       end
       
       # cd into working directory
@@ -63,9 +64,9 @@ module Polisher
       
       # checkout the latest rawhide
       # TODO allow other branches to be specified
-      `#{GIT_CMD} checkout master`
-      `#{GIT_CMD} reset HEAD~ --hard`
-      `#{GIT_CMD} pull`
+      AwesomeSpawn.run "#{GIT_CMD} checkout master"
+      AwesomeSpawn.run "#{GIT_CMD} reset HEAD~ --hard"
+      AwesomeSpawn.run "#{GIT_CMD} pull"
 
       self.new :name => name
     end
@@ -75,19 +76,19 @@ module Polisher
     # @param [Polisher::Gem] gem instance of gem containing metadata to update to
     def update_to(gem)
       # TODO use Polisher::RPMSpec to update spec
-      `#{SED_CMD} -i "s/Version.*/Version: #{gem.version}/" #{spec}`
-      `#{SED_CMD} -i "s/Release:.*/Release: 1%{?dist}/" #{spec}`
-      `#{MD5SUM_CMD} #{gem.name}-#{gem.version}.gem > sources`
+      AwesomeSpawn.run "#{SED_CMD} -i 's/Version.*/Version: #{gem.version}/' #{spec}"
+      AwesomeSpawn.run "#{SED_CMD} -i 's/Release:.*/Release: 1%{?dist}/' #{spec}"
+      AwesomeSpawn.run "#{MD5SUM_CMD} #{gem.name}-#{gem.version}.gem > sources"
       File.open(".gitignore", "w") { |f| f.write "#{gem.name}-#{gem.version}.gem" }
     end
 
     # Build the locally cloned package using the configured build command
     def build
       # build srpm
-      `#{PKG_CMD} srpm`
+      AwesomeSpawn.run "#{PKG_CMD} srpm"
       
       # attempt to build packages
-      `#{BUILD_CMD} build --scratch #{BUILD_TGT} #{srpm}`
+      AwesomeSpawn.run "#{BUILD_CMD} build --scratch #{BUILD_TGT} #{srpm}"
       # TODO if build fails, spit out error, exit
     end
 
@@ -95,7 +96,7 @@ module Polisher
     #
     # @return [Boolean] true/false depending on whether or not spec has %check
     def has_check?
-      open(spec, "r") do |spec|
+      File.open(spec, "r") do |spec|
         spec.lines.any? { |line| line.include?("%check") }
       end 
     end
@@ -103,9 +104,9 @@ module Polisher
     # Command the local package to the local git repo
     def commit
       # git add spec, git commit w/ message
-      `#{GIT_CMD} add #{spec} sources .gitignore`
+      AwesomeSpawn.run "#{GIT_CMD} add #{spec} sources .gitignore"
       #`git add #{gem_name}-#{version}.gem`
-      `#{GIT_CMD} commit -m 'updated to #{self.version}'`
+      AwesomeSpawn.run "#{GIT_CMD} commit -m 'updated to #{self.version}'"
     end
 
     # Retrieve list of the version of the specified package in git
@@ -120,7 +121,7 @@ module Polisher
       Dir.mktmpdir do |dir|
         Dir.chdir(dir) do |path|
           version = nil
-          `#{GIT_CMD} clone #{DIST_GIT_URL}#{rpm_name}.git . >& /dev/null`
+          AwesomeSpawn.run "#{GIT_CMD} clone #{DIST_GIT_URL}#{rpm_name}.git ."
           begin
             spec = Polisher::RPMSpec.parse(File.read("#{rpm_name}.spec"))
             version = spec.version
