@@ -35,6 +35,22 @@ module Polisher
       end
     end
 
+    # Return bool indiciating if koji has a build exactly
+    # matching the specified version
+    def self.has_build?(name, version)
+      versions = self.versions_for name
+      versions.include?(version)
+    end
+
+    # Return bool indicating if koji has a build which
+    # satisfies the specified ruby dependency
+    def self.has_build_satisfying?(name, version)
+      dep = ::Gem::Dependency.new name, version
+      self.versions_for(name).any? { |v|
+        dep.match?(name, v)
+      }
+    end
+
     # Retrieve list of the version of the specified package in koji
     #
     # @param [String] name name of package to lookup
