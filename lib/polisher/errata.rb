@@ -3,6 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013 Red Hat, Inc.
 
+require 'json'
 require 'curb'
 
 module Polisher
