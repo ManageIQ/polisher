@@ -270,5 +270,62 @@ EOS
       contents
     end
 
+    def compare(upstream_source)
+      same = {}
+      diff = {}
+      upstream_source.deps.each do |d|
+        spec_req =
+          @metadata[:requires].find { |r|
+            r.split.first == "rubygem(#{d.name})"
+          }
+        spec_version = !spec_req.nil? ? spec_req.split[1..-1] : nil
+
+        # FIXME interim hack discarding requirement specifier and just
+        # comparing value. Should retrieve latest (or min? or both?)
+        # dependency which satisfies req and verify it is satisfied by both
+        # gem and rpmspec
+        upstream_version = d.requirement.to_s.split.last
+
+        same_version = !spec_version.nil? ?
+                       (spec_version.last == upstream_version ) : false
+
+        if spec_req.nil?
+          diff[d.name] = {:spec => nil, :upstream => d.requirement}
+        elsif !same_version
+          diff[d.name] = {:spec => spec_version, :upstream => d.requirement}
+        else
+          same[d.name] = {:spec => spec_version, :upstream => d.requirement}
+        end
+      end
+
+      @metadata[:requires].each do |req|
+        req_name = req.split.first
+        # XXX skip already processed gems (due to same FIXME as above)
+        processed = !same.keys.find { |k| k == req_name }.nil?
+        next unless req =~ /rubygem\(([^\)]*)\).*/ && !processed
+
+        gem_name = $1
+        spec_version = req.split[1..-1]
+
+        upstream_dep = upstream_source.deps.find { |d| d.name == gem_name }
+
+        # same FIXME as above
+        upstream_version = !upstream_dep.nil? ? 
+                           upstream_dep.requirement.to_s.split.last : nil
+
+        same_version = spec_version.last == upstream_version
+
+        if upstream_dep.nil?
+          diff[req_name] = {:spec => spec_version, :upstream => nil}
+        elsif !same_version
+          diff[req_name] = {:spec => spec_version, :upstream => upstream_dep.requirement }
+        else
+          same[req_name] = {:spec => spec_version, :upstream => upstream_dep.requirement }
+        end
+      end
+
+      {:same => same, :diff => diff}
+    end
+
   end # class RPMSpec
 end # module Polisher
