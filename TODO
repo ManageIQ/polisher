@@ -1,5 +1,4 @@
 - polisher/
-  - use linux_admin to run commands
   - minimize gem deps, add optional requirements that get pulled-in/activated
     when certain functionality is invoked (for ex pkgwat is only needed when
     querying fedora)
@@ -14,11 +13,6 @@
     available on the local platform
   - refactor / extract generic components into
     polisher library
-
-- Flush out documentation, for both API and cmd line
-- Add Gemfile
-- Round of specs, test all modules & edge cases
-- Push updated polisher gem to rubygems
 
 - Ideas:
   - Tool to extract/package vendored dependencies during
