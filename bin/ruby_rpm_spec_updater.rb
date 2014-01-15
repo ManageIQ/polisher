@@ -13,7 +13,7 @@
 #   ruby_rpm_spec_updater.rb <path-to-spec> <optional-source-or-version>
 #
 # Licensed under the MIT License
-# Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'colored'
 require 'polisher'

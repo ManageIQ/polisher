@@ -1,7 +1,7 @@
 # Polisher RPM Spec Represenation
 #
 # Licensed under the MIT license
-# Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'gem2rpm'
 require 'active_support/core_ext'

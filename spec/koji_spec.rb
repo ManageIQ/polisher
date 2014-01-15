@@ -1,7 +1,7 @@
 # Polisher Koji Spec
 #
 # Licensed under the MIT license
-# Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/koji'
 

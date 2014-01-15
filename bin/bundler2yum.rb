@@ -6,7 +6,7 @@
 # line options
 #
 # Licensed under the MIT License
-# Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'colored'
 require 'optparse'

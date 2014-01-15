@@ -1,7 +1,7 @@
 # Polisher Spec Helper
 #
 # Licensed under the MIT license
-# Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2013-2014 Red Hat, Inc.
 
 SPEC_DIR = File.expand_path File.dirname(__FILE__)
 
