@@ -32,8 +32,8 @@ module Polisher
        /^%defattr.*/, /^%exclude\s/, /^%{gem_instdir}\/+/]
     
     FILE_MACRO_REPLACEMENTS =
-      {"%{_bindir}"    => '/bin',
-       "%{gem_libdir}" => '/lib'}
+      {"%{_bindir}"    => 'bin',
+       "%{gem_libdir}" => 'lib'}
 
     attr_accessor :metadata
 
@@ -188,7 +188,10 @@ module Polisher
         non_gem_brequires + extra_gem_brequires +
         new_source.dev_deps.collect { |r|
           r.requirement.to_s.split(',').collect { |req|
-            "rubygem(#{r.name}) #{req}"
+            expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
+            expanded.collect { |e|
+             "rubygem(#{r.name}) #{e.first} #{e.last}"
+            }
           }
         }.flatten
     end

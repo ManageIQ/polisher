@@ -19,7 +19,10 @@ module Polisher
 
     # Common files shipped in gems that we should ignore
     IGNORE_FILES = ['.gemtest', '.gitignore', '.travis.yml',
-                    /.*.gemspec/, /Gemfile.*/, 'Rakefile']
+                    /.*.gemspec/, /Gemfile.*/, 'Rakefile',
+                    /rspec.*/, '.yardopts', '.rvmrc']
+
+    # TODO also mark certain files to be tagged as %{doc}
 
     attr_accessor :spec
     attr_accessor :name
