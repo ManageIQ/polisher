@@ -17,6 +17,10 @@ module Polisher
   class Gem
     GEM_CMD      = '/usr/bin/gem'
 
+    # Common files shipped in gems that we should ignore
+    IGNORE_FILES = ['.gemtest', '.gitignore', '.travis.yml',
+                    /.*.gemspec/, /Gemfile.*/, 'Rakefile']
+
     attr_accessor :spec
     attr_accessor :name
     attr_accessor :version
@@ -31,6 +35,13 @@ module Polisher
       @deps     = args[:deps]     || []
       @dev_deps = args[:dev_deps] || []
       @files    = args[:files]    || []
+    end
+
+    # Return bool indiicating if the specified file is on the IGNORE_FILES list
+    def self.ignorable_file?(file)
+      IGNORE_FILES.any? do |ignore|
+        ignore.is_a?(Regexp) ? ignore.match(file) : ignore == file
+      end
     end
 
     # Retrieve list of the versions of the specified gem installed locally
@@ -67,7 +78,7 @@ module Polisher
 
         metadata[:dev_deps] =
           specj['dependencies']['development'].collect { |d|
-            ::Gem::Dependency.new d['name'], d['requirements']
+            ::Gem::Dependency.new d['name'], d['requirements'].split(',')
           }
 
       elsif args.has_key?(:gemspec)
@@ -138,7 +149,8 @@ module Polisher
       Dir.mktmpdir { |dir|
         pkg.unpack dir
         Pathname(dir).find do |path|
-          pathstr = path.to_s.gsub(dir, '')
+          next if path.to_s == dir.to_s
+          pathstr = path.to_s.gsub("#{dir}/", '')
           @files << pathstr unless pathstr.blank?
         end
       }

@@ -21,4 +21,5 @@
     to yum repository which satisfies gemfile
   - Tools to trigger automatic builds / updates of gem
     rpms on upstream releases
+  - Generate rpmspec patches from forked gem diffs
   - ...

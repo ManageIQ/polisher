@@ -15,7 +15,6 @@
 # Licensed under the MIT License
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'colored'
 require 'polisher'
 
 spec_file = ARGV.shift
@@ -26,4 +25,4 @@ source    = source.nil? ?
   Polisher::Upstream.parse(source)
 
 rpmspec.update_to(source)
-puts rpmspec.to_string.yellow.bold
+puts rpmspec.to_string

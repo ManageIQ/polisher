@@ -7,6 +7,7 @@ require 'gem2rpm'
 require 'active_support/core_ext'
 
 require 'polisher/core'
+require 'polisher/gem'
 
 module Polisher
   class RPMSpec
@@ -28,13 +29,18 @@ module Polisher
     FILE_MACRO_MATCHERS         =
       [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
        /^%verify\s/,  /^%docdir.*/,  /^%dir\s/,
-       /^%defattr.*/, /^%exclude\s/, /^%{gem_instdir}/]
+       /^%defattr.*/, /^%exclude\s/, /^%{gem_instdir}\/+/]
     
     FILE_MACRO_REPLACEMENTS =
       {"%{_bindir}"    => '/bin',
        "%{gem_libdir}" => '/lib'}
 
     attr_accessor :metadata
+
+    # Return the currently configured author
+    def self.current_author
+      ENV['POLISHER_AUTHOR'] || AUTHOR
+    end
 
     def initialize(metadata={})
       @metadata = metadata
@@ -198,7 +204,8 @@ module Polisher
                      }
 
           to_add.delete(gem_file)
-          to_add << gem_file.rpmize if !has_file
+          to_add << gem_file.rpmize if !has_file &&
+                                       !Gem.ignorable_file?(gem_file)
         }
       }
 
@@ -208,14 +215,11 @@ module Polisher
     def update_metadata_from(new_source)
       # update to new version
       @metadata[:version] = new_source.version
-
-      # better release updating ?
-      release = "1%{?dist}"
-      @metadata[:release] = release
+      @metadata[:release] = "1%{?dist}"
 
       # add changelog entry
       changelog_entry = <<EOS
-* #{Time.now.strftime("%a %b %d %Y")} #{AUTHOR} - #{$version}-#{release}
+* #{Time.now.strftime("%a %b %d %Y")} #{RPMSpec.current_author} - #{@metadata[:version]}-1
 - Update to version #{new_source.version}
 EOS
       @metadata[:changelog_entries] ||= []
