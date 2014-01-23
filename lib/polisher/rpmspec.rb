@@ -52,9 +52,10 @@ module Polisher
 
         end
 
-        req = self.new opts.merge({:name      => name,
-                                   :condition => condition,
-                                   :version   => version})
+        req = self.new({:name      => name,
+                        :condition => condition,
+                        :version   => version,
+                        :br        => br}.merge(opts))
         req
       end
 
@@ -143,9 +144,8 @@ module Polisher
     end
 
     def requirement_for_gem(gem_name)
-      @metadata[:requires].find { |r|
-        r.name == "rubygem(#{gem_name})"
-      }
+      @metadata[:requires] &&
+      @metadata[:requires].find { |r| r.gem_name == gem_name }
     end
 
     # Parse the specified rpm spec and return new RPMSpec instance from metadata
@@ -406,7 +406,7 @@ EOS
           diff[req_name] = {:spec     => req.specifier,
                             :upstream => nil}
 
-        elsif !req.matches?(d)
+        elsif !req.matches?(upstream_dep)
           diff[req_name] = {:spec     => req.specifier,
                             :upstream => upstream_dep.requirement }
 
