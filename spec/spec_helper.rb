@@ -5,6 +5,8 @@
 
 SPEC_DIR = File.expand_path File.dirname(__FILE__)
 
+require 'polisher/rpmspec'
+
 module Polisher
   module Test
     GEM_SPEC = {
@@ -58,8 +60,34 @@ module Polisher
       :name     => "activesupport",
       :version  => "4.0.0",
       :release  => "1%{?dist}",
-      :requires => ["ruby(rubygems)", "ruby(release)", "rubygem(bigdecimal)", "rubygem(dalli)", "rubygem(i18n) >= 0.6", "rubygem(i18n) < 1.0", "rubygem(minitest) >= 4.2", "rubygem(minitest) < 5", "rubygem(multi_json) >= 1.0", "rubygem(multi_json) < 2", "rubygem(rack)", "rubygem(thread_safe)", "rubygem(tzinfo) >= 0.3.37", "rubygem(tzinfo) < 0.4.0"],
-      :build_requires => ["rubygems-devel", "rubygem(bigdecimal)", "rubygem(builder)", "rubygem(dalli)", "rubygem(i18n) >= 0.6", "rubygem(i18n) < 1.0", "rubygem(minitest)", "rubygem(mocha)", "rubygem(multi_json) >= 1.0", "rubygem(multi_json) < 2", "rubygem(rack)", "rubygem(thread_safe)", "rubygem(tzinfo) >= 0.3.37", "rubygem(tzinfo) < 0.4.0"],
+      :requires => [Polisher::RPMSpec::Requirement.parse("ruby(rubygems)"),
+                    Polisher::RPMSpec::Requirement.parse("ruby(release)"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(bigdecimal)"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(dalli)"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(i18n) >= 0.6"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(i18n) < 1.0"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(minitest) >= 4.2"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(minitest) < 5"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(multi_json) >= 1.0"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(multi_json) < 2"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(rack)"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(thread_safe)"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(tzinfo) >= 0.3.37"),
+                    Polisher::RPMSpec::Requirement.parse("rubygem(tzinfo) < 0.4.0")],
+      :build_requires => [Polisher::RPMSpec::Requirement.parse("rubygems-devel"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(bigdecimal)"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(builder)"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(dalli)"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(i18n) >= 0.6"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(i18n) < 1.0"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(minitest)"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(mocha)"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(multi_json) >= 1.0"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(multi_json) < 2"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(rack)"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(thread_safe)"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(tzinfo) >= 0.3.37"),
+                          Polisher::RPMSpec::Requirement.parse("rubygem(tzinfo) < 0.4.0")],
       :changelog => "",
       :files     => {"activesupport"=>["%{gem_instdir}", "CHANGELOG.md", "lib", "MIT-LICENSE", "README.rdoc", "%{gem_docdir}", "%{gem_cache}", "%{gem_spec}", "test"]}
     }

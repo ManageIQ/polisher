@@ -11,6 +11,91 @@ require 'polisher/gem'
 
 module Polisher
   class RPMSpec
+    class Requirement
+      # Bool indiciating if req is a BR
+      attr_accessor :br
+
+      # Name of requirement
+      attr_accessor :name
+
+      # Condition, eg >=, =, etc
+      attr_accessor :condition
+
+      # Version number
+      attr_accessor :version
+
+      # Requirement string
+      def str
+        sp = self.specifier
+        sp.nil? ? "#{@name}" : "#{@name} #{sp}"
+      end
+
+      # Specified string
+      def specifier
+        @version.nil? ? nil : "#{@condition} #{@version}"
+      end
+
+      def self.parse(str, opts={})
+        stra   = str.split
+        br = str.include?('BuildRequires')
+        name = condition = version = nil
+
+        if str.include?('Requires')
+          name      = stra[1] 
+          condition = stra[2]
+          version   = stra[3]
+
+        else
+          name      = stra[0]
+          condition = stra[1]
+          version   = stra[2]
+
+        end
+
+        req = self.new opts.merge({:name      => name,
+                                   :condition => condition,
+                                   :version   => version})
+        req
+      end
+
+      def initialize(args={})
+        @br        = args[:br] || false
+        @name      = args[:name]
+        @condition = args[:condition]
+        @version   = args[:version]
+
+        @name.strip!      unless @name.nil?
+        @condition.strip! unless @condition.nil?
+        @version.strip!   unless @version.nil?
+      end
+
+      def ==(other)
+        @br        == other.br &&
+        @name      == other.name &&
+        @condition == other.condition &&
+        @version   == other.version
+      end
+
+      def matches?(gem_dep)
+        # FIXME interim hack discarding requirement condition and just
+        # comparing value. Should retrieve latest (or min? or both?)
+        # dependency which satisfies req and verify it is satisfied by both
+        # gem and rpmspec
+        upstream_version = dep.requirement.to_s.split.last
+
+        !self.version.nil? && self.version.last == upstream_version
+      end
+
+      def gem?
+        !!(self.str =~ SPEC_GEM_REQ_MATCHER)
+      end
+
+      def gem_name
+        # XXX need to explicitly run regex here to get $1
+        !!(self.str =~ SPEC_GEM_REQ_MATCHER) ? $1 : nil
+      end
+    end
+
     AUTHOR = "#{ENV['USER']} <#{ENV['USER']}@localhost.localdomain>"
 
     COMMENT_MATCHER             = /^\s*#.*/
@@ -57,6 +142,12 @@ module Polisher
       end
     end
 
+    def requirement_for_gem(gem_name)
+      @metadata[:requires].find { |r|
+        r.name == "rubygem(#{gem_name})"
+      }
+    end
+
     # Parse the specified rpm spec and return new RPMSpec instance from metadata
     #
     # @param [String] string contents of spec to parse
@@ -93,12 +184,12 @@ module Polisher
         elsif l =~ SPEC_REQUIRES_MATCHER &&
               !in_subpackage
           meta[:requires] ||= []
-          meta[:requires] << $1.strip
+          meta[:requires] << RPMSpec::Requirement.parse($1.strip)
     
         elsif l =~ SPEC_BUILD_REQUIRES_MATCHER &&
               !in_subpackage
           meta[:build_requires] ||= []
-          meta[:build_requires] << $1.strip
+          meta[:build_requires] << RPMSpec::Requirement.parse($1.strip)
     
         elsif l =~ SPEC_CHANGELOG_MATCHER
           in_changelog = true
@@ -151,9 +242,9 @@ module Polisher
 
       @metadata[:requires] ||= []
       @metadata[:requires].each { |r|
-        if r !~ SPEC_GEM_REQ_MATCHER
+        if !r.gem?
           non_gem_requires << r
-        elsif !new_source.deps.any? { |d| d.name == $1 }
+        elsif !new_source.deps.any? { |d| d.name == r.gem_name }
           extra_gem_requires << r
         #else
         #  spec_version = $2
@@ -162,9 +253,9 @@ module Polisher
 
       @metadata[:build_requires] ||= []
       @metadata[:build_requires].each { |r|
-        if r !~ SPEC_GEM_REQ_MATCHER
+        if !r.gem?
           non_gem_brequires << r
-        elsif !new_source.deps.any? { |d| d.name == $1 }
+        elsif !new_source.deps.any? { |d| d.name == r.gem_name }
           extra_gem_brequires << r
         #else
         #  spec_version = $2
@@ -177,10 +268,13 @@ module Polisher
         non_gem_requires + extra_gem_requires +
         new_source.deps.collect { |r|
           r.requirement.to_s.split(',').collect { |req|
-           expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
-           expanded.collect { |e|
-             "rubygem(#{r.name}) #{e.first} #{e.last}"
-           }
+            expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
+            expanded.collect { |e|
+              RPMSpec::Requirement.new :name      => "rubygem(#{r.name})",
+                                       :condition => e.first.to_s,
+                                       :version   => e.last.to_s,
+                                       :br        => false
+            }
           }
         }.flatten
 
@@ -190,7 +284,10 @@ module Polisher
           r.requirement.to_s.split(',').collect { |req|
             expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
             expanded.collect { |e|
-             "rubygem(#{r.name}) #{e.first} #{e.last}"
+              RPMSpec::Requirement.new :name      => "rubygem(#{r.name})",
+                                       :condition => e.first.to_s,
+                                       :version   => e.last.to_s,
+                                       :br        => true
             }
           }
         }.flatten
@@ -263,8 +360,8 @@ EOS
 
       contents.slice!(tp...ltpn)
       contents.insert tp,
-        (@metadata[:requires].collect { |r| "Requires: #{r}" } +
-         @metadata[:build_requires].collect { |r| "BuildRequires: #{r}" }).join("\n")
+        (@metadata[:requires].collect { |r| "Requires: #{r.str}" } +
+         @metadata[:build_requires].collect { |r| "BuildRequires: #{r.str}" }).join("\n")
 
       # add new files
        fp = contents.index SPEC_FILES_MATCHER
@@ -281,53 +378,41 @@ EOS
       same = {}
       diff = {}
       upstream_source.deps.each do |d|
-        spec_req =
-          @metadata[:requires].find { |r|
-            r.split.first == "rubygem(#{d.name})"
-          }
-        spec_version = !spec_req.nil? ? spec_req.split[1..-1] : nil
-
-        # FIXME interim hack discarding requirement specifier and just
-        # comparing value. Should retrieve latest (or min? or both?)
-        # dependency which satisfies req and verify it is satisfied by both
-        # gem and rpmspec
-        upstream_version = d.requirement.to_s.split.last
-
-        same_version = !spec_version.nil? ?
-                       (spec_version.last == upstream_version ) : false
+        spec_req = self.requirement_for_gem(d.name)
 
         if spec_req.nil?
-          diff[d.name] = {:spec => nil, :upstream => d.requirement}
-        elsif !same_version
-          diff[d.name] = {:spec => spec_version, :upstream => d.requirement}
+          diff[d.name] = {:spec     => nil,
+                          :upstream => d.requirement}
+
+        elsif !spec_req.matches?(d)
+          diff[d.name] = {:spec     => spec_req.specifier,
+                          :upstream => d.requirement}
+
         else
-          same[d.name] = {:spec => spec_version, :upstream => d.requirement}
+          same[d.name] = {:spec     => spec_req.specifier,
+                          :upstream => d.requirement}
         end
       end
 
       @metadata[:requires].each do |req|
-        req_name = req.split.first
-        # XXX skip already processed gems (due to same FIXME as above)
-        processed = !same.keys.find { |k| k == req_name }.nil?
-        next unless req =~ /rubygem\(([^\)]*)\).*/ && !processed
+        # XXX skip already processed gems
+        # (due to FIXME in Requirement#matches? above)
+        processed = !same.keys.find { |k| k == req.name }.nil?
+        next unless req.gem? && !processed
 
-        gem_name = $1
-        spec_version = req.split[1..-1]
-
-        upstream_dep = upstream_source.deps.find { |d| d.name == gem_name }
-
-        # same FIXME as above
-        upstream_version = !upstream_dep.nil? ? 
-                           upstream_dep.requirement.to_s.split.last : nil
-
-        same_version = spec_version.last == upstream_version
+        upstream_dep = upstream_source.deps.find { |d| d.name == req.gem_name }
 
         if upstream_dep.nil?
-          diff[req_name] = {:spec => spec_version, :upstream => nil}
-        elsif !same_version
-          diff[req_name] = {:spec => spec_version, :upstream => upstream_dep.requirement }
+          diff[req_name] = {:spec     => req.specifier,
+                            :upstream => nil}
+
+        elsif !req.matches?(d)
+          diff[req_name] = {:spec     => req.specifier,
+                            :upstream => upstream_dep.requirement }
+
         else
-          same[req_name] = {:spec => spec_version, :upstream => upstream_dep.requirement }
+          same[req_name] = {:spec     => req.specifier,
+                            :upstream => upstream_dep.requirement }
         end
       end
 
