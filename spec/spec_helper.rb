@@ -43,7 +43,7 @@ module Polisher
                     ::Gem::Dependency.new('rspec-expectations', '~> 2.14.0'),
                     ::Gem::Dependency.new('rspec-mocks', '~> 2.14.0')],
       :dev_deps => [],
-      :files    => ['/License.txt', '/README.md', '/lib', '/lib/rspec', '/lib/rspec/version.rb', '/lib/rspec.rb']
+      :files    => ['License.txt', 'README.md', 'lib', 'lib/rspec', 'lib/rspec/version.rb', 'lib/rspec.rb']
     }
 
     GEMFILE = {
@@ -61,7 +61,7 @@ module Polisher
       :requires => ["ruby(rubygems)", "ruby(release)", "rubygem(bigdecimal)", "rubygem(dalli)", "rubygem(i18n) >= 0.6", "rubygem(i18n) < 1.0", "rubygem(minitest) >= 4.2", "rubygem(minitest) < 5", "rubygem(multi_json) >= 1.0", "rubygem(multi_json) < 2", "rubygem(rack)", "rubygem(thread_safe)", "rubygem(tzinfo) >= 0.3.37", "rubygem(tzinfo) < 0.4.0"],
       :build_requires => ["rubygems-devel", "rubygem(bigdecimal)", "rubygem(builder)", "rubygem(dalli)", "rubygem(i18n) >= 0.6", "rubygem(i18n) < 1.0", "rubygem(minitest)", "rubygem(mocha)", "rubygem(multi_json) >= 1.0", "rubygem(multi_json) < 2", "rubygem(rack)", "rubygem(thread_safe)", "rubygem(tzinfo) >= 0.3.37", "rubygem(tzinfo) < 0.4.0"],
       :changelog => "",
-      :files     => {"activesupport"=>["/CHANGELOG.md", "/lib", "/MIT-LICENSE", "/README.rdoc", "%{gem_docdir}", "%{gem_cache}", "%{gem_spec}", "/test"]}
+      :files     => {"activesupport"=>["%{gem_instdir}", "CHANGELOG.md", "lib", "MIT-LICENSE", "README.rdoc", "%{gem_docdir}", "%{gem_cache}", "%{gem_spec}", "test"]}
     }
   end # module Test
 end # module Polisher

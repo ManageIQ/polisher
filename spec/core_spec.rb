@@ -52,13 +52,13 @@ describe String do
   describe "unrpmize" do
     it "returns string with rpm macros removed/replaced" do
       "%doc ".unrpmize.should == ""
-      "%{_bindir}".unrpmize.should == "/bin"
+      "%{_bindir}".unrpmize.should == "bin"
     end
   end
 
   describe "#rpmize" do
     it "returns string with rpm macros swapped in" do
-      "/bin".rpmize.should == "%{_bindir}"
+      "bin".rpmize.should == "%{_bindir}"
     end
   end
 end # describe String
