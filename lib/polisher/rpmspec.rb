@@ -82,9 +82,9 @@ module Polisher
         # comparing value. Should retrieve latest (or min? or both?)
         # dependency which satisfies req and verify it is satisfied by both
         # gem and rpmspec
-        upstream_version = dep.requirement.to_s.split.last
+        upstream_version = gem_dep.requirement.to_s.split.last
 
-        !self.version.nil? && self.version.last == upstream_version
+        !self.version.nil? && self.version == upstream_version
       end
 
       def gem?
@@ -382,15 +382,15 @@ EOS
 
         if spec_req.nil?
           diff[d.name] = {:spec     => nil,
-                          :upstream => d.requirement}
+                          :upstream => d.requirement.to_s}
 
         elsif !spec_req.matches?(d)
           diff[d.name] = {:spec     => spec_req.specifier,
-                          :upstream => d.requirement}
+                          :upstream => d.requirement.to_s}
 
         else
           same[d.name] = {:spec     => spec_req.specifier,
-                          :upstream => d.requirement}
+                          :upstream => d.requirement.to_s}
         end
       end
 
@@ -403,18 +403,18 @@ EOS
         upstream_dep = upstream_source.deps.find { |d| d.name == req.gem_name }
 
         if upstream_dep.nil?
-          diff[req_name] = {:spec     => req.specifier,
-                            :upstream => nil}
+          diff[req.gem_name] = {:spec     => req.specifier,
+                                :upstream => nil}
 
         elsif !req.matches?(upstream_dep)
-          diff[req_name] = {:spec     => req.specifier,
-                            :upstream => upstream_dep.requirement }
+          diff[req.gem_name] = {:spec     => req.specifier,
+                                :upstream => upstream_dep.requirement.to_s }
 
         else
-          same[req_name] = {:spec     => req.specifier,
-                            :upstream => upstream_dep.requirement }
+          same[req.gem_name] = {:spec     => req.specifier,
+                                :upstream => upstream_dep.requirement.to_s }
         end
-      end
+      end unless @metadata[:requires].nil?
 
       {:same => same, :diff => diff}
     end
