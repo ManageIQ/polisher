@@ -4,6 +4,7 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'gem2rpm'
+require 'versionomy'
 require 'active_support/core_ext'
 
 require 'polisher/core'
@@ -75,6 +76,63 @@ module Polisher
         @name      == other.name &&
         @condition == other.condition &&
         @version   == other.version
+      end
+
+      # Greatest Common Denominator,
+      # Max version in list that is less than the local version
+      def gcd(versions)
+        lversion = Versionomy.parse(self.version)
+        versions.collect { |v| Versionomy.parse(v) }.
+                 sort { |a,b| a <=> b }.reverse.
+                 find { |v| v < lversion }.to_s
+      end
+
+      # Minimum gem version which satisfies this dependency
+      def min_satisfying_version
+        return "0.0"        if self.version.nil?      ||
+                               self.condition == '<'  ||
+                               self.condition == '<='
+        return self.version if self.condition == '='  ||
+                               self.condition == '>='
+        Versionomy.parse(self.version).bump(:tiny).to_s # self.condition == '>'
+      end
+
+      # Minimum gem version which satisfies this dependency
+      #
+      # Can't automatically deduce in '<' case, so if that is the conditional
+      # we require a version list, and will return the gcd from it
+      def max_satisfying_version(versions=nil)
+        return Float::INFINITY if self.version.nil?      ||
+                                  self.condition == '>'  ||
+                                  self.condition == '>='
+        return self.version    if self.condition == '='  ||
+                                  self.condition == '<='
+
+        raise ArgumentError    if versions.nil?
+        self.gcd(versions)
+      end
+
+      # Minimum gem version for which this dependency fails
+      def min_failing_version
+        raise ArgumentError if self.version.nil?
+        return "0.0"        if self.condition == '>'  ||
+                               self.condition == '>='
+        return self.version if self.condition == '<'
+        Versionomy.parse(self.version).bump(:tiny).to_s # self.condition == '<=' and '='
+      end
+
+      # Max gem version for which this dependency fails
+      #
+      # Can't automatically deduce in '>=', and '=' cases, so if that is the
+      # conditional we require a version list, and will return the gcd from it
+      def max_failing_version(versions=nil)
+        raise ArgumentError if self.version.nil?      ||
+                               self.condition == '<=' ||
+                               self.condition == '<'
+        return self.version if self.condition == '>'
+
+        raise ArgumentError if versions.nil?
+        self.gcd(versions)
       end
 
       def matches?(gem_dep)
