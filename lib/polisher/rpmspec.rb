@@ -97,7 +97,7 @@ module Polisher
         Versionomy.parse(self.version).bump(:tiny).to_s # self.condition == '>'
       end
 
-      # Minimum gem version which satisfies this dependency
+      # Max gem version which satisfies this dependency
       #
       # Can't automatically deduce in '<' case, so if that is the conditional
       # we require a version list, and will return the gcd from it
