@@ -360,17 +360,17 @@ module Polisher
       end
     end
 
-    describe "#requirement_for_get" do
-      it "returns requirement for specified gem name" do
+    describe "#requirements_for_gem" do
+      it "returns requirements for specified gem name" do
         spec = Polisher::RPMSpec.new :requires =>
           [Polisher::RPMSpec::Requirement.new(:name => 'rubygem(rake)')]
-        spec.requirement_for_gem('rake').should == spec.requires.first
+        spec.requirements_for_gem('rake').should == [spec.requires.first]
       end
 
       context "spec has no requirement with specified name" do
-        it "returns nil" do
+        it "returns empty array" do
           spec = Polisher::RPMSpec.new
-          spec.requirement_for_gem('rake').should be_nil
+          spec.requirements_for_gem('rake').should be_empty
         end
       end
     end

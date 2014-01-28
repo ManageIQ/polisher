@@ -135,14 +135,17 @@ module Polisher
         self.gcd(versions)
       end
 
-      def matches?(gem_dep)
-        # FIXME interim hack discarding requirement condition and just
-        # comparing value. Should retrieve latest (or min? or both?)
-        # dependency which satisfies req and verify it is satisfied by both
-        # gem and rpmspec
-        upstream_version = gem_dep.requirement.to_s.split.last
+      def matches?(dep)
+        return self == dep      if dep.is_a?(self.class)
+        raise ArgumentError unless dep.is_a?(::Gem::Dependency)
 
-        !self.version.nil? && self.version == upstream_version
+        return false if !self.gem? || self.gem_name != dep.name
+        return true  if  self.version.nil?
+
+        Gem2Rpm::Helpers.expand_requirement([dep.requirement.to_s.split]).
+          any?{ |req|
+            req.first == self.condition && req.last.to_s == self.version
+          }
       end
 
       def gem?
@@ -201,9 +204,26 @@ module Polisher
       end
     end
 
-    def requirement_for_gem(gem_name)
-      @metadata[:requires] &&
-      @metadata[:requires].find { |r| r.gem_name == gem_name }
+    # Return all the requirements for the specified gem
+    def requirements_for_gem(gem_name)
+      @metadata[:requires].nil? ? [] :
+      @metadata[:requires].select { |r| r.gem_name == gem_name }
+    end
+
+    # Return bool indicating if this spec specifies all the
+    # requirements in the specified gem dependency
+    def has_all_requirements_for?(gem_dep)
+      reqs = self.requirements_for_gem gem_dep.name
+      # create a spec requirement dependency for each expanded subrequirement,
+      # verify we can find a match for that
+      gem_dep.requirement.to_s.split(',').all? { |greq|
+        Gem2Rpm::Helpers.expand_requirement([greq.split]).all? { |ereq|
+          tereq = Requirement.new :name      => "rubygem(#{gem_dep.name})",
+                                  :condition => ereq.first,
+                                  :version   => ereq.last.to_s
+          reqs.any? { |req| req.matches?(tereq)}
+        }
+      }
     end
 
     # Parse the specified rpm spec and return new RPMSpec instance from metadata
@@ -436,27 +456,27 @@ EOS
       same = {}
       diff = {}
       upstream_source.deps.each do |d|
-        spec_req = self.requirement_for_gem(d.name)
+        spec_reqs = self.requirements_for_gem(d.name)
+        spec_reqs_specifier = spec_reqs.empty? ? nil :
+             spec_reqs.collect { |req| req.specifier }
 
-        if spec_req.nil?
+        if spec_reqs.nil?
           diff[d.name] = {:spec     => nil,
                           :upstream => d.requirement.to_s}
 
-        elsif !spec_req.matches?(d)
-          diff[d.name] = {:spec     => spec_req.specifier,
+        elsif !spec_reqs.any? { |req| req.matches?(d) } ||
+              !self.has_all_requirements_for?(d)
+          diff[d.name] = {:spec     => spec_reqs_specifier,
                           :upstream => d.requirement.to_s}
 
-        else
-          same[d.name] = {:spec     => spec_req.specifier,
-                          :upstream => d.requirement.to_s}
+        elsif !diff.has_key?(d.name)
+          same[d.name] = {:spec     => spec_reqs_specifier,
+                          :upstream => d.requirement.to_s }
         end
       end
 
       @metadata[:requires].each do |req|
-        # XXX skip already processed gems
-        # (due to FIXME in Requirement#matches? above)
-        processed = !same.keys.find { |k| k == req.name }.nil?
-        next unless req.gem? && !processed
+        next unless req.gem?
 
         upstream_dep = upstream_source.deps.find { |d| d.name == req.gem_name }
 
@@ -468,7 +488,7 @@ EOS
           diff[req.gem_name] = {:spec     => req.specifier,
                                 :upstream => upstream_dep.requirement.to_s }
 
-        else
+        elsif !diff.has_key?(req.gem_name)
           same[req.gem_name] = {:spec     => req.specifier,
                                 :upstream => upstream_dep.requirement.to_s }
         end
