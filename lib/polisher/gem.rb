@@ -12,6 +12,7 @@ require 'rubygems/installer'
 require 'active_support/core_ext'
 
 require 'polisher/version_checker'
+require 'polisher/gem_cache'
 
 module Polisher
   class Gem
@@ -29,7 +30,6 @@ module Polisher
     attr_accessor :version
     attr_accessor :deps
     attr_accessor :dev_deps
-    attr_accessor :files
 
     def initialize(args={})
       @spec     = args[:spec]
@@ -37,7 +37,6 @@ module Polisher
       @version  = args[:version]
       @deps     = args[:deps]     || []
       @dev_deps = args[:dev_deps] || []
-      @files    = args[:files]    || []
     end
 
     # Return bool indiicating if the specified file is on the IGNORE_FILES list
@@ -108,56 +107,73 @@ module Polisher
     end
 
     # Download the gem and return the binary file contents as a string
+    #
     # @return [String] binary gem contents
     def download_gem
+      cached = GemCache.get(@name, @version)
+      return cached unless cached.nil?
+
       gem_path = "https://rubygems.org/gems/#{@name}-#{@version}.gem"
       curl = Curl::Easy.new(gem_path)
       curl.follow_location = true
       curl.http_get
       gemf = curl.body_str
+
+      GemCache.set(@name, @version, gemf)
+      gemf
     end
 
-    # Refresh the gem spec
-    def refresh_spec
-      gemf = download_gem
-      tgem = Tempfile.new(@name)
-      tgem.write gemf
-      tgem.close
-
-      @spec = YAML.load `#{GEM_CMD} specification #{tgem.path}`
-
-      # update deps, dev_deps
-      @deps =
-        @spec.dependencies.select { |dep|
-          dep.type == :runtime
-        }.collect { |dep| dep }
-
-      @dev_deps =
-        @spec.dependencies.select { |dep|
-          dep.type == :development
-        }.collect { |dep| dep }
-    end
-
-    # Retrieve the list of files in the gem
+    # Returns path to downloaded gem
     #
-    # @return [Array<String>] list of files in the gem
-    def refresh_files
-      gemf = download_gem
-      tgem = Tempfile.new(@name)
-      tgem.write gemf
-      tgem.close
+    # @return [String] path to downloaded gem
+    def downloaded_gem_path
+      # ensure gem is downloaded
+      self.download_gem
+      GemCache.path_for(@name, @version)
+    end
 
-      @files = []
-      pkg = ::Gem::Installer.new tgem.path, :unpack => true
-      Dir.mktmpdir { |dir|
+    # Unpack files & return unpacked directory
+    #
+    # If block is specified, it will be invoked
+    # with directory after which directory will be removed
+    def unpack(&bl)
+      dir = nil
+      pkg = ::Gem::Installer.new downloaded_gem_path, :unpack => true
+
+      if bl
+        Dir.mktmpdir { |dir|
+          bl.call dir
+        }
+      else
+        dir = Dir.mktmpdir
         pkg.unpack dir
+      end
+
+      dir
+    end
+
+    # Iterate over each file in gem invoking block with path
+    def each_file(&bl)
+      self.unpack do |dir|
         Pathname(dir).find do |path|
           next if path.to_s == dir.to_s
-          pathstr = path.to_s.gsub("#{dir}/", '')
-          @files << pathstr unless pathstr.blank?
+          bl.call path
         end
-      }
-      @files
+      end
+    end
+
+    # Retrieve the list of paths to files in the gem
+    #
+    # @return [Array<String>] list of files in the gem
+    def file_paths
+      @file_paths ||= begin
+        files = []
+        self.each_file do |path|
+          pathstr = path.to_s.gsub("#{dir}/", '')
+          files << pathstr unless pathstr.blank?
+        end
+        files
+      end
     end
 
     # Retrieve gem metadata and contents from rubygems.org
@@ -168,7 +184,6 @@ module Polisher
       gem_json_path = "https://rubygems.org/api/v1/gems/#{name}.json"
       spec = Curl::Easy.http_get(gem_json_path).body_str
       gem  = self.parse spec
-      gem.refresh_files
       gem
     end
 
@@ -208,5 +223,25 @@ module Polisher
       end
       versions
     end
+
+    # Scan gem for vendored dependencies
+    def vendored
+      vfiles = self.file_paths.select { |f| f.include?('vendor/') }
+      vpkgs  = {}
+      vfiles.each { |f|
+        vf = f.split('/')
+        vname = vf[vf.index('vendor') + 1]
+        next if vname == vf.last # only process vendor'd dirs
+        vversion = nil
+        #vf.last.downcase == 'version.rb' # TODO set vversion from version.rb
+        vpkgs[vname] = vversion
+      }
+      vpkgs
+    end
+
+    # Return diff of content in this gem against other
+    def diff(other)
+    end
+
   end # class Gem
 end # module Polisher

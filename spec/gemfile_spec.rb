@@ -23,7 +23,7 @@ module Polisher
       it "sets default gemfile version,files" do
         gemfile = Polisher::Gemfile.new
         gemfile.version.should be_nil
-        gemfile.files.should == []
+        gemfile.file_paths.should == []
       end
     end
 

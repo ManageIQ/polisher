@@ -442,7 +442,9 @@ module Polisher
 
       it "adds new files from gem" do
         spec = Polisher::RPMSpec.new :files => {'pkg' => ['/foo']}
-        gem  = Polisher::Gem.new :files => ['/foo', '/foo/bar', '/baz']
+        gem  = Polisher::Gem.new
+        gem.should_receive(:file_paths).at_least(:once).
+            and_return(['/foo', '/foo/bar', '/baz'])
         spec.update_to(gem)
         spec.new_files.should == ['/baz']
       end

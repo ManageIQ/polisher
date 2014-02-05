@@ -6,6 +6,13 @@
 SPEC_DIR = File.expand_path File.dirname(__FILE__)
 
 require 'polisher/rpmspec'
+require 'polisher/gem_cache'
+
+RSpec.configure do |config|
+  config.after do
+    Polisher::GemCache.clear!
+  end
+end
 
 module Polisher
   module Test
@@ -40,7 +47,7 @@ module Polisher
       :url      => "https://rubygems.org/gems/rspec-2.12.0.gem",
       :contents => File.read("#{SPEC_DIR}/data/rspec-2.12.0.gem"),
       :name     => 'rspec',
-      :version  => '2.12.0',
+      :version  => '2.14.1',
       :deps     => [::Gem::Dependency.new('rspec-core', '~> 2.14.0'),
                     ::Gem::Dependency.new('rspec-expectations', '~> 2.14.0'),
                     ::Gem::Dependency.new('rspec-mocks', '~> 2.14.0')],

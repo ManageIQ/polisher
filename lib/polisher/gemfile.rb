@@ -39,13 +39,13 @@ module Polisher
     attr_accessor :dev_deps
 
     # always empty array, for interface compatability
-    attr_accessor :files
+    attr_accessor :file_paths
 
     def initialize(args={})
       @version  = nil
       @deps     = args[:deps]
       @dev_deps = args[:dev_deps]
-      @files    = []
+      @file_paths = []
     end
 
     # Parse the specified gemfile & return new Gemfile instance from metadata

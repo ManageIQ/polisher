@@ -372,10 +372,10 @@ module Polisher
     end
 
     def update_files_from(new_source)
-      to_add = new_source.files
+      to_add = new_source.file_paths
       @metadata[:files] ||= {}
       @metadata[:files].each { |pkg,spec_files|
-        (new_source.files & to_add).each { |gem_file|
+        (new_source.file_paths & to_add).each { |gem_file|
           # skip files already included in spec or in dir in spec
           has_file = spec_files.any? { |sf|
                        gem_file.gsub(sf,'') != gem_file

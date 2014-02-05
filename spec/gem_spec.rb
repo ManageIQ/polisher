@@ -50,17 +50,6 @@ module Polisher
     describe "#retrieve" do
       before(:each) do
         @local_gem = Polisher::Test::LOCAL_GEM
-
-        # stub out expected calls to curl
-        @curl1 = Curl::Easy.new
-        @curl2 = Curl::Easy.new
-
-        Curl::Easy.should_receive(:http_get).with(@local_gem[:json_url]).and_return(@curl1)
-        @curl1.should_receive(:body_str).and_return(@local_gem[:json])
-
-        Curl::Easy.should_receive(:new).with(@local_gem[:url]).and_return(@curl2)
-        @curl2.should_receive(:http_get)
-        @curl2.should_receive(:body_str).and_return(@local_gem[:contents])
       end
 
       it "returns gem retrieved from rubygems" do
@@ -70,12 +59,6 @@ module Polisher
         gem.version.should  == @local_gem[:version]
         gem.deps.should     == @local_gem[:deps]
         gem.dev_deps.should == @local_gem[:dev_deps]
-      end
-
-      it "sets gem files" do
-        gem = Polisher::Gem.retrieve(@local_gem[:name])
-        gem.should be_an_instance_of(Polisher::Gem)
-        gem.files.should == @local_gem[:files]
       end
     end
   end # describe Gem
