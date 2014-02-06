@@ -3,12 +3,14 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'spec_helper'
+
 require 'polisher/gem'
 
 module Polisher
   describe Gem do
     describe "#initialize" do
-      it "sets gemfile attributes" do
+      it "sets gem attributes" do
         gem = Polisher::Gem.new :name => 'rails',
                                 :version => '4.0.0',
                                 :deps => ['activesupport', 'activerecord'],
@@ -18,6 +20,27 @@ module Polisher
         gem.deps.should == ['activesupport', 'activerecord']
         gem.dev_deps.should == ['rake']
       end
+    end
+
+    describe "#ignorable_file?" do
+      context "args matches an ignorable file" do
+        it "returns true" do
+          Polisher::Gem.ignorable_file?('foo.gemspec').should be_true
+          Polisher::Gem.ignorable_file?('Gemfile').should be_true
+        end
+      end
+
+      context "args does not match an ignorable file" do
+        it "returns false" do
+          Polisher::Gem.ignorable_file?('.rvmra').should be_false
+          Polisher::Gem.ignorable_file?('foo.gemspoc').should be_false
+        end
+      end
+    end
+
+    describe "#local_versions_for" do
+      it "returns versions of specified gem in local db"
+      it "invokes cb with versions retrieved"
     end
 
     describe "#parse" do
@@ -47,6 +70,65 @@ module Polisher
       end
     end
 
+
+    describe "#download_gem" do
+      context "gem in GemCache" do
+        it "returns GemCache gem"
+      end
+
+      it "uses curl to download gem"
+      it "sets gem in gem cached"
+      it "returns downloaded gem binary contents"
+    end
+
+    describe "#download_gem_path" do
+      it "downloads gem" do
+        gem = Polisher::Gem.new
+        gem.should_receive(:download_gem)
+        gem.downloaded_gem_path
+      end
+
+      it "returns gem cache path for gem" do
+        # stub out d/l
+        gem = Polisher::Gem.new :name => 'rails', :version => '1.0'
+        gem.should_receive(:download_gem)
+        Polisher::GemCache.should_receive(:path_for).
+                           with('rails', '1.0').
+                           at_least(:once).
+                           and_return('rails_path')
+        gem.downloaded_gem_path.should == 'rails_path'
+      end
+    end
+
+    describe "#gem_path" do
+      it "returns specified path" do
+        gem = Polisher::Gem.new :path => 'gem_path'
+        gem.gem_path.should == 'gem_path'
+      end
+
+      context "specified path is null" do
+        it "returns downloaded gem path" do
+          gem = Polisher::Gem.new
+          gem.should_receive(:downloaded_gem_path).and_return('gem_path')
+          gem.gem_path.should == 'gem_path'
+        end
+      end
+    end
+
+    describe "#unpack" do
+      it "unpacks gem at gem_path into temp dir"
+      it "returns tmp dir"
+      context "block specified" do
+        it "invokes block with tmp dir"
+        it "removes tmp dir"
+        it "returns nil"
+      end
+    end
+
+    describe "#file_paths" do
+      it "returns list of file paths in gem"
+    end
+
     describe "#retrieve" do
       before(:each) do
         @local_gem = Polisher::Test::LOCAL_GEM
@@ -61,5 +143,35 @@ module Polisher
         gem.dev_deps.should == @local_gem[:dev_deps]
       end
     end
+
+    describe "#versions" do
+      it "looks up and returns versions for gemname in polisher version checker"
+
+      context "recursive is true" do
+        it "appends versions of gem dependencies to versions list"
+        context "dev_deps is true" do
+          it "appends versions of gem dev dependencies to versions list"
+        end
+      end
+    end
+
+    describe "#vendored" do
+      it "returns list of vendored modules in gem"
+      context "vendored module has VERSION.rb file" do
+        it "returns version of vendored gems"
+      end
+    end
+
+    describe "#diff" do
+      it "unpacks local and other gems"
+      it "uses AwesomeSpawn to run recursive diff on unpacked gems"
+      it "removes unpacked gem dirs"
+      it "returns diff output"
+
+      context "error during operations" do
+        it "removes unpacked gem dirs"
+      end
+    end
+
   end # describe Gem
 end # module Polisher

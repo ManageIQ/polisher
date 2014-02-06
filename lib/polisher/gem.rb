@@ -8,6 +8,8 @@ require 'json'
 require 'yaml'
 require 'tempfile'
 require 'pathname'
+require 'fileutils'
+require 'awesome_spawn'
 require 'rubygems/installer'
 require 'active_support/core_ext'
 
@@ -17,6 +19,7 @@ require 'polisher/gem_cache'
 module Polisher
   class Gem
     GEM_CMD      = '/usr/bin/gem'
+    DIFF_CMD     = '/usr/bin/diff'
 
     # Common files shipped in gems that we should ignore
     IGNORE_FILES = ['.gemtest', '.gitignore', '.travis.yml',
@@ -31,10 +34,13 @@ module Polisher
     attr_accessor :deps
     attr_accessor :dev_deps
 
+    attr_accessor :path
+
     def initialize(args={})
       @spec     = args[:spec]
       @name     = args[:name]
       @version  = args[:version]
+      @path     = args[:path]
       @deps     = args[:deps]     || []
       @dev_deps = args[:dev_deps] || []
     end
@@ -113,6 +119,7 @@ module Polisher
       cached = GemCache.get(@name, @version)
       return cached unless cached.nil?
 
+      # TODO utilize a singleton curl instance (akin to errata module)
       gem_path = "https://rubygems.org/gems/#{@name}-#{@version}.gem"
       curl = Curl::Easy.new(gem_path)
       curl.follow_location = true
@@ -132,16 +139,22 @@ module Polisher
       GemCache.path_for(@name, @version)
     end
 
+    # Returns path to gem, either specified one of downloaded one
+    def gem_path
+      @path || downloaded_gem_path
+    end
+
     # Unpack files & return unpacked directory
     #
     # If block is specified, it will be invoked
     # with directory after which directory will be removed
     def unpack(&bl)
       dir = nil
-      pkg = ::Gem::Installer.new downloaded_gem_path, :unpack => true
+      pkg = ::Gem::Installer.new gem_path, :unpack => true
 
       if bl
         Dir.mktmpdir { |dir|
+          pkg.unpack dir
           bl.call dir
         }
       else
@@ -241,6 +254,19 @@ module Polisher
 
     # Return diff of content in this gem against other
     def diff(other)
+      out = nil
+
+      begin
+        this_dir  = self.unpack
+        other_dir = other.unpack
+        result = AwesomeSpawn.run("#{DIFF_CMD} -r #{this_dir} #{other_dir}")
+        out = result.output
+      ensure
+        FileUtils.rm_rf this_dir
+        FileUtils.rm_rf other_dir
+      end
+
+      out
     end
 
   end # class Gem
