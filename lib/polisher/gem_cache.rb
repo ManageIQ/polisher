@@ -7,7 +7,7 @@ require 'fileutils'
 
 module Polisher
   class GemCache
-    DIR = '~/.polisher/gems'
+    DIR = "#{ENV['HOME']}/.polisher/gems"
 
     def self.create!
       FileUtils.mkdir_p(DIR) unless File.directory?(DIR)
