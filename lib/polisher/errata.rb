@@ -8,6 +8,8 @@ require 'curb'
 
 module Polisher
   class Errata
+    # Initialize/return singleton curl handle to
+    # query errata and set url
     def self.client(url)
       @curl ||= begin
         c = Curl::Easy.new
@@ -23,22 +25,32 @@ module Polisher
     end
 
     def self.versions_for(advisory_url, name, &bl)
-      url    = "#{advisory_url}/builds"
-      result = self.client(url).get
-      json   = JSON.parse result.body_str
+      result = self.client("#{advisory_url}/builds").get
       versions =
-        json.collect { |tag, builds|
-          builds.collect { |build|
-            pkg,meta = *build.flatten
-            if pkg =~ /^rubygem-#{name}-([^-]*)-.*$/
-              $1
-            else
-              nil
-            end
-          }
-        }.flatten.compact
+        JSON.parse(result.body_str).collect { |tag, builds|
+          ErrataBuild.builds_matching(builds, name)
+        }.flatten
+
       bl.call(:errata, name, versions) unless(bl.nil?) 
       versions
+    end
+  end
+
+  class ErrataBuild
+    def self.builds_matching(builds, name)
+      builds.collect { |build|
+        self.build_matches?(build, name) ? self.build_version(build, name) : nil
+      }.compact
+    end
+
+    def self.build_matches?(build, name)
+      pkg,meta = *build.flatten
+      pkg =~ /^rubygem-#{name}-([^-]*)-.*$/
+    end
+
+    def self.build_version(build, name)
+      pkg,meta = *build.flatten
+      pkg.split('-')[2]
     end
   end
 end
