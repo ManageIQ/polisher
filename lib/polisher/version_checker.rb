@@ -17,6 +17,7 @@ module Polisher
     FEDORA_TARGET = :fedora
     GIT_TARGET    = :git
     YUM_TARGET    = :yum
+    BODHI_TARGET  = :bodhi # fedora dispatches to bodhi to not enabled by default
     ALL_TARGETS   = [GEM_TARGET, KOJI_TARGET, FEDORA_TARGET,
                      GIT_TARGET, YUM_TARGET]
 
@@ -61,6 +62,10 @@ module Polisher
 
       if @check_list.include?(YUM_TARGET)
         versions.merge! :yum => [Yum.version_for(name, &bl)]
+      end
+
+      if @check_list.include?(BODHI_TARGET)
+        versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
       end
 
       #bodhi_version   = Bodhi.versions_for(name, &bl)

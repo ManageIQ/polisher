@@ -33,7 +33,8 @@ conf = { :gemfile             => './Gemfile',
          :check_rhn           => false,
          :check_yum           => false,
          :check_bugzilla      => false,
-         :check_errata        => false}
+         :check_errata        => false,
+         :check_bodhi         => false}
 
 optparse = OptionParser.new do |opts|
   opts.on('-h', '--help', 'Display this help screen') do
@@ -118,6 +119,7 @@ targets << Polisher::VersionChecker::KOJI_TARGET   if conf[:check_koji]
 targets << Polisher::VersionChecker::FEDORA_TARGET if conf[:check_fedora]
 targets << Polisher::VersionChecker::GIT_TARGET    if conf[:check_git]
 targets << Polisher::VersionChecker::YUM_TARGET    if conf[:check_yum]
+targets << Polisher::VersionChecker::BODHI_TARGET  if conf[:check_bodhi]
 targets  = Polisher::VersionChecker::ALL_TARGETS   if targets.empty?
 Polisher::VersionChecker.check targets
 
