@@ -237,19 +237,27 @@ module Polisher
       versions
     end
 
-    # Scan gem for vendored dependencies
+    # Return list of file paths marked as vendored
+    def vendored_file_paths
+      self.file_paths.select { |f| f.include?('vendor/') }
+    end
+
+    # Return list of vendered gems in file list
     def vendored
-      vfiles = self.file_paths.select { |f| f.include?('vendor/') }
-      vpkgs  = {}
-      vfiles.each { |f|
-        vf = f.split('/')
-        vname = vf[vf.index('vendor') + 1]
-        next if vname == vf.last # only process vendor'd dirs
+      vendored_file_paths.inject({}){ |v,fp|
+        vendored_file = fp.split('/')
+        vendor_index  = vendored_file.index('vendor')
+
+        # only process vendor'd dirs:
+        next v if vendor_index + 2 == vendored_file.size
+
+        vname = vendored_file[vendor_index + 1]
         vversion = nil
-        #vf.last.downcase == 'version.rb' # TODO set vversion from version.rb
-        vpkgs[vname] = vversion
+        # TODO set vversion from version.rb:
+        #vf.last.downcase == 'version.rb'
+        v[vname] = vversion
+        v
       }
-      vpkgs
     end
 
     # Return diff of content in this gem against other
@@ -261,6 +269,7 @@ module Polisher
         other_dir = other.unpack
         result = AwesomeSpawn.run("#{DIFF_CMD} -r #{this_dir} #{other_dir}")
         out = result.output
+      rescue
       ensure
         FileUtils.rm_rf this_dir
         FileUtils.rm_rf other_dir

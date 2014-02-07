@@ -303,6 +303,9 @@ module Polisher
 
     # Update RPMSpec metadata to new gem
     #
+    # TODO add option to enable/disable certain aspects
+    # from being updates
+    #
     # @param [Polisher::Gem] new_source new gem to update rpmspec to
     def update_to(new_source)
       update_deps_from(new_source)

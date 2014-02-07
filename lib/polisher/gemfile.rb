@@ -68,5 +68,14 @@ module Polisher
 
       self.new metadata
     end
+
+    # TODO simply alias for gems in gemfile?
+    def vendored
+    end
+
+    # TODO retrieve gems which differ from
+    # rubygems.org/other upstream sources
+    def patched
+    end
   end # class Gemfile
 end # module Polisher

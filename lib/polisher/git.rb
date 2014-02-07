@@ -1,4 +1,4 @@
-# Polisher DistGit Package Representation
+# Polisher Git Entity Representations
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
@@ -10,6 +10,7 @@ require 'awesome_spawn'
 require 'polisher/rpmspec'
 
 module Polisher
+  # DistGit Package Representation
   class GitPackage
     attr_accessor :name
     attr_accessor :version
@@ -134,4 +135,11 @@ module Polisher
       version
     end
   end # class GitPackage
+
+  # Upstream Git project representation
+  class GitProject
+    # TODO scan project for vendored components
+    def vendored
+    end
+  end
 end # module Polisher

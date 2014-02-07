@@ -155,21 +155,68 @@ module Polisher
       end
     end
 
+    describe "#vendored_file_paths" do
+      it "returns file marks in gem marked as vendored" do
+        expected = [ 'vendor/foo.rb', 'vendor/bar/foo.rb']
+        paths    = ['foo.rb'] + expected
+        gem = Polisher::Gem.new
+        gem.should_receive(:file_paths).and_return(paths)
+        gem.vendored_file_paths.should == expected
+      end
+    end
+
     describe "#vendored" do
-      it "returns list of vendored modules in gem"
+      it "returns list of vendored modules in gem" do
+        gem = Polisher::Gem.new
+        vendored = ['vendor/thor.rb', 'vendor/thor/foo.rb', 'vendor/biz/baz.rb']
+        gem.should_receive(:vendored_file_paths).and_return(vendored)
+        gem.vendored.should == {'thor' => nil, 'biz' => nil}
+      end
+
       context "vendored module has VERSION.rb file" do
         it "returns version of vendored gems"
       end
     end
 
     describe "#diff" do
-      it "unpacks local and other gems"
-      it "uses AwesomeSpawn to run recursive diff on unpacked gems"
-      it "removes unpacked gem dirs"
-      it "returns diff output"
+      before(:each) do
+        @gem1 = Polisher::Gem.new
+        @gem2 = Polisher::Gem.new
+
+        @result = AwesomeSpawn::CommandResult.new '', 'diff_out', '', 0
+      end
+
+      it "runs diff against unpacked local and other gems and returns output" do
+        @gem1.should_receive(:unpack).and_return('dir1')
+        @gem2.should_receive(:unpack).and_return('dir2')
+        AwesomeSpawn.should_receive(:run).
+          with("#{Polisher::Gem::DIFF_CMD} -r dir1 dir2").
+          and_return(@result)
+        @gem1.diff(@gem2).should == @result.output
+      end
+
+      it "removes unpacked gem dirs" do
+        @gem1.should_receive(:unpack).and_return('dir1')
+        @gem2.should_receive(:unpack).and_return('dir2')
+        AwesomeSpawn.should_receive(:run).and_return(@result)
+        FileUtils.should_receive(:rm_rf).with('dir1')
+        FileUtils.should_receive(:rm_rf).with('dir2')
+        # XXX for the GemCache dir cleaning:
+        FileUtils.should_receive(:rm_rf).at_least(:once)
+        @gem1.diff(@gem2)
+      end
 
       context "error during operations" do
-        it "removes unpacked gem dirs"
+        it "removes unpacked gem dirs" do
+          @gem1.should_receive(:unpack).and_return('dir1')
+          @gem2.should_receive(:unpack).and_return('dir2')
+          AwesomeSpawn.should_receive(:run).
+            and_raise(AwesomeSpawn::CommandResultError.new('', ''))
+          FileUtils.should_receive(:rm_rf).with('dir1')
+          FileUtils.should_receive(:rm_rf).with('dir2')
+          FileUtils.should_receive(:rm_rf).at_least(:once)
+          @gem1.diff(@gem2)
+        end
       end
     end
 

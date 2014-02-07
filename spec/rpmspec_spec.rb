@@ -432,6 +432,7 @@ module Polisher
                                            ::Gem::Dependency.new('rails', '~> 10')],
                                  :dev_deps => [::Gem::Dependency.new('rspec', :development)]
 
+        spec.should_receive(:update_files_from) # stub out files update
         spec.update_to(gem)
           spec.requires.should == [Polisher::RPMSpec::Requirement.parse('rubygem(activerecord)'),
                                    Polisher::RPMSpec::Requirement.parse('rubygem(rake) >= 0'),
@@ -452,6 +453,7 @@ module Polisher
       it "updates metadata from gem" do
         spec = Polisher::RPMSpec.new
         gem  = Polisher::Gem.new :version => '1.0.0'
+        spec.should_receive(:update_files_from) # stub out files update
         spec.update_to(gem)
         spec.version.should == '1.0.0'
         spec.release.should == '1%{?dist}'
