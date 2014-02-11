@@ -61,7 +61,7 @@ Dir.chdir conf[:dir]
 conf[:gems].each do |gem_name|
   pkg =
     begin
-      Polisher::GitPackage.clone(gem_name)
+      Polisher::GitPackage.new(:name => gem_name).clone
     rescue => e
       next
     end
@@ -73,7 +73,7 @@ conf[:gems].each do |gem_name|
 
   pkg.build
 
-  unless pkg.has_check?
+  unless pkg.spec.has_check?
     puts "Warning: no %check section in spec,\
           manually verify functionality!".bold.red
   end

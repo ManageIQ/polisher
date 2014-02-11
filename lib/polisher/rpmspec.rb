@@ -172,6 +172,7 @@ module Polisher
     SPEC_CHANGELOG_MATCHER      = /^%changelog$/
     SPEC_FILES_MATCHER          = /^%files$/
     SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
+    SPEC_CHECK_MATCHER          = /^%check$/
     
     FILE_MACRO_MATCHERS         =
       [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
@@ -202,6 +203,10 @@ module Polisher
       else
         super(method, *args, &block)
       end
+    end
+
+    def has_check?
+      @metadata.has_key?(:has_check) && @metadata[:has_check]
     end
 
     # Return all the requirements for the specified gem
@@ -279,6 +284,9 @@ module Polisher
         elsif l =~ SPEC_SUBPKG_FILES_MATCHER
           subpkg_name = $1.strip
           in_files = true
+
+        elsif l =~ SPEC_CHECK_MATCHER
+          meta[:has_check] = true
     
         elsif in_changelog
           meta[:changelog] ||= ""

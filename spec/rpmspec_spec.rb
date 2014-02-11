@@ -360,6 +360,23 @@ module Polisher
       end
     end
 
+    describe "#has_check?" do
+      context "package spec has %check section" do
+        it "returns true" do
+          spec = described_class.new :has_check => true
+          spec.has_check?.should be_true
+        end
+      end
+
+      context "package spec does not have a %check section" do
+        it "returns false" do
+          spec = described_class.new
+          spec.has_check?.should be_false
+        end
+      end
+    end
+
+
     describe "#requirements_for_gem" do
       it "returns requirements for specified gem name" do
         spec = Polisher::RPMSpec.new :requires =>
@@ -420,6 +437,14 @@ module Polisher
       it "parses unrpmized files from spec" do
         pspec = Polisher::RPMSpec.parse @spec[:contents]
         pspec.files.should == @spec[:files]
+      end
+
+      it "parses %check from spec" do
+        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec.has_check?.should be_true
+
+        pspec = Polisher::RPMSpec.parse ""
+        pspec.has_check?.should be_false
       end
     end
 

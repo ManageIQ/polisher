@@ -18,7 +18,7 @@ module Polisher
     end
 
     def self.path_for(name, version)
-      path = "#{DIR}/#{name}-#{version}.gem"
+      "#{DIR}/#{name}-#{version}.gem"
     end
 
     def self.get(name, version)
