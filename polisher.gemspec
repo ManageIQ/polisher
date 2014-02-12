@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
   # TODO tighten up deps, some may be optional
   s.add_dependency('json')
   s.add_dependency('curb')
-  s.add_dependency('active_support')
+  s.add_dependency('activesupport')
   s.add_dependency('i18n')
   s.add_dependency('bundler')
   s.add_dependency('pkgwat')
