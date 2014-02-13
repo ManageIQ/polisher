@@ -5,8 +5,10 @@
 
 require 'tmpdir'
 require 'awesome_spawn'
+
 require 'polisher/rpmspec'
 require 'polisher/git_cache'
+require 'polisher/vendor'
 
 module Polisher
   # Git Repository
@@ -36,6 +38,10 @@ module Polisher
       Dir.chdir path do
         yield
       end
+    end
+
+    def file_paths
+      in_repo { Dir['**/*'] }
     end
 
     # Note be careful when invoking:
@@ -228,8 +234,13 @@ module Polisher
 
   # Upstream Git project representation
   class GitProject < GitRepo
-    # TODO scan project for vendored components
+    include HasVendoredDeps
+
+    # Override vendored to ensure repo is
+    # cloned before retrieving modules
     def vendored
+      clone unless cloned?
+      super
     end
   end
 end # module Polisher

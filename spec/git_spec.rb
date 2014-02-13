@@ -73,6 +73,16 @@ module Polisher
       end
     end
 
+    describe "#file_paths" do
+      it "returns list of all first paths in git repo" do
+        expected = ['file1', 'dir1/file2', 'dir2']
+        repo = described_class.new
+        repo.should_receive(:in_repo).and_yield
+        Dir.should_receive(:[]).with('**/*').and_return(expected)
+        repo.file_paths.should == expected
+      end
+    end
+
     describe "#reset!" do
       it "resets git repo to head" do
         expected = "/usr/bin/git reset HEAD~ --hard"
@@ -377,6 +387,19 @@ module Polisher
         described_class.version_for('rails', &cb)
       end
     end
-
   end # describe GitPackage
+
+  describe GitProject do
+    describe "#vendored" do
+      context "repo not cloned" do
+        it "clones repo" do
+          git = described_class.new
+          git.should_receive(:cloned?).and_return(false)
+          git.should_receive(:clone)
+          git.should_receive(:vendored_file_paths).and_return([]) # stub out
+          git.vendored
+        end
+      end
+    end
+  end
 end # module Polisher
