@@ -74,9 +74,16 @@ module Polisher
       deps + dev_deps
     end
 
-    # TODO retrieve gems which differ from
+    # Retrieve gems which differ from
     # rubygems.org/other upstream sources
     def patched
+      vendored.each do |dep|
+        # TODO
+        # if dependency specified alternate source (git, path, other)
+        # retrieve, compare against version retrieved from rubygems
+        # (try to extract version from alternate source,
+        #  else use bundler to resolve version from Gemfile)
+      end
     end
   end # class Gemfile
 end # module Polisher
