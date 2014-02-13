@@ -69,8 +69,9 @@ module Polisher
       self.new metadata
     end
 
-    # TODO simply alias for gems in gemfile?
+    # Simply alias for all dependencies in Gemfile
     def vendored
+      deps + dev_deps
     end
 
     # TODO retrieve gems which differ from
