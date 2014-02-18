@@ -67,6 +67,49 @@ module Polisher
       versions
     end
 
+    # Return new instance of Gem from JSON Specification
+    def self.from_json(json)
+      specj     = JSON.parse(json)
+      metadata           = {}
+      metadata[:spec]    = specj
+      metadata[:name]    = specj['name']
+      metadata[:version] = specj['version']
+
+      metadata[:deps] =
+        specj['dependencies']['runtime'].collect { |d|
+          ::Gem::Dependency.new d['name'], *d['requirements'].split(',')
+        }
+
+      metadata[:dev_deps] =
+        specj['dependencies']['development'].collect { |d|
+          ::Gem::Dependency.new d['name'], d['requirements'].split(',')
+        }
+
+      self.new metadata
+    end
+
+    # Return new instance of Gem from Gemspec
+    def self.from_gemspec(gemspec)
+      gemspec  = ::Gem::Specification.load(gemspec)
+
+      metadata           = {}
+      metadata[:spec]    = gemspec # TODO to json
+      metadata[:name]    = gemspec.name
+      metadata[:version] = gemspec.version.to_s
+
+      metadata[:deps] =
+        gemspec.dependencies.select { |dep|
+          dep.type == :runtime
+        }.collect { |dep| dep }
+
+      metadata[:dev_deps] =
+        gemspec.dependencies.select { |dep|
+          dep.type == :development
+        }.collect { |dep| dep }
+
+      self.new metadata
+    end
+
     # Parse the specified gemspec & return new Gem instance from metadata
     # 
     # @param [String,Hash] args contents of actual gemspec of option hash
@@ -74,63 +117,38 @@ module Polisher
     # @option args [String] :gemspec path to gemspec to load / parse
     # @return [Polisher::Gem] gem instantiated from gemspec metadata
     def self.parse(args={})
-      metadata = {}
-
       if args.is_a?(String)
-        specj     = JSON.parse(args)
-        metadata[:spec]    = specj
-        metadata[:name]    = specj['name']
-        metadata[:version] = specj['version']
-
-        metadata[:deps] =
-          specj['dependencies']['runtime'].collect { |d|
-            ::Gem::Dependency.new d['name'], *d['requirements'].split(',')
-          }
-
-        metadata[:dev_deps] =
-          specj['dependencies']['development'].collect { |d|
-            ::Gem::Dependency.new d['name'], d['requirements'].split(',')
-          }
+        return self.from_json args
 
       elsif args.has_key?(:gemspec)
-        gemspec  = ::Gem::Specification.load(args[:gemspec])
-        metadata[:spec]    = gemspec # TODO to json
-        metadata[:name]    = gemspec.name
-        metadata[:version] = gemspec.version.to_s
+        return self.from_gemspec args[:gemspec]
 
-        metadata[:deps] =
-          gemspec.dependencies.select { |dep|
-            dep.type == :runtime
-          }.collect { |dep| dep }
-
-        metadata[:dev_deps] =
-          gemspec.dependencies.select { |dep|
-            dep.type == :development
-          }.collect { |dep| dep }
-
-      elsif args.has_key?(:gem)
-        # TODO
       end
 
-      self.new metadata
+      self.new
     end
 
-    # Download the gem and return the binary file contents as a string
+    # Download the specified gem and return the binary file contents as a string
     #
     # @return [String] binary gem contents
-    def download_gem
-      cached = GemCache.get(@name, @version)
+    def self.download_gem(name, version)
+      cached = GemCache.get(name, version)
       return cached unless cached.nil?
 
       # TODO utilize a singleton curl instance (akin to errata module)
-      gem_path = "https://rubygems.org/gems/#{@name}-#{@version}.gem"
+      gem_path = "https://rubygems.org/gems/#{name}-#{version}.gem"
       curl = Curl::Easy.new(gem_path)
       curl.follow_location = true
       curl.http_get
       gemf = curl.body_str
 
-      GemCache.set(@name, @version, gemf)
+      GemCache.set(name, version, gemf)
       gemf
+    end
+
+    # Download the local gem and return it as a string
+    def download_gem
+      self.class.download_gem @name, @version
     end
 
     # Returns path to downloaded gem
@@ -246,13 +264,14 @@ module Polisher
 
       begin
         this_dir  = self.unpack
-        other_dir = other.unpack
+        other_dir = other.is_a?(Polisher::Gem) ? other.unpack : other
         result = AwesomeSpawn.run("#{DIFF_CMD} -r #{this_dir} #{other_dir}")
         out = result.output
       rescue
       ensure
-        FileUtils.rm_rf this_dir
-        FileUtils.rm_rf other_dir
+        FileUtils.rm_rf this_dir  unless this_dir.nil?
+        FileUtils.rm_rf other_dir unless  other_dir.nil? ||
+                                         !other.is_a?(Polisher::Gem)
       end
 
       out
