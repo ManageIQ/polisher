@@ -50,7 +50,7 @@ end
 require 'mkmf'
 
 alias :_cpp_command :cpp_command
-def cpp_command(outfile="", opt)
+def cpp_command(outfile, opt="")
   ""
 end
 
