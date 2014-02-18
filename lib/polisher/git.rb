@@ -104,7 +104,7 @@ module Polisher
 
     # Return handle to instance of Polisher::RPMSpec corresponding to spec
     def spec
-      @spec ||= in_repo { Polisher::RPMSpec.parse spec_file }
+      @spec ||= in_repo { Polisher::RPMSpec.parse File.read(spec_file) }
     end
 
     # Files representing pkg tracked by git
