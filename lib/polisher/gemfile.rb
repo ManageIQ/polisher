@@ -5,28 +5,9 @@
 
 require 'bundler'
 
+require 'polisher/git'
+require 'polisher/gem'
 require 'polisher/version_checker'
-
-# Override bundler's gem registration
-module Bundler
-  class << self
-    attr_accessor :bundler_gems
-
-    def init_gems
-      Bundler.bundler_gems = []
-    end
-  end
-
-  class Dsl
-    alias :old_gem :gem
-    def gem(name, *args)
-      Bundler.bundler_gems ||= []
-      version = args.first.is_a?(Hash) ? nil : args.first
-      Bundler.bundler_gems << [name, version]
-      old_gem(name, *args)
-    end
-  end
-end
 
 module Polisher
   class Gemfile
@@ -45,6 +26,7 @@ module Polisher
       @version  = nil
       @deps     = args[:deps]
       @dev_deps = args[:dev_deps]
+      @definition = args[:definition]
       @file_paths = []
     end
 
@@ -53,18 +35,20 @@ module Polisher
     # @param [String] path to gemfile to parse
     # @return [Polisher::Gemfile] gemfile instantiated from parsed metadata
     def self.parse(path)
+      definition = nil
       path,g = File.split(path)
       Dir.chdir(path){
-        Bundler.init_gems
         begin
-          Bundler::Definition.build(g, nil, false)
+          definition = Bundler::Definition.build(g, nil, false)
         rescue Bundler::GemfileNotFound
           raise ArgumentError, "invalid gemfile: #{path}"
         end
       }
+
       metadata = {}
-      metadata[:deps]     = Bundler.bundler_gems.collect { |n,v| n }
+      metadata[:deps]     = definition.dependencies.collect { |d| d.name }
       metadata[:dev_deps] = [] # TODO
+      metadata[:definition] = definition
 
       self.new metadata
     end
@@ -77,12 +61,28 @@ module Polisher
     # Retrieve gems which differ from
     # rubygems.org/other upstream sources
     def patched
-      vendored.each do |dep|
-        # TODO
-        # if dependency specified alternate source (git, path, other)
-        # retrieve, compare against version retrieved from rubygems
-        # (try to extract version from alternate source,
-        #  else use bundler to resolve version from Gemfile)
+      vendored.collect do |dep|
+        bundler_dep = @definition ?
+                      @definition.dependencies.find { |d| d.name == dep } : nil
+
+        # TODO right now just handling git based alternate sources,
+        # should be able to handle other types bundler supports
+        # (path and alternate rubygems src)
+        next unless bundler_dep && bundler_dep.source.is_a?(Bundler::Source::Git)
+        src = bundler_dep.source
+
+        # retrieve gem
+        gem = src.version ?
+              Polisher::Gem.new(:name => dep, :version => src.version) :
+              Polisher::Gem.retrieve(dep)
+
+        # retrieve dep
+        git = Polisher::GitRepo.new :url => src.uri
+        git.clone unless git.cloned?
+        git.checkout src.ref if src.ref
+
+        # diff gem against git
+        gem.diff(git.path)
       end
     end
   end # class Gemfile
