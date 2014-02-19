@@ -18,7 +18,9 @@ module ConfHelpers
     self.send(:define_singleton_method, name) do |*args|
       nvar = "@#{name}".intern
       current = self.instance_variable_get(nvar)
+      envk    = "POLISHER_#{name.to_s.upcase}"
       self.instance_variable_set(nvar, default)    unless current
+      self.instance_variable_set(ENV[envk])        if ENV.has_key?(envk)
       self.instance_variable_set(nvar, args.first) unless args.empty?
       self.instance_variable_get(nvar)
     end
