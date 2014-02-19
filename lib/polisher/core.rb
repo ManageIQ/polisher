@@ -21,6 +21,7 @@ module ConfHelpers
       envk    = "POLISHER_#{name.to_s.upcase}"
       self.instance_variable_set(nvar, default)    unless current
       self.instance_variable_set(ENV[envk])        if ENV.has_key?(envk)
+      # TODO also allow vars to be able to be set from a conf file
       self.instance_variable_set(nvar, args.first) unless args.empty?
       self.instance_variable_get(nvar)
     end
