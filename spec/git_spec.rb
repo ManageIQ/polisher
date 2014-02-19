@@ -356,7 +356,7 @@ module Polisher
 
     describe "#version_for" do
       it "uses git to retrieve the package" do
-        pkg = "#{described_class::DIST_GIT_URL}rubygem-rails.git"
+        pkg = "#{described_class.dist_git_url}rubygem-rails.git"
         dir = Polisher::GitCache.path_for('rubygem-rails')
         expected = "/usr/bin/git clone #{pkg} #{dir}"
         AwesomeSpawn.should_receive(:run).with(expected)

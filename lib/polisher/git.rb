@@ -6,6 +6,7 @@
 require 'tmpdir'
 require 'awesome_spawn'
 
+require 'polisher/core'
 require 'polisher/rpmspec'
 require 'polisher/git_cache'
 require 'polisher/vendor'
@@ -13,8 +14,14 @@ require 'polisher/vendor'
 module Polisher
   # Git Repository
   class GitRepo
+    extend ConfHelpers
+
     # TODO use ruby git api
-    GIT_CMD      = '/usr/bin/git'
+    conf_attr :git_cmd, '/usr/bin/git'
+
+    def git_cmd
+      self.class.git_cmd
+    end
 
     attr_accessor :url
 
@@ -27,7 +34,7 @@ module Polisher
     end
 
     def clone
-      AwesomeSpawn.run "#{GIT_CMD} clone #{url} #{path}"
+      AwesomeSpawn.run "#{git_cmd} clone #{url} #{path}"
     end
 
     def cloned?
@@ -46,22 +53,22 @@ module Polisher
 
     # Note be careful when invoking:
     def reset!
-      in_repo { AwesomeSpawn.run "#{GIT_CMD} reset HEAD~ --hard" }
+      in_repo { AwesomeSpawn.run "#{git_cmd} reset HEAD~ --hard" }
       self
     end
 
     def pull
-      in_repo { AwesomeSpawn.run "#{GIT_CMD} pull" }
+      in_repo { AwesomeSpawn.run "#{git_cmd} pull" }
       self
     end
 
     def checkout(tgt)
-      in_repo { AwesomeSpawn.run "#{GIT_CMD} checkout #{tgt}" }
+      in_repo { AwesomeSpawn.run "#{git_cmd} checkout #{tgt}" }
       self
     end
 
     def commit(msg)
-      in_repo { AwesomeSpawn.run "#{GIT_CMD} commit -m '#{msg}'" }
+      in_repo { AwesomeSpawn.run "#{git_cmd} commit -m '#{msg}'" }
       self
     end
   end
@@ -71,15 +78,14 @@ module Polisher
     attr_accessor :name
     attr_accessor :version
 
-    # TODO these should be to be configurable
-    RPM_PREFIX   = 'rubygem-'
-    PKG_CMD      = '/usr/bin/fedpkg'
-    BUILD_CMD    = '/usr/bin/koji'
-    BUILD_TGT    = 'rawhide'
-
-    MD5SUM_CMD   = '/usr/bin/md5sum'
-    SED_CMD      = '/usr/bin/sed'
-    DIST_GIT_URL = 'git://pkgs.fedoraproject.org/'
+    conf_attr :rpm_prefix,   'rubygem-'
+    conf_attr :pkg_cmd,      '/usr/bin/fedpkg'
+    conf_attr :build_cmd,    '/usr/bin/koji'
+    conf_attr :build_tgt,    'rawhide'
+    conf_attr :md5sum_cmd,   '/usr/bin/md5sum'
+    conf_attr :sed_cmd,      '/usr/bin/sed'
+    conf_attr :dist_git_url, 'git://pkgs.fedoraproject.org/'
+    conf_attr :fetch_tgt,    'master'
 
     def initialize(args={})
       @name    = args[:name]
@@ -89,7 +95,7 @@ module Polisher
 
     # Return full rpm name of package containing optional prefix
     def rpm_name
-      @rpm_name ||= "#{RPM_PREFIX}#{self.name}"
+      @rpm_name ||= "#{rpm_prefix}#{self.name}"
     end
 
     # Return full srpm file name of package
@@ -125,7 +131,7 @@ module Polisher
     # @override
     def clone
       in_repo do
-        AwesomeSpawn.run "#{PKG_CMD} clone #{rpm_name}"
+        AwesomeSpawn.run "#{pkg_cmd} clone #{rpm_name}"
         Dir.glob(rpm_name, '*').each { |f| File.move f, '.' }
         FileUtils.rm_rf rpm_name
       end
@@ -141,7 +147,7 @@ module Polisher
     def fetch
       clone unless cloned?
       raise Exception, "Dead package detected" if dead?
-      checkout 'master'
+      checkout fetch_tgt
       reset!
       pull
 
@@ -156,7 +162,7 @@ module Polisher
         replace_version = "s/Version.*/Version: #{gem.version}/"
         replace_release = "s/Release:.*/Release: 1%{?dist}/"
         [replace_version, replace_release].each do |replace|
-          AwesomeSpawn.run "#{SED_CMD} -i '#{replace}' #{spec_file}"
+          AwesomeSpawn.run "#{sed_cmd} -i '#{replace}' #{spec_file}"
         end
       end
     end
@@ -164,7 +170,7 @@ module Polisher
     # Generate new sources file
     def gen_sources_for(gem)
       in_repo do
-        AwesomeSpawn.run "#{MD5SUM_CMD} #{gem.name}-#{gem.version}.gem > sources"
+        AwesomeSpawn.run "#{md5sum_cmd} #{gem.name}-#{gem.version}.gem > sources"
       end
     end
 
@@ -186,21 +192,21 @@ module Polisher
     # Override commit, generate a default msg, always add pkg files
     # @override
     def commit(msg=nil)
-      in_repo { AwesomeSpawn.run "#{GIT_CMD} add #{pkg_files.join(' ')}" }
+      in_repo { AwesomeSpawn.run "#{git_cmd} add #{pkg_files.join(' ')}" }
       super(msg.nil? ? "updated to #{version}" : msg)
       self
     end
 
     # Build the srpm
     def build_srpm
-      in_repo { AwesomeSpawn.run "#{PKG_CMD} srpm" }
+      in_repo { AwesomeSpawn.run "#{pkg_cmd} srpm" }
       self
     end
 
     # Run a scratch build
     def scratch_build
       # TODO if build fails, raise error, else return output
-      cmd = "#{BUILD_CMD} build --scratch #{BUILD_TGT} #{srpm}"
+      cmd = "#{build_cmd} build --scratch #{build_tgt} #{srpm}"
       in_repo { AwesomeSpawn.run(cmd) }
       self
     end
@@ -220,7 +226,7 @@ module Polisher
     def self.version_for(name, &bl)
       version = nil
       gitpkg = self.new :name => name
-      gitpkg.url = "#{DIST_GIT_URL}#{gitpkg.rpm_name}.git"
+      gitpkg.url = "#{dist_git_url}#{gitpkg.rpm_name}.git"
       gitpkg.git_clone
       begin
         version = gitpkg.spec.version

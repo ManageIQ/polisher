@@ -5,6 +5,30 @@
 
 require 'polisher/rpmspec'
 
+class Object
+  def eigenclass
+    class << self
+      self
+    end
+  end
+end
+
+module ConfHelpers
+  def conf_attr(name, default=nil)
+    self.send(:define_singleton_method, name) do |*args|
+      nvar = "@#{name}".intern
+      current = self.instance_variable_get(nvar)
+      self.instance_variable_set(nvar, default)    unless current
+      self.instance_variable_set(nvar, args.first) unless args.empty?
+      self.instance_variable_get(nvar)
+    end
+
+    self.send(:define_method, name) do
+      self.class.send(name)
+    end
+  end
+end
+
 class String
   # Return bool indicating if self is a path to a gem
   def gem?
