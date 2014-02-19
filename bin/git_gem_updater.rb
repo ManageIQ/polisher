@@ -74,13 +74,13 @@ conf[:gems].each do |gem_name|
   pkg.build
 
   unless pkg.spec.has_check?
-    puts "Warning: no %check section in spec,\
-          manually verify functionality!".bold.red
+    puts "Warning: no %check section in spec, "\
+         "manually verify functionality!".bold.red
   end
 
   pkg.commit
 
   puts "#{gem_name} commit complete".green
   puts "Push commit with: git push".blue
-  puts "Build and tag official rpms with: #{Polisher::GitPackage::PKG_CMD} build".blue
+  puts "Build and tag official rpms with: #{Polisher::GitPackage.pkg_cmd} build".blue
 end
