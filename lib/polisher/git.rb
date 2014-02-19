@@ -7,6 +7,7 @@ require 'tmpdir'
 require 'awesome_spawn'
 
 require 'polisher/core'
+require 'polisher/error'
 require 'polisher/rpmspec'
 require 'polisher/git_cache'
 require 'polisher/vendor'
@@ -31,6 +32,11 @@ module Polisher
 
     def path
       GitCache.path_for(@url)
+    end
+
+    # Clobber the git repo
+    def clobber!
+      FileUtils.rm_rf path
     end
 
     def clone
@@ -130,9 +136,13 @@ module Polisher
     # Override clone to use PKG_PCMD
     # @override
     def clone
+      self.clobber!
+      Dir.mkdir path unless File.directory? path
       in_repo do
-        AwesomeSpawn.run "#{pkg_cmd} clone #{rpm_name}"
-        Dir.glob(rpm_name, '*').each { |f| File.move f, '.' }
+        result = AwesomeSpawn.run "#{pkg_cmd} clone #{rpm_name}"
+        raise PolisherError,
+              "could not clone #{rpm_name}" unless result.exit_status == 0
+        Dir.glob("#{rpm_name}/*").each { |f| FileUtils.move f, '.' }
         FileUtils.rm_rf rpm_name
       end
 

@@ -184,7 +184,8 @@ module Polisher
         pkg.should_receive(:in_repo).and_yield
 
         expected = '/usr/bin/fedpkg clone rubygem-rails'
-        AwesomeSpawn.should_receive(:run).with(expected)
+        result   = AwesomeSpawn::CommandResult.new '', '', '', 0
+        AwesomeSpawn.should_receive(:run).with(expected).and_return(result)
         pkg.clone
       end
 

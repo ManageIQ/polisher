@@ -63,6 +63,7 @@ conf[:gems].each do |gem_name|
     begin
       Polisher::GitPackage.new(:name => gem_name).clone
     rescue => e
+      puts "Problem Cloning Package, Skipping: #{e}"
       next
     end
 
