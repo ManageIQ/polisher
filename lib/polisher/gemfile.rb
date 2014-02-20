@@ -83,7 +83,7 @@ module Polisher
 
         # diff gem against git
         gem.diff(git.path)
-      end
+      end.compact!
     end
   end # class Gemfile
 end # module Polisher

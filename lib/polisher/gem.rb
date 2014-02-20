@@ -278,7 +278,7 @@ module Polisher
         this_dir  = self.unpack
         other_dir = other.is_a?(Polisher::Gem) ? other.unpack : other
         result = AwesomeSpawn.run("#{DIFF_CMD} -r #{this_dir} #{other_dir}")
-        out = result.output
+        out = result.output.gsub("#{this_dir}", 'a').gsub("#{other_dir}", 'b')
       rescue
       ensure
         FileUtils.rm_rf this_dir  unless this_dir.nil?
