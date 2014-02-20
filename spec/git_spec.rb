@@ -159,7 +159,7 @@ module Polisher
     end
 
     describe "#spec" do
-      it "returns handle to parsed Polisher::RPMSpec"
+      it "returns handle to parsed Polisher::RPM::Spec"
     end
 
     describe "#pkg_files" do
@@ -367,7 +367,7 @@ module Polisher
       it "returns version of the package" do
         AwesomeSpawn.should_receive(:run) # stub out run
 
-        spec = Polisher::RPMSpec.new :version => '1.0.0'
+        spec = Polisher::RPM::Spec.new :version => '1.0.0'
         pkg  = described_class.new
         described_class.should_receive(:new).and_return(pkg)
         pkg.should_receive(:spec).and_return(spec)
@@ -378,7 +378,7 @@ module Polisher
       it "invokes callback with version of package" do
         AwesomeSpawn.should_receive(:run) # stub out run
 
-        spec = Polisher::RPMSpec.new :version => '1.0.0'
+        spec = Polisher::RPM::Spec.new :version => '1.0.0'
         pkg  = described_class.new
         described_class.should_receive(:new).and_return(pkg)
         pkg.should_receive(:spec).and_return(spec)

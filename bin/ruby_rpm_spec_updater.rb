@@ -19,7 +19,7 @@ require 'polisher'
 
 spec_file = ARGV.shift
 source    = ARGV.shift
-rpmspec   = Polisher::RPMSpec.parse File.read(spec_file)
+rpmspec   = Polisher::RPM::Spec.parse File.read(spec_file)
 source    = source.nil? ?
   Polisher::Gem.retrieve(rpmspec.gem_name) :
   Polisher::Upstream.parse(source)

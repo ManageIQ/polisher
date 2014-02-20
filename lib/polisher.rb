@@ -5,7 +5,8 @@
 
 require 'polisher/core'
 require 'polisher/error'
-require 'polisher/rpmspec'
+require 'polisher/rpm/requirement'
+require 'polisher/rpm/spec'
 require 'polisher/gem'
 require 'polisher/upstream'
 require 'polisher/gemfile'

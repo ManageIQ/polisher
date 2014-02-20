@@ -5,11 +5,11 @@
 
 require 'spec_helper'
 
-require 'polisher/rpmspec'
+require 'polisher/rpm/spec'
 require 'polisher/gem'
 
 module Polisher
-  describe RPMSpec::Requirement do
+  describe RPM::Requirement do
     describe "#str" do
       it "returns requirement in string format" do
         req = described_class.new :name => 'rubygem(activesupport)'
@@ -345,17 +345,17 @@ module Polisher
     end
   end
 
-  describe RPMSpec do
+  describe RPM::Spec do
     describe "#initialize" do
       it "sets gem metadata" do
-        spec = Polisher::RPMSpec.new :version => '1.0.0'
+        spec = Polisher::RPM::Spec.new :version => '1.0.0'
         spec.metadata.should == {:version => '1.0.0'}
       end
     end
 
     describe "#method_missing" do
       it "proxies lookup to metadata" do
-        spec = Polisher::RPMSpec.new :version => '1.0.0'
+        spec = Polisher::RPM::Spec.new :version => '1.0.0'
         spec.version.should == '1.0.0'
       end
     end
@@ -379,14 +379,14 @@ module Polisher
 
     describe "#requirements_for_gem" do
       it "returns requirements for specified gem name" do
-        spec = Polisher::RPMSpec.new :requires =>
-          [Polisher::RPMSpec::Requirement.new(:name => 'rubygem(rake)')]
+        spec = Polisher::RPM::Spec.new :requires =>
+          [Polisher::RPM::Requirement.new(:name => 'rubygem(rake)')]
         spec.requirements_for_gem('rake').should == [spec.requires.first]
       end
 
       context "spec has no requirement with specified name" do
         it "returns empty array" do
-          spec = Polisher::RPMSpec.new
+          spec = Polisher::RPM::Spec.new
           spec.requirements_for_gem('rake').should be_empty
         end
       end
@@ -398,60 +398,60 @@ module Polisher
       end
 
       it "returns new rpmspec instance" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
-        pspec.should be_an_instance_of(Polisher::RPMSpec)
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
+        pspec.should be_an_instance_of(Polisher::RPM::Spec)
       end
 
       it "parses contents from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.contents.should == @spec[:contents]
       end
 
       it "parses name from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.gem_name.should == @spec[:name]
       end
 
       it "parses version from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.version.should == @spec[:version]
       end
 
       it "parses release from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.release.should == @spec[:release]
       end
 
       it "parses requires from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.requires.should == @spec[:requires]
       end
 
       it "parses build requires from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.build_requires.should == @spec[:build_requires]
       end
 
       it "parses changelog from spec"
 
       it "parses unrpmized files from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.files.should == @spec[:files]
       end
 
       it "parses %check from spec" do
-        pspec = Polisher::RPMSpec.parse @spec[:contents]
+        pspec = Polisher::RPM::Spec.parse @spec[:contents]
         pspec.has_check?.should be_true
 
-        pspec = Polisher::RPMSpec.parse ""
+        pspec = Polisher::RPM::Spec.parse ""
         pspec.has_check?.should be_false
       end
     end
 
     describe "#update_to" do
       it "updates dependencies from gem" do
-        spec = Polisher::RPMSpec.new :requires => [Polisher::RPMSpec::Requirement.parse('rubygem(rake)'),
-                                                   Polisher::RPMSpec::Requirement.parse('rubygem(activerecord)')],
+        spec = Polisher::RPM::Spec.new :requires => [Polisher::RPM::Requirement.parse('rubygem(rake)'),
+                                                     Polisher::RPM::Requirement.parse('rubygem(activerecord)')],
                                      :build_requires => []
         gem  = Polisher::Gem.new :deps => [::Gem::Dependency.new('rake'),
                                            ::Gem::Dependency.new('rails', '~> 10')],
@@ -459,15 +459,15 @@ module Polisher
 
         spec.should_receive(:update_files_from) # stub out files update
         spec.update_to(gem)
-          spec.requires.should == [Polisher::RPMSpec::Requirement.parse('rubygem(activerecord)'),
-                                   Polisher::RPMSpec::Requirement.parse('rubygem(rake) >= 0'),
-                                   Polisher::RPMSpec::Requirement.parse('rubygem(rails) => 10'),
-                                   Polisher::RPMSpec::Requirement.parse('rubygem(rails) < 11')]
-        spec.build_requires.should == [Polisher::RPMSpec::Requirement.parse('rubygem(rspec) >= 0', :br => true)]
+          spec.requires.should == [Polisher::RPM::Requirement.parse('rubygem(activerecord)'),
+                                   Polisher::RPM::Requirement.parse('rubygem(rake) >= 0'),
+                                   Polisher::RPM::Requirement.parse('rubygem(rails) => 10'),
+                                   Polisher::RPM::Requirement.parse('rubygem(rails) < 11')]
+        spec.build_requires.should == [Polisher::RPM::Requirement.parse('rubygem(rspec) >= 0', :br => true)]
       end
 
       it "adds new files from gem" do
-        spec = Polisher::RPMSpec.new :files => {'pkg' => ['/foo']}
+        spec = Polisher::RPM::Spec.new :files => {'pkg' => ['/foo']}
         gem  = Polisher::Gem.new
         gem.should_receive(:file_paths).at_least(:once).
             and_return(['/foo', '/foo/bar', '/baz'])
@@ -476,7 +476,7 @@ module Polisher
       end
 
       it "updates metadata from gem" do
-        spec = Polisher::RPMSpec.new
+        spec = Polisher::RPM::Spec.new
         gem  = Polisher::Gem.new :version => '1.0.0'
         spec.should_receive(:update_files_from) # stub out files update
         spec.update_to(gem)
@@ -493,8 +493,8 @@ module Polisher
 
     describe "#compare" do
       it "returns requirements in spec but not in gem" do
-        req  = Polisher::RPMSpec::Requirement.parse 'rubygem(rails) > 3.0.0'
-        spec = Polisher::RPMSpec.new :requires => [req]
+        req  = Polisher::RPM::Requirement.parse 'rubygem(rails) > 3.0.0'
+        spec = Polisher::RPM::Spec.new :requires => [req]
         gem  = Polisher::Gem.new
 
         spec.compare(gem).should ==
@@ -504,7 +504,7 @@ module Polisher
 
       it "returns requirements in gem but not in spec" do
         req = ::Gem::Dependency.new('rails', '> 3.0.0')
-        spec = Polisher::RPMSpec.new
+        spec = Polisher::RPM::Spec.new
         gem  = Polisher::Gem.new :deps => [req]
 
         spec.compare(gem).should ==
@@ -516,8 +516,8 @@ module Polisher
         greq = ::Gem::Dependency.new('rails', '< 5.0.0')
         gem  = Polisher::Gem.new :deps => [greq]
 
-        sreq = Polisher::RPMSpec::Requirement.parse 'rubygem(rails) > 3.0.0'
-        spec = Polisher::RPMSpec.new :requires => [sreq]
+        sreq = Polisher::RPM::Requirement.parse 'rubygem(rails) > 3.0.0'
+        spec = Polisher::RPM::Spec.new :requires => [sreq]
 
         spec.compare(gem).should ==
           {:same => {}, :diff => {'rails' =>
@@ -528,13 +528,13 @@ module Polisher
         greq = ::Gem::Dependency.new('rails', '< 3.0.0')
         gem  = Polisher::Gem.new :deps => [greq]
 
-        sreq = Polisher::RPMSpec::Requirement.parse 'rubygem(rails) < 3.0.0'
-        spec = Polisher::RPMSpec.new :requires => [sreq]
+        sreq = Polisher::RPM::Requirement.parse 'rubygem(rails) < 3.0.0'
+        spec = Polisher::RPM::Spec.new :requires => [sreq]
 
         spec.compare(gem).should ==
           {:diff => {}, :same => {'rails' =>
                   {:spec => '< 3.0.0', :upstream => '< 3.0.0'}}}
       end
     end
-  end # describe RPMSpec
+  end # describe RPM::Spec
 end # module Polisher
