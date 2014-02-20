@@ -90,7 +90,9 @@ module Polisher
 
     # Return new instance of Gem from Gemspec
     def self.from_gemspec(gemspec)
-      gemspec  = ::Gem::Specification.load(gemspec)
+      gemspec  =
+        ::Gem::Specification.load(gemspec) if !gemspec.is_a?(::Gem::Specification) &&
+                                               File.exists?(gemspec)
 
       metadata           = {}
       metadata[:spec]    = gemspec # TODO to json
@@ -110,6 +112,13 @@ module Polisher
       self.new metadata
     end
 
+    # Return ew instance of Gem from rubygem
+    def self.from_gem(gem_path)
+      gem = self.parse :gemspec => ::Gem::Package.new(gem_path).spec
+      gem.path = gem_path
+      gem
+    end
+
     # Parse the specified gemspec & return new Gem instance from metadata
     # 
     # @param [String,Hash] args contents of actual gemspec of option hash
@@ -122,6 +131,9 @@ module Polisher
 
       elsif args.has_key?(:gemspec)
         return self.from_gemspec args[:gemspec]
+
+      elsif args.has_key?(:gem)
+        return self.from_gem args[:gem]
 
       end
 
@@ -191,7 +203,8 @@ module Polisher
       self.unpack do |dir|
         Pathname(dir).find do |path|
           next if path.to_s == dir.to_s
-          bl.call path
+          pathstr = path.to_s.gsub("#{dir}/", '')
+          bl.call pathstr unless pathstr.blank?
         end
       end
     end
@@ -203,8 +216,7 @@ module Polisher
       @file_paths ||= begin
         files = []
         self.each_file do |path|
-          pathstr = path.to_s.gsub("#{dir}/", '')
-          files << pathstr unless pathstr.blank?
+          files << path
         end
         files
       end

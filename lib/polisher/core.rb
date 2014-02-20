@@ -3,8 +3,6 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/rpmspec'
-
 class Object
   def eigenclass
     class << self
@@ -31,6 +29,8 @@ module ConfHelpers
     end
   end
 end
+
+require 'polisher/rpmspec'
 
 class String
   # Return bool indicating if self is a path to a gem
