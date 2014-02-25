@@ -95,7 +95,7 @@ module Polisher
                                                File.exists?(gemspec)
 
       metadata           = {}
-      metadata[:spec]    = gemspec # TODO to json
+      metadata[:spec]    = gemspec
       metadata[:name]    = gemspec.name
       metadata[:version] = gemspec.version.to_s
 
@@ -112,7 +112,7 @@ module Polisher
       self.new metadata
     end
 
-    # Return ew instance of Gem from rubygem
+    # Return new instance of Gem from rubygem
     def self.from_gem(gem_path)
       gem = self.parse :gemspec => ::Gem::Package.new(gem_path).spec
       gem.path = gem_path
@@ -140,6 +140,11 @@ module Polisher
       self.new
     end
 
+    # Return handler to internal curl helper
+    def self.client
+      @client ||= Curl::Easy.new
+    end
+
     # Download the specified gem and return the binary file contents as a string
     #
     # @return [String] binary gem contents
@@ -147,12 +152,10 @@ module Polisher
       cached = GemCache.get(name, version)
       return cached unless cached.nil?
 
-      # TODO utilize a singleton curl instance (akin to errata module)
-      gem_path = "https://rubygems.org/gems/#{name}-#{version}.gem"
-      curl = Curl::Easy.new(gem_path)
-      curl.follow_location = true
-      curl.http_get
-      gemf = curl.body_str
+      client.url = "https://rubygems.org/gems/#{name}-#{version}.gem"
+      client.follow_location = true
+      client.http_get
+      gemf = client.body_str
 
       GemCache.set(name, version, gemf)
       gemf
@@ -245,9 +248,10 @@ module Polisher
     def versions(args={}, &bl)
       recursive = args[:recursive]
       dev_deps  = args[:dev_deps]
-
       versions  = args[:versions] || {}
-      versions.merge!({ self.name => Polisher::VersionChecker.versions_for(self.name, &bl) })
+
+      gem_versions = Polisher::VersionChecker.versions_for(self.name, &bl)
+      versions.merge!({ self.name => gem_versions })
       args[:versions] = versions
 
       if recursive
