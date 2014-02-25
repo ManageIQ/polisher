@@ -61,18 +61,28 @@ module Polisher
         end
       end
   
+      # Return boolean indicating if spec has a %check section
       def has_check?
         @metadata.has_key?(:has_check) && @metadata[:has_check]
       end
   
-      # Return all the requirements for the specified gem
+      # Return all the Requires for the specified gem
       def requirements_for_gem(gem_name)
         @metadata[:requires].nil? ? [] :
         @metadata[:requires].select { |r| r.gem_name == gem_name }
       end
-  
+
+      # Return all the BuildRequires for the specified gem
+      def build_requirements_for_gem(gem_name)
+        @metadata[:build_requires].nil? ? [] :
+        @metadata[:build_requires].select { |r| r.gem_name == gem_name }
+      end
+
       # Return bool indicating if this spec specifies all the
       # requirements in the specified gem dependency
+      #
+      # @param [Gem::Dependency] gem_dep dependency which to retreive / compare
+      # requirements
       def has_all_requirements_for?(gem_dep)
         reqs = self.requirements_for_gem gem_dep.name
         # create a spec requirement dependency for each expanded subrequirement,
@@ -85,6 +95,42 @@ module Polisher
             reqs.any? { |req| req.matches?(tereq)}
           }
         }
+      end
+
+      # Return all gem Requires
+      def gem_requirements
+        @metadata[:requires].nil? ? [] :
+        @metadata[:requires].select { |r| r.gem? }
+      end
+
+      # Return all gem BuildRequires
+      def gem_build_requirements
+        @metadata[:build_requires].nil? ? [] :
+        @metadata[:build_requires].select { |r| r.gem? }
+      end
+
+      # Return all non gem Requires
+      def non_gem_requirements
+        @metadata[:requires].nil? ? [] :
+        @metadata[:requires].select { |r| !r.gem? }
+      end
+
+      # Return all non gem BuildRequires
+      def non_gem_build_requirements
+        @metadata[:build_requires].nil? ? [] :
+        @metadata[:build_requires].select { |r| !r.gem? }
+      end
+
+      # Return all gem requirements _not_ in the specified gem
+      def extra_gem_requirements(gem)
+        gem_reqs = gem.deps.collect { |d| requirements_for_gem(d.name) }.flatten
+        gem_requirements - gem_reqs
+      end
+
+      # Return all gem build requirements _not_ in the specified gem
+      def extra_gem_build_requirements(gem)
+        gem_reqs = gem.deps.collect { |d| requirements_for_gem(d.name) }.flatten
+        gem_build_requirements - gem_reqs
       end
   
       # Parse the specified rpm spec and return new RPM::Spec instance from metadata
@@ -167,9 +213,6 @@ module Polisher
   
       # Update RPM::Spec metadata to new gem
       #
-      # TODO add option to enable/disable certain aspects
-      # from being updates
-      #
       # @param [Polisher::Gem] new_source new gem to update rpmspec to
       def update_to(new_source)
         update_deps_from(new_source)
@@ -178,66 +221,25 @@ module Polisher
       end
   
       private
-  
+
+      # Update spec dependencies from new source
       def update_deps_from(new_source)
-        non_gem_requires    = []
-        non_gem_brequires   = []
-        extra_gem_requires  = []
-        extra_gem_brequires = []
-  
-        @metadata[:requires] ||= []
-        @metadata[:requires].each { |r|
-          if !r.gem?
-            non_gem_requires << r
-          elsif !new_source.deps.any? { |d| d.name == r.gem_name }
-            extra_gem_requires << r
-          #else
-          #  spec_version = $2
-          end
-        }
-  
-        @metadata[:build_requires] ||= []
-        @metadata[:build_requires].each { |r|
-          if !r.gem?
-            non_gem_brequires << r
-          elsif !new_source.deps.any? { |d| d.name == r.gem_name }
-            extra_gem_brequires << r
-          #else
-          #  spec_version = $2
-          end
-        }
-  
-        # TODO detect if req is same as @version, swap out w/ %{version} macro ?
-  
         @metadata[:requires] =
-          non_gem_requires + extra_gem_requires +
+          non_gem_requirements +
+          extra_gem_requirements(new_source) +
           new_source.deps.collect { |r|
-            r.requirement.to_s.split(',').collect { |req|
-              expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
-              expanded.collect { |e|
-                RPM::Requirement.new :name      => "rubygem(#{r.name})",
-                                         :condition => e.first.to_s,
-                                         :version   => e.last.to_s,
-                                         :br        => false
-              }
-            }
+            RPM::Requirement.from_gem_dep(r)
           }.flatten
   
         @metadata[:build_requires] =
-          non_gem_brequires + extra_gem_brequires +
+          non_gem_build_requirements +
+          extra_gem_build_requirements(new_source) +
           new_source.dev_deps.collect { |r|
-            r.requirement.to_s.split(',').collect { |req|
-              expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
-              expanded.collect { |e|
-                RPM::Requirement.new :name      => "rubygem(#{r.name})",
-                                         :condition => e.first.to_s,
-                                         :version   => e.last.to_s,
-                                         :br        => true
-              }
-            }
+            RPM::Requirement.from_gem_dep(r, true)
           }.flatten
       end
   
+      # Internal helper to update spec files from new source
       def update_files_from(new_source)
         to_add = new_source.file_paths
         @metadata[:files] ||= {}
@@ -257,8 +259,10 @@ module Polisher
         @metadata[:new_files] = to_add
       end
   
+      # Internal helper to update spec metadata from new source
       def update_metadata_from(new_source)
         # update to new version
+        # TODO detect if new_source is same as @version, swap out w/ %{version} macro ?
         @metadata[:version] = new_source.version
         @metadata[:release] = "1%{?dist}"
   
@@ -319,6 +323,15 @@ EOS
         contents
       end
   
+      # Compare this spec to a sepecified upstream gem source
+      # and return result.
+      #
+      # upstream_source should be an instance of Polisher::Gem,
+      # Polisher::Gemfile, or other class defining a 'deps'
+      # accessor that returns an array of Gem::Requirement dependencies
+      #
+      # Result will be a hash containing the shared dependencies as
+      # well as those that differ and their respective differences
       def compare(upstream_source)
         same = {}
         diff = {}

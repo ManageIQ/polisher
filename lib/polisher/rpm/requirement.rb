@@ -36,6 +36,7 @@ module Polisher
         @version.nil? ? nil : "#{@condition} #{@version}"
       end
 
+      # Instantiate / return new rpm spec requirements from string
       def self.parse(str, opts={})
         stra   = str.split
         br = str.include?('BuildRequires')
@@ -58,6 +59,22 @@ module Polisher
                         :version   => version,
                         :br        => br}.merge(opts))
         req
+      end
+
+      # Instantiate / return new rpm spec requirements from gem dependency.
+      #
+      # Because a gem dependency may result in multiple spec requirements
+      # this will always return an array of Requirement instances
+      def self.from_gem_dep(gem_dep, br=false)
+        gem_dep.requirement.to_s.split(',').collect { |req|
+          expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
+          expanded.collect { |e|
+            self.new :name      => "rubygem(#{gem_dep.name})",
+                     :condition => e.first.to_s,
+                     :version   => e.last.to_s,
+                     :br        => br
+          }
+        }.flatten
       end
 
       def initialize(args={})
@@ -135,6 +152,13 @@ module Polisher
         self.gcd(versions)
       end
 
+      # Return bool indicating if requirement matches specified
+      # depedency.
+      #
+      # Comparison mechanism will depend on type of class
+      # passed to this. Valid types include
+      # - Polisher::RPM::Requirements
+      # - ::Gem::Dependency
       def matches?(dep)
         return self == dep      if dep.is_a?(self.class)
         raise ArgumentError unless dep.is_a?(::Gem::Dependency)
@@ -148,10 +172,13 @@ module Polisher
           }
       end
 
+      # Whether or not this requirement specified a ruby gem dependency
       def gem?
         !!(self.str =~ RPM::Spec::SPEC_GEM_REQ_MATCHER)
       end
 
+      # Return the name of the gem which this requirement is for.
+      # Returns nil if this is not a gem requirement
       def gem_name
         # XXX need to explicitly run regex here to get $1
         !!(self.str =~ RPM::Spec::SPEC_GEM_REQ_MATCHER) ? $1 : nil
