@@ -32,6 +32,11 @@ module Polisher
       @check_list << target
     end
 
+    def self.should_check?(target)
+      @check_list ||= ALL_TARGETS
+      @check_list.include?(target)
+    end
+
     # Retrieve all the versions of the specified package using
     # the configured targets.
     #
@@ -41,30 +46,29 @@ module Polisher
     # @returns [Hash<target,Array<String>>] returns a hash of target to versions
     # available for specified package
     def self.versions_for(name, &bl)
-      @check_list ||= ALL_TARGETS
       versions = {}
 
-      if @check_list.include?(GEM_TARGET)
+      if should_check?(GEM_TARGET)
         versions.merge! :gem => Gem.local_versions_for(name, &bl)
       end
 
-      if @check_list.include?(FEDORA_TARGET)
+      if should_check?(FEDORA_TARGET)
         versions.merge! :fedora => Fedora.versions_for(name, &bl)
       end
 
-      if @check_list.include?(KOJI_TARGET)
+      if should_check?(KOJI_TARGET)
         versions.merge! :koji => Koji.versions_for(name, &bl)
       end
 
-      if @check_list.include?(GIT_TARGET)
+      if should_check?(GIT_TARGET)
         versions.merge! :git => [GitPackage.version_for(name, &bl)]
       end
 
-      if @check_list.include?(YUM_TARGET)
+      if should_check?(YUM_TARGET)
         versions.merge! :yum => [Yum.version_for(name, &bl)]
       end
 
-      if @check_list.include?(BODHI_TARGET)
+      if should_check?(BODHI_TARGET)
         versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
       end
 
