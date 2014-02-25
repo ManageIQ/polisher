@@ -17,7 +17,6 @@ module Polisher
         c.ssl_verify_host = false
         c.http_auth_types = :negotiate
         c.userpwd = ':'
-        c.get
       end
 
       @curl.url = url
