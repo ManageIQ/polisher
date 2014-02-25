@@ -77,7 +77,7 @@ module Polisher
               Polisher::Gem.retrieve(dep)
 
         # retrieve dep
-        git = Polisher::GitRepo.new :url => src.uri
+        git = Polisher::Git::Repo.new :url => src.uri
         git.clone unless git.cloned?
         git.checkout src.ref if src.ref
 

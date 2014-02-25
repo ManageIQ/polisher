@@ -6,7 +6,7 @@
 require 'polisher/git'
 
 module Polisher
-  describe GitRepo do
+  describe Git::Repo do
     describe "#initialize" do
       it "initializes url" do
         repo = described_class.new :url => 'repo_url'
@@ -124,7 +124,7 @@ module Polisher
     end
   end
 
-  describe GitPackage do
+  describe Git::Pkg do
     describe "#initialize" do
       it "initializes name" do
         pkg = described_class.new :name => 'pkg_name'
@@ -388,9 +388,9 @@ module Polisher
         described_class.version_for('rails', &cb)
       end
     end
-  end # describe GitPackage
+  end # describe Git::Pkg
 
-  describe GitProject do
+  describe Git::Project do
     describe "#vendored" do
       context "repo not cloned" do
         it "clones repo" do

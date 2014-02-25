@@ -61,7 +61,7 @@ module Polisher
       end
 
       if should_check?(GIT_TARGET)
-        versions.merge! :git => [GitPackage.version_for(name, &bl)]
+        versions.merge! :git => [Git::Package.version_for(name, &bl)]
       end
 
       if should_check?(YUM_TARGET)
