@@ -12,6 +12,22 @@ class Object
 end
 
 module ConfHelpers
+  # Defines a 'config attribute' or attribute on the class
+  # which this is defined in. Accessors to the single shared
+  # attribute will be added to the class as well as instances
+  # of the class. Specify the default value with the attr name
+  # or via an env variable
+  #
+  # @example
+  #   class Custom
+  #     extend ConfHelpers
+  #     conf_attr :data_dir, '/etc/'
+  #   end
+  #   Custom.data_dir # => '/etc/'
+  #   ENV['POLISHER_DATA_DIR'] = '/usr/'
+  #   Custom.data_dir # => '/usr/'
+  #   Custom.data_dir == Custom.new.data_dir # => true
+  #
   def conf_attr(name, default=nil)
     self.send(:define_singleton_method, name) do |*args|
       nvar = "@#{name}".intern

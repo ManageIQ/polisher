@@ -18,7 +18,7 @@ module Polisher
 
     # Return list of vendered gems in file list
     def vendored
-      vendored_file_paths.inject({}){ |v,fp|
+      vendored_file_paths.inject({}) do |v,fp|
         vendored_file = fp.split('/')
         vendor_index  = vendored_file.index('vendor')
 
@@ -31,7 +31,7 @@ module Polisher
         #vf.last.downcase == 'version.rb'
         v[vname] = vversion
         v
-      }
+      end
     end
   end
 end
