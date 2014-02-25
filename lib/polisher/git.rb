@@ -20,10 +20,6 @@ module Polisher
     # TODO use ruby git api
     conf_attr :git_cmd, '/usr/bin/git'
 
-    def git_cmd
-      self.class.git_cmd
-    end
-
     attr_accessor :url
 
     def initialize(args={})
