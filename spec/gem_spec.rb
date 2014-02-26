@@ -84,14 +84,14 @@ module Polisher
     describe "#download_gem_path" do
       it "downloads gem" do
         gem = Polisher::Gem.new
-        gem.should_receive(:download_gem)
+        Polisher::Gem.should_receive(:download_gem)
         gem.downloaded_gem_path
       end
 
       it "returns gem cache path for gem" do
         # stub out d/l
         gem = Polisher::Gem.new :name => 'rails', :version => '1.0'
-        gem.should_receive(:download_gem)
+        Polisher::Gem.should_receive(:download_gem)
         Polisher::GemCache.should_receive(:path_for).
                            with('rails', '1.0').
                            at_least(:once).

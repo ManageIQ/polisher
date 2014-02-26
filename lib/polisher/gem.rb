@@ -166,13 +166,25 @@ module Polisher
       self.class.download_gem @name, @version
     end
 
+    # Download the specified gem / version from rubygems and
+    # return instance of Polisher::Gem class corresponding to it
+    def self.from_rubygems(name, version)
+      download_gem name, version
+      self.from_gem downloaded_gem_path(name, version)
+    end
+
     # Returns path to downloaded gem
     #
     # @return [String] path to downloaded gem
-    def downloaded_gem_path
+    def self.downloaded_gem_path(name, version)
       # ensure gem is downloaded
-      self.download_gem
-      GemCache.path_for(@name, @version)
+      self.download_gem(name, version)
+      GemCache.path_for(name, version)
+    end
+
+    # Return path to downloaded gem
+    def downloaded_gem_path
+      self.class.downloaded_gem_path @name, @version
     end
 
     # Returns path to gem, either specified one of downloaded one
@@ -280,7 +292,8 @@ module Polisher
 
       begin
         this_dir  = self.unpack
-        other_dir = other.is_a?(Polisher::Gem) ? other.unpack : other
+        other_dir = other.is_a?(Polisher::Gem) ? other.unpack :
+                   (other.is_a?(Polisher::Git::Repo) ? other.path : other)
         result = AwesomeSpawn.run("#{DIFF_CMD} -r #{this_dir} #{other_dir}")
         out = result.output.gsub("#{this_dir}", 'a').gsub("#{other_dir}", 'b')
       rescue
