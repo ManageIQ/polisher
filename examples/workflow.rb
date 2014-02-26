@@ -1,7 +1,7 @@
 # An example post-processing workflow using polisher
 
 require 'polisher/git'
-require 'polisher/rpmspec'
+require 'polisher/rpm/spec'
 require 'polisher/gem'
 
 git  = Polisher::GitPackage.clone('rails')
