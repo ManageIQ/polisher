@@ -262,7 +262,6 @@ module Polisher
       # Internal helper to update spec metadata from new source
       def update_metadata_from(new_source)
         # update to new version
-        # TODO detect if new_source is same as @version, swap out w/ %{version} macro ?
         @metadata[:version] = new_source.version
         @metadata[:release] = "1%{?dist}"
   

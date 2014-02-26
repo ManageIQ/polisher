@@ -13,6 +13,8 @@ module Polisher
   class Koji
     extend ConfHelpers
 
+    # TODO Koji#build (on class or instance?)
+
     conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
     conf_attr :koji_tag, 'f21'
 

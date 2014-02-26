@@ -81,6 +81,7 @@ module Polisher
         self
       end
 
+      # Return boolean indicating if package is marked as dead (retired/obsolete/etc)
       def dead?
         in_repo { File.exists?('dead.package') }
       end
