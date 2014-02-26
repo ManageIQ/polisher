@@ -18,7 +18,6 @@ require 'optparse'
 require 'colored'
 require 'polisher/gem'
 require 'polisher/gemfile'
-require 'polisher/gemspec'
 
 ##########################################################
 
@@ -145,6 +144,12 @@ if conf[:gemname]
     print_dep(tgt, dep, versions)
   end
 
+elsif conf[:gemspec]
+  gem = Polisher::Gem.from_gemspec(conf[:gemspec])
+  gem.versions(:recursive => true, :dev_deps => true) do |tgt, dep, versions|
+    print_dep(tgt, dep, versions)
+  end
+
 elsif conf[:gemfile]
   gemfile = nil
 
@@ -156,12 +161,6 @@ elsif conf[:gemfile]
   end
 
   gemfile.dependency_versions do |tgt, dep, versions|
-    print_dep(tgt, dep, versions)
-  end
-
-elsif conf[:gemspec]
-  gemspec = Polisher::Gemspec.parse(conf[:gemspec])
-  gemspec.dependency_versions do |tgt, dep, versions|
     print_dep(tgt, dep, versions)
   end
 end
