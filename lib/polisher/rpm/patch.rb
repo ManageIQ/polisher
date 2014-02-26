@@ -6,6 +6,9 @@
 module Polisher
   module RPM
     class Patch
+      attr_accessor :title
+      attr_accessor :content
+
       def initialize(args={})
         @title   = args[:title]
         @content = args[:content]
@@ -34,8 +37,7 @@ module Polisher
           end
         end
 
-        # TODO create Patch objects from content (auto formatting name in process)
-        result
+        result.collect { |t,c| self.new :title => t, :content => c }
       end
     end
   end
