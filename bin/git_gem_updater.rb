@@ -61,14 +61,13 @@ Dir.chdir conf[:dir]
 conf[:gems].each do |gem_name|
   pkg =
     begin
-      Polisher::Git::Package.new(:name => gem_name).clone
+      Polisher::Git::Pkg.new(:name => gem_name).clone
     rescue => e
       puts "Problem Cloning Package, Skipping: #{e}"
       next
     end
 
   gem = Polisher::Gem.retrieve gem_name
-  File.write("#{gem.name}-#{gem.version}.gem", gem.download_gem)
   pkg.update_to(gem)
   # TODO append gem dependencies to conf[:gems] list
 
@@ -82,6 +81,7 @@ conf[:gems].each do |gem_name|
   pkg.commit
 
   puts "#{gem_name} commit complete".green
+  puts "Package located in #{pkg.path.bold}"
   puts "Push commit with: git push".blue
-  puts "Build and tag official rpms with: #{Polisher::Git::Package.pkg_cmd} build".blue
+  puts "Build and tag official rpms with: #{Polisher::Git::Pkg.pkg_cmd} build".blue
 end

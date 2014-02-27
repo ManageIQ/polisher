@@ -21,7 +21,6 @@ module Polisher
       conf_attr :build_cmd,    '/usr/bin/koji'
       conf_attr :build_tgt,    'rawhide'
       conf_attr :md5sum_cmd,   '/usr/bin/md5sum'
-      conf_attr :sed_cmd,      '/usr/bin/sed'
       conf_attr :dist_git_url, 'git://pkgs.fedoraproject.org/'
       conf_attr :fetch_tgt,    'master'
 
@@ -74,7 +73,15 @@ module Polisher
           result = AwesomeSpawn.run "#{pkg_cmd} clone #{rpm_name}"
           raise PolisherError,
                 "could not clone #{rpm_name}" unless result.exit_status == 0
-          Dir.glob("#{rpm_name}/*").each { |f| FileUtils.move f, '.' }
+
+          # pkg_cmd will clone into the rpm_name subdir,
+          # move everything up a dir
+          Dir.foreach("#{rpm_name}/") do |f|
+            orig = "#{rpm_name}/#{f}"
+            skip = ['.', '..'].include?(f)
+            FileUtils.move orig, '.' unless skip
+          end
+
           FileUtils.rm_rf rpm_name
         end
 
@@ -113,13 +120,16 @@ module Polisher
       # Generate new sources file
       def gen_sources_for(gem)
         in_repo do
-          AwesomeSpawn.run "#{md5sum_cmd} #{gem.name}-#{gem.version}.gem > sources"
+          AwesomeSpawn.run "#{md5sum_cmd} #{gem.gem_path} > sources"
+          File.write('sources', File.read('sources').gsub("#{GemCache::DIR}/", ''))
         end
       end
 
       # Update git ignore to ignore gem
       def ignore(gem)
-        File.open(".gitignore", "w") { |f| f.write "#{gem.name}-#{gem.version}.gem" }
+        in_repo do
+          File.open(".gitignore", "w") { |f| f.write "#{gem.name}-#{gem.version}.gem" }
+        end
       end
 
       # Update the local pkg to specified gem
