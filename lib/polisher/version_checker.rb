@@ -6,7 +6,7 @@
 require 'polisher/gem'
 require 'polisher/fedora'
 require 'polisher/koji'
-require 'polisher/git'
+require 'polisher/git/pkg'
 require 'polisher/bodhi'
 require 'polisher/yum'
 
