@@ -15,6 +15,8 @@ module Polisher
 
     # TODO Koji#build (on class or instance?)
 
+    # TODO Koji#diff(tag1, tag2)
+
     conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
     conf_attr :koji_tag, 'f21'
 
