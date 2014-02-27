@@ -177,7 +177,7 @@ module Polisher
     describe "#clone" do
       it "clones package" do
         # stub out glob / rm_rf
-        Dir.should_receive(:glob).and_return([])
+        Dir.should_receive(:foreach).and_return([])
         FileUtils.should_receive(:rm_rf).at_least(:once)
 
         pkg = described_class.new :name => 'rails'
