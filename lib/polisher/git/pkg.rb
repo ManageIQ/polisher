@@ -105,15 +105,10 @@ module Polisher
       end
 
       # Update the local spec to the specified gem version
-      #
-      # FIXME this should be removed and calls replaced with self.spec.update_to(gem)
       def update_spec_to(gem)
         in_repo do
-          replace_version = "s/Version.*/Version: #{gem.version}/"
-          replace_release = "s/Release:.*/Release: 1%{?dist}/"
-          [replace_version, replace_release].each do |replace|
-            AwesomeSpawn.run "#{sed_cmd} -i '#{replace}' #{spec_file}"
-          end
+          spec.update_to(gem)
+          File.write(spec_file, spec.to_string)
         end
       end
 
