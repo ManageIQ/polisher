@@ -24,6 +24,7 @@ require 'polisher/gemfile'
 conf = { :gemfile             => './Gemfile',
          :gemspec             => nil,
          :gemname             => nil,
+         :groups              =>  [],
          :devel_deps          => false,
          :highlight_missing   => false,
          :check_fedora        => false,
@@ -43,6 +44,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on('--gemfile file', 'Location of the gemfile to parse') do |g|
     conf[:gemfile] = g
+  end
+
+  opts.on('--group gemfile_groups', 'Gemfile groups (may be specified multiple times)') do |g|
+    conf[:groups] << g
   end
 
   opts.on('--gemspec file', 'Location of the gemspec to parse') do |g|
@@ -154,7 +159,7 @@ elsif conf[:gemfile]
   gemfile = nil
 
   begin
-    gemfile = Polisher::Gemfile.parse(conf[:gemfile])
+    gemfile = Polisher::Gemfile.parse(conf[:gemfile], :groups => conf[:groups])
   rescue => e
     puts "Runtime err #{e}".red
     exit 1

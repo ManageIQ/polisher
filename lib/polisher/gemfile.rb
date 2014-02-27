@@ -34,7 +34,9 @@ module Polisher
     # 
     # @param [String] path to gemfile to parse
     # @return [Polisher::Gemfile] gemfile instantiated from parsed metadata
-    def self.parse(path)
+    def self.parse(path, args={})
+      groups = args[:groups]
+
       definition = nil
       path,g = File.split(path)
       Dir.chdir(path){
@@ -46,7 +48,13 @@ module Polisher
       }
 
       metadata = {}
-      metadata[:deps]     = definition.dependencies.collect { |d| d.name }
+      metadata[:deps] =
+        definition.dependencies.select { |d|
+           d.groups.include?(:default)  ||                  # dep in all groups
+           groups.nil? || groups.empty? ||                  # groups not specified
+           groups.any? { |g| d.groups.include?(g.intern) }  # dep in any group
+        }.collect { |d| d.name }
+
       metadata[:dev_deps] = [] # TODO
       metadata[:definition] = definition
 
