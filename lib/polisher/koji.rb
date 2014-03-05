@@ -4,8 +4,10 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'xmlrpc/client'
-XMLRPC::Config::ENABLE_NIL_PARSER = true
-XMLRPC::Config::ENABLE_NIL_CREATE = true
+silence_warnings do
+  XMLRPC::Config::ENABLE_NIL_PARSER = true
+  XMLRPC::Config::ENABLE_NIL_CREATE = true
+end
 
 require 'polisher/core'
 
