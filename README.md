@@ -1,25 +1,32 @@
-Polisher
-======================
+# Polisher
+
+[![Gem Version](https://badge.fury.io/rb/polisher.png)](http://badge.fury.io/rb/polisher)
+[![Build Status](https://travis-ci.org/ManageIQ/polisher.png)](https://travis-ci.org/ManageIQ/polisher)
+[![Code Climate](https://codeclimate.com/github/ManageIQ/polisher.png)](https://codeclimate.com/github/ManageIQ/polisher)
+[![Coverage Status](https://coveralls.io/repos/ManageIQ/polisher/badge.png?branch=master)](https://coveralls.io/r/ManageIQ/polisher)
+[![Dependency Status](https://gemnasium.com/ManageIQ/polisher.png)](https://gemnasium.com/ManageIQ/polisher)
+
+
 Ruby Post-Publishing Processor - Polish your Ruby projects with ease!
 
 <pre>
- .77                                                                 7.         
-  +$                                                                 =~         
-+?ZZZII                                                           .Z$$$$$$      
-$~~:,.$Z                                                           $~~:,.7      
- ?~:,, .......................................redmine...............=~:,,.      
-  ~::,..rails.......................................................~~:,.      
-  ~~:,, .........rack................json...........................=~:,,      
-  =~::,.....................sass............activerecord..............~::,.     
-   ~~:,.=....eruby...................................................~~:,.~    
-   +~:,,.................haml......................eventmachine.......?~::,.    
-    ~::,. ........................rspec................................~~:,.:   
-    =~:,,:.........................................bundler.............~~:,,    
-     ~I7I..........rvm..................rake...........................,~7?II   
-    $$$$$$$O                                                           $$$$$$$$ 
-     .ZO7Z,                                                             .+ZIZ.  
-        7                                                                  7    
-        $I                                                                 ZI   
+ .77                                                                 7.
+  +$                                                                 =~
++?ZZZII                                                           .Z$$$$$$
+$~~:,.$Z                                                           $~~:,.7
+ ?~:,, .......................................redmine...............=~:,,.
+  ~::,..rails.......................................................~~:,.
+  ~~:,, .........rack................json...........................=~:,,
+  =~::,.....................sass............activerecord..............~::,.
+   ~~:,.=....eruby...................................................~~:,.~
+   +~:,,.................haml......................eventmachine.......?~::,.
+    ~::,. ........................rspec................................~~:,.:
+    =~:,,:.........................................bundler.............~~:,,
+     ~I7I..........rvm..................rake...........................,~7?II
+    $$$$$$$O                                                           $$$$$$$$
+     .ZO7Z,                                                             .+ZIZ.
+        7                                                                  7
+        $I                                                                 ZI
 </pre>
 
 Polisher is a Ruby module and set of utilities aimed to assisting the post-publishing
@@ -69,7 +76,7 @@ To install the latest release and all ruby dependencies simply run:
     gem install polisher
 
 See the bin/ directory for all executables available, pass '-h' to any to
-see specific command line options. To run any command from a local git checkout 
+see specific command line options. To run any command from a local git checkout
 of polisher, run the following beforehand:
 
     export RUBYLIB='lib'

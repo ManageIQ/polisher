@@ -3,3 +3,4 @@ doc
 *.swp
 tmp
 wiki
+/coverage/
