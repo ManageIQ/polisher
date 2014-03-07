@@ -3,14 +3,6 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-class Object
-  def eigenclass
-    class << self
-      self
-    end
-  end
-end
-
 module ConfHelpers
   # Defines a 'config attribute' or attribute on the class
   # which this is defined in. Accessors to the single shared
