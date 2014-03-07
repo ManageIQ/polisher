@@ -55,7 +55,6 @@ Various polisher subcomponents depend on various command line utilities, these i
 * /usr/bin/git - to checkout git repos
 * /usr/bin/koji - to query and build against koji
 * /usr/bin/yum - to query yum
-* /usr/bin/sed - to manipulated metadata
 * /usr/bin/md5sum - to generate required metadata
 * /usr/bin/fedpkg - to query fedora
 
@@ -100,6 +99,16 @@ Simply specify the name of the gem to update like so:
 Alternatively if "-u" is specified with a Fedora username, all the packages the
 user owns will be checked out and updated.
 
+## git_gem_diff
+
+A script that does a source comparison between a gem maintained in git against
+its corresponding rubygems.org gem.
+
+Simply specify the url to the git repo and the tool will automatically detect
+the version of the gem to retrieve and run the diff on
+
+    git_gem_diff.rb -g https://github.com/ManageIQ/polisher.git
+
 ### ruby_rpm_spec_updater
 
 A tool to update a given ruby gem or application based rpm spec to the specified
@@ -111,10 +120,15 @@ to STDOUT.
 
     ruby_rpm_spec_updater.rb ~/rpmbuild/SPECS/rubygem-rails.spec rails-5.0.0.gem
 
-### Other
+### check_ruby_spec
 
-There are various other tools and utilities provided and in conceptual phases.
-See the bin dir and TODO document for more detailed listing. 
+A tool to compare the given ruby based rpm spec against the specified source
+and/or the corresponding gem retrieved from rubygems.org
+
+    check_ruby_spec.rb ~/rpmbuild/SPECS/rubygem-polisher.spec
+
+This will retrieve the gem and check the spec for consistency, reporting
+any discrepancies.
 
 ### polisher
 
