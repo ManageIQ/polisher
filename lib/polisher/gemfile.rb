@@ -50,7 +50,6 @@ module Polisher
       metadata = {}
       metadata[:deps] =
         definition.dependencies.select { |d|
-           d.groups.include?(:default)  ||                  # dep in all groups
            groups.nil? || groups.empty? ||                  # groups not specified
            groups.any? { |g| d.groups.include?(g.intern) }  # dep in any group
         }.collect { |d| d.name }
