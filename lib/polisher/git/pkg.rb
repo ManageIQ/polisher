@@ -123,7 +123,9 @@ module Polisher
       # Update git ignore to ignore gem
       def ignore(gem)
         in_repo do
-          File.open(".gitignore", "w") { |f| f.write "#{gem.name}-#{gem.version}.gem" }
+          nl = File.exists?('.gitignore') ? "\n" : ''
+          content = "#{nl}#{gem.name}-#{gem.version}.gem"
+          File.open(".gitignore", 'a') { |f| f.write content }
         end
       end
 
