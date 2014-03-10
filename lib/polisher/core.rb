@@ -38,8 +38,6 @@ module ConfHelpers
   end
 end
 
-require 'polisher/rpm/spec'
-
 class String
   # Return bool indicating if self is a path to a gem
   def gem?
@@ -60,6 +58,7 @@ class String
   # macro correspondents. If no rpm macro is specified macro will
   # simply be removed
   def unrpmize
+    require 'polisher/rpm/spec'
     fmm = Polisher::RPM::Spec::FILE_MACRO_MATCHERS
     fmr = Polisher::RPM::Spec::FILE_MACRO_REPLACEMENTS
     f = fmm.inject(self) { |file, matcher| file.gsub(matcher, '') }
@@ -70,6 +69,7 @@ class String
   # Replace all occurrances of non-rpm macro strings in self
   # with their macro correspondences
   def rpmize
+    require 'polisher/rpm/spec'
     fmr = Polisher::RPM::Spec::FILE_MACRO_REPLACEMENTS.invert
     fmr.keys.inject(self) { |file, r| file.gsub(r, fmr[r]) }
   end
