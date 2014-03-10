@@ -40,4 +40,5 @@ Gem::Specification.new do |s|
   s.add_dependency('gem2rpm')
   s.add_dependency('versionomy')
   s.add_development_dependency('rspec', '>= 2.0.0')
+  s.add_development_dependency('coveralls')
 end
