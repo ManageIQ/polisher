@@ -4,6 +4,7 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/git'
+require 'pathname'
 
 module Polisher
   describe Git::Repo do
@@ -61,10 +62,12 @@ module Polisher
         repo = described_class.new
         Dir.mktmpdir do |dir|
           repo.should_receive(:path).and_return(dir)
+
+          expected = Pathname.new(dir).realpath.to_s
           invoked = false
           orig = Dir.pwd
           repo.in_repo do
-            Dir.pwd.should == dir
+            Dir.pwd.should == expected
             invoked = true
           end
           Dir.pwd.should == orig
