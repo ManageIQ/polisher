@@ -4,3 +4,7 @@ doc
 tmp
 wiki
 /coverage/
+.ruby-gemset
+.ruby-version
+.rvmrc
+.rbenv-version
