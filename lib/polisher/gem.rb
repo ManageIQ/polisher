@@ -61,7 +61,9 @@ module Polisher
     # @param [Callable] bl optional block to invoke with versions retrieved
     # @return [Array<String>] list of versions of gem installed locally
     def self.local_versions_for(name, &bl)
-      @local_db ||= ::Gem::Specification.all
+      silence_warnings do
+        @local_db ||= ::Gem::Specification.all
+      end
       versions = @local_db.select { |s| s.name == name }.collect { |s| s.version }
       bl.call(:local_gem, name, versions) unless(bl.nil?) 
       versions
