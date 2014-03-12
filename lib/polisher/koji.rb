@@ -15,8 +15,6 @@ module Polisher
 
     # TODO Koji#build (on class or instance?)
 
-    # TODO Koji#diff(tag1, tag2)
-
     conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
     conf_attr :koji_tag, 'f21'
 
@@ -59,6 +57,30 @@ module Polisher
       versions = builds.collect { |b| b['version'] }
       bl.call(:koji, name, versions) unless(bl.nil?) 
       versions
+    end
+
+    # Return diff between list of packages in two tags in koji
+    def self.diff(tag1, tag2)
+      builds1 = client.call('listTagged', tag1, nil, false, nil, false)
+      builds2 = client.call('listTagged', tag2, nil, false, nil, false)
+      builds  = {}
+      builds1.each do |build|
+        name         = build['package_name']
+        build2       = builds2.find { |b| b['name'] == name }
+        version1     = build['version']
+        version2     = build2 && build2['version']
+        builds[name] = {tag1 => version1, tag2 => version2}
+      end
+
+      builds2.each do |build|
+        name = build['package_name']
+        next if builds.key?(name)
+
+        version = build['version']
+        builds[name] = {tag1 => nil, tag2 => version}
+      end
+
+      builds
     end
   end
 end
