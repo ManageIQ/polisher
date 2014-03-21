@@ -22,6 +22,8 @@ module Polisher
     # always empty array, for interface compatability
     attr_accessor :file_paths
 
+    attr_accessor :definition
+
     def initialize(args={})
       @version  = nil
       @deps     = args[:deps]
