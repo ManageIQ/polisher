@@ -106,7 +106,7 @@ Simply specify the name of the gem to update like so:
 Alternatively if "-u" is specified with a Fedora username, all the packages the
 user owns will be checked out and updated.
 
-## git_gem_diff
+### git_gem_diff
 
 A script that does a source comparison between a gem maintained in git against
 its corresponding rubygems.org gem.
