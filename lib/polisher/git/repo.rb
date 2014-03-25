@@ -3,8 +3,11 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'rugged'
 require 'awesome_spawn'
+
 require 'polisher/core'
+require 'polisher/user'
 require 'polisher/git_cache'
 
 module Polisher
@@ -23,8 +26,20 @@ module Polisher
       end
   
       def path
-        GitCache.path_for(@url)
+        @path ||= GitCache.path_for(@url)
       end
+
+      def author
+        @author ||= {:email=> User.email, :name => User.name}
+      end
+
+      private
+
+      def rugged
+        @rugged ||= Rugged::Repository.new path
+      end
+
+      public
   
       # Clobber the git repo
       def clobber!
@@ -32,7 +47,7 @@ module Polisher
       end
   
       def clone
-        AwesomeSpawn.run "#{git_cmd} clone #{url} #{path}"
+        Rugged::Repository.clone_at url, path
       end
   
       def cloned?
@@ -51,7 +66,7 @@ module Polisher
   
       # Note be careful when invoking:
       def reset!
-        in_repo { AwesomeSpawn.run "#{git_cmd} reset HEAD~ --hard" }
+        rugged.reset 'HEAD~', :hard
         self
       end
   
@@ -61,12 +76,24 @@ module Polisher
       end
   
       def checkout(tgt)
+        # TODO repo.checkout implement in upstream rugged
+        # (not in latest release yet), when available use that here
         in_repo { AwesomeSpawn.run "#{git_cmd} checkout #{tgt}" }
         self
       end
   
       def commit(msg)
-        in_repo { AwesomeSpawn.run "#{git_cmd} commit -m '#{msg}'" }
+        commit_author = author.merge{:time => Time.now}
+
+        # FIXME need to add outstanding file changes to index:
+        tree = repo.index.write_tree(repo)
+        Rugged::Commit.create(rugged,
+                              :author     => commit_author,
+                              :committer  => commit_author,
+                              :message    => msg,
+                              :parents    => [repo.head.target],
+                              :tree       => tree,
+                              :update_ref => "HEAD")
         self
       end
     end # class Repo

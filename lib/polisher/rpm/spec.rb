@@ -8,14 +8,13 @@ require 'versionomy'
 require 'active_support/core_ext'
 
 require 'polisher/core'
+require 'polisher/user'
 require 'polisher/gem'
 require 'polisher/rpm/requirement'
 
 module Polisher
   module RPM
     class Spec
-      AUTHOR = "#{ENV['USER']} <#{ENV['USER']}@localhost.localdomain>"
-  
       COMMENT_MATCHER             = /^\s*#.*/
       GEM_NAME_MATCHER            = /^%global\s*gem_name\s(.*)$/
       SPEC_NAME_MATCHER           = /^Name:\s*rubygem-(.*)$/
@@ -40,11 +39,6 @@ module Polisher
          "%{gem_libdir}" => 'lib'}
   
       attr_accessor :metadata
-  
-      # Return the currently configured author
-      def self.current_author
-        ENV['POLISHER_AUTHOR'] || AUTHOR
-      end
   
       def initialize(metadata={})
         @metadata = metadata
@@ -267,7 +261,7 @@ module Polisher
   
         # add changelog entry
         changelog_entry = <<EOS
-* #{Time.now.strftime("%a %b %d %Y")} #{RPM::Spec.current_author} - #{@metadata[:version]}-1
+* #{Time.now.strftime("%a %b %d %Y")} #{User.email} - #{@metadata[:version]}-1
 - Update to version #{new_source.version}
 EOS
         @metadata[:changelog_entries] ||= []
