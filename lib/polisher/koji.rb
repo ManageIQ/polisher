@@ -50,6 +50,17 @@ module Polisher
       }
     end
 
+    # Return list of tags for which a package exists
+    #
+    # @param [String] name of package to lookup
+    # @return [Hash<String,String>] hash of tag names to package versions for tags
+    # which package was found in
+    def self.tagged_in(name)
+      #                               tagid  userid         pkgid  prefix inherit with_dups
+      pkgs = client.call('listPackages', nil, nil, "rubygem-#{name}", nil, false, true)
+      pkgs.collect { |pkg| pkg['tag_name'] }
+    end
+
     # Retrieve list of the versions of the specified package in koji
     #
     # @param [String] name name of package to lookup
