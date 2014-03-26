@@ -53,10 +53,10 @@ module Polisher
     # @return [String] versions retrieved, or nil if none found
     def self.versions_for(name, &bl)
       # koji xmlrpc call
-      builds =
-        self.client.call('listTagged',
-          koji_tag, nil, false, nil, false,
-          "rubygem-#{name}")
+      builds = [koji_tag].flatten.collect do |tag|
+                 self.client.call('listTagged', tag, nil, false, nil, false,
+                                  "rubygem-#{name}")
+               end.flatten
       versions = builds.collect { |b| b['version'] }
       bl.call(:koji, name, versions) unless(bl.nil?) 
       versions
