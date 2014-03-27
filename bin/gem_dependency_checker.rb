@@ -21,25 +21,30 @@ require 'polisher/gemfile'
 
 ##########################################################
 
-conf = { :gemfile             => './Gemfile',
-         :gemspec             => nil,
-         :gemname             => nil,
-         :groups              =>  [],
-         :devel_deps          => false,
-         :highlight_missing   => false,
-         :check_fedora        => false,
-         :check_git           => false,
-         :check_koji          => false,
-         :check_rhn           => false,
-         :check_yum           => false,
-         :check_bugzilla      => false,
-         :check_errata        => false,
-         :check_bodhi         => false}
+conf = {:format            => nil,
+        :gemfile           => './Gemfile',
+        :gemspec           => nil,
+        :gemname           => nil,
+        :groups            => [],
+        :devel_deps        => false,
+        :highlight_missing => false,
+        :check_fedora      => false,
+        :check_git         => false,
+        :check_koji        => false,
+        :check_rhn         => false,
+        :check_yum         => false,
+        :check_bugzilla    => false,
+        :check_errata      => false,
+        :check_bodhi       => false}
 
 optparse = OptionParser.new do |opts|
   opts.on('-h', '--help', 'Display this help screen') do
     puts opts
     exit
+  end
+
+  opts.on("--format val", 'Format which to render output') do |f|
+    conf[:format] = f
   end
 
   opts.on('--gemfile file', 'Location of the gemfile to parse') do |g|
@@ -127,21 +132,82 @@ targets << Polisher::VersionChecker::BODHI_TARGET  if conf[:check_bodhi]
 targets  = Polisher::VersionChecker::ALL_TARGETS   if targets.empty?
 Polisher::VersionChecker.check targets
 
+@format = conf[:format]
+
+def format_dep(dep)
+  if @format.nil?
+    dep.to_s.blue.bold
+  elsif @format == 'xml'
+    "<#{dep}>"
+  elsif @format == 'json'
+    "'#{dep}':{"
+  end
+end
+
+def format_end_dep(dep)
+  if @format.nil?
+    "\n"
+  elsif @format == 'xml'
+    "\n</#{dep}>"
+  elsif @format == 'json'
+    "\n}"
+  end
+end
+
+def format_tgt(tgt)
+  if @format.nil?
+    "#{tgt.to_s.red.bold} "
+  elsif @format == 'xml'
+    "<#{tgt}/>"
+  elsif @format == 'json'
+    "'#{tgt}':null,"
+  end
+end
+
+def format_tgt_with_versions(tgt, versions)
+  if @format.nil?
+    "#{tgt.to_s.green.bold}: #{versions.join(', ').yellow} "
+  elsif @format == 'xml'
+    "<#{tgt}>#{versions.join(', ')}</#{tgt}>"
+  elsif @format == 'json'
+    "'#{tgt}':['#{versions.join('\', \'')}'],"
+  end
+end
+
+def print_header
+  if @format == 'xml'
+    puts '<dependencies>'
+  elsif @format == 'json'
+    puts '{'
+  end
+end
+
+def print_footer
+  if @format == 'xml'
+    puts "</dependencies>"
+  elsif @format == 'json'
+    puts "}"
+  end
+end
+
 def print_dep(tgt, dep, versions)
   # XXX little bit hacky but works for now
   @last_dep ||= nil
   if @last_dep != dep
-    puts "\n#{dep}".blue.bold
+    puts format_end_dep(@last_dep) unless @last_dep.nil?
+    puts format_dep(dep)
     @last_dep = dep
   end
 
   if versions.nil? || versions.empty? ||
      versions.size == 1 && versions[0].nil?
-    print " #{tgt.to_s.red.bold} "
+    print format_tgt(tgt)
   else
-    print " #{tgt.to_s.green.bold}: #{versions.join(', ').yellow}"
+    print format_tgt_with_versions(tgt, versions)
   end
 end
+
+print_header
 
 if conf[:gemname]
   gem = Polisher::Gem.retrieve(conf[:gemname])
@@ -169,3 +235,6 @@ elsif conf[:gemfile]
     print_dep(tgt, dep, versions)
   end
 end
+
+puts format_end_dep(@last_dep) unless @last_dep.nil? # XXX
+print_footer
