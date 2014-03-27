@@ -21,6 +21,10 @@ module Polisher
     conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
     conf_attr :koji_tag, 'f21'
 
+    def self.koji_tags
+      [koji_tag].flatten
+    end
+
     # Retrieve shared instance of xmlrpc client to use
     def self.client
       @client ||= begin
@@ -46,17 +50,29 @@ module Polisher
       }
     end
 
-    # Retrieve list of the version of the specified package in koji
+    # Return list of tags for which a package exists
+    #
+    # @param [String] name of package to lookup
+    # @return [Hash<String,String>] hash of tag names to package versions for tags
+    # which package was found in
+    def self.tagged_in(name)
+      #                               tagid  userid         pkgid  prefix inherit with_dups
+      pkgs = client.call('listPackages', nil, nil, "rubygem-#{name}", nil, false, true)
+      pkgs.collect { |pkg| pkg['tag_name'] }
+    end
+
+    # Retrieve list of the versions of the specified package in koji
     #
     # @param [String] name name of package to lookup
     # @param [Callable] bl optional block to invoke with versions retrieved
-    # @return [String] versions retrieved, or nil if none found
+    # @return [Array<String>] versions retrieved, empty array if none found
     def self.versions_for(name, &bl)
       # koji xmlrpc call
       builds =
-        self.client.call('listTagged',
-          koji_tag, nil, false, nil, false,
-          "rubygem-#{name}")
+        koji_tags.collect do |tag|
+          client.call('listTagged', tag, nil, false, nil, false,
+                      "rubygem-#{name}")
+        end.flatten
       versions = builds.collect { |b| b['version'] }
       bl.call(:koji, name, versions) unless(bl.nil?) 
       versions

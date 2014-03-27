@@ -39,16 +39,46 @@ module Polisher
       end
     end
 
-    describe "#versions_for" do
+    describe "#tagged_in" do
       before(:each) do
         @client = double(XMLRPC::Client)
         described_class.should_receive(:client).and_return(@client)
+      end
+
+      it "uses xmlrpc client to retrieve packages" do
+        expected = ['listPackages', nil, nil, "rubygem-rails", nil, false, true]
+        @client.should_receive(:call).with(*expected).and_return([])
+        described_class.tagged_in 'rails'
+      end
+
+      it "returns tags" do
+        tags = [{'tag_name' => 'tag1'}, {'tag_name' => 'tag2'}]
+        @client.should_receive(:call).and_return(tags)
+        described_class.tagged_in('rails').should == ['tag1', 'tag2']
+      end
+    end
+
+    describe "#versions_for" do
+      before(:each) do
+        @client = double(XMLRPC::Client)
+        described_class.should_receive(:client).at_least(:once).and_return(@client)
       end
 
       it "uses xmlrpc client to retreive versions" do
         expected = ['listTagged', described_class.koji_tag, nil, false,
                     nil, false, "rubygem-rails"]
         @client.should_receive(:call).with(*expected).and_return([])
+        described_class.versions_for 'rails'
+      end
+
+      it "handles mulitple koji tags" do
+        described_class.should_receive(:koji_tags).and_return(['tag1', 'tag2'])
+        expected1 = ['listTagged', 'tag1', nil, false,
+                     nil, false, "rubygem-rails"]
+        expected2 = ['listTagged', 'tag2', nil, false,
+                     nil, false, "rubygem-rails"]
+        @client.should_receive(:call).with(*expected1).and_return([])
+        @client.should_receive(:call).with(*expected2).and_return([])
         described_class.versions_for 'rails'
       end
 
