@@ -20,6 +20,7 @@ module Polisher
 
     conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
     conf_attr :koji_tag, 'f21'
+    conf_attr :package_prefix, 'rubygem-'
 
     def self.koji_tags
       [koji_tag].flatten
@@ -71,7 +72,7 @@ module Polisher
       builds =
         koji_tags.collect do |tag|
           client.call('listTagged', tag, nil, false, nil, false,
-                      "rubygem-#{name}")
+                      "#{package_prefix}#{name}")
         end.flatten
       versions = builds.collect { |b| b['version'] }
       bl.call(:koji, name, versions) unless(bl.nil?) 
