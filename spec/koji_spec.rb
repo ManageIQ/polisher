@@ -71,7 +71,7 @@ module Polisher
         described_class.versions_for 'rails'
       end
 
-      it "handles mulitple koji tags" do
+      it "handles multiple koji tags" do
         described_class.should_receive(:koji_tags).and_return(['tag1', 'tag2'])
         expected1 = ['listTagged', 'tag1', nil, false,
                      nil, false, "rubygem-rails"]
