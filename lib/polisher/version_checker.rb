@@ -22,14 +22,9 @@ module Polisher
                      GIT_TARGET, YUM_TARGET]
 
     # Enable the specified target(s) in the list of target to check
-    def self.check(target)
+    def self.check(*target)
       @check_list ||= []
-      if target.is_a?(Array)
-        target.each { |t| self.check(t) }
-        return
-      end
-
-      @check_list << target
+      target.each { |t| @check_list << t }
     end
 
     def self.should_check?(target)
