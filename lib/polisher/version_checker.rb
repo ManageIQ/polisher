@@ -4,11 +4,6 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/gem'
-require 'polisher/fedora'
-require 'polisher/koji'
-require 'polisher/git/pkg'
-require 'polisher/bodhi'
-require 'polisher/yum'
 
 module Polisher
   class VersionChecker
@@ -48,22 +43,27 @@ module Polisher
       end
 
       if should_check?(FEDORA_TARGET)
+        require 'polisher/fedora'
         versions.merge! :fedora => Fedora.versions_for(name, &bl)
       end
 
       if should_check?(KOJI_TARGET)
+        require 'polisher/koji'
         versions.merge! :koji => Koji.versions_for(name, &bl)
       end
 
       if should_check?(GIT_TARGET)
+        require 'polisher/git/pkg'
         versions.merge! :git => [Git::Pkg.version_for(name, &bl)]
       end
 
       if should_check?(YUM_TARGET)
+        require 'polisher/yum'
         versions.merge! :yum => [Yum.version_for(name, &bl)]
       end
 
       if should_check?(BODHI_TARGET)
+        require 'polisher/bodhi'
         versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
       end
 
