@@ -12,7 +12,8 @@ module Polisher
     FEDORA_TARGET = :fedora
     GIT_TARGET    = :git
     YUM_TARGET    = :yum
-    BODHI_TARGET  = :bodhi # fedora dispatches to bodhi to not enabled by default
+    BODHI_TARGET  = :bodhi  # fedora dispatches to bodhi so not enabled by default
+    ERRATA_TARGET = :errata # not enabled by default
     ALL_TARGETS   = [GEM_TARGET, KOJI_TARGET, FEDORA_TARGET,
                      GIT_TARGET, YUM_TARGET]
 
@@ -67,8 +68,10 @@ module Polisher
         versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
       end
 
-      #bodhi_version   = Bodhi.versions_for(name, &bl)
-      #errata_version  = Errata.version_for('url?', name, &bl)
+      if should_check?(ERRATA_TARGET)
+        require 'polisher/errata'
+        versions.merge! :errata => Errata.versions_for(name, &bl)
+      end
 
       versions
     end
