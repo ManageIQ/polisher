@@ -6,30 +6,50 @@
 require 'json'
 require 'curb'
 
+require 'polisher/core'
+
 module Polisher
   class Errata
-    # Initialize/return singleton curl handle to
-    # query errata and set url
-    def self.client(url)
-      @curl ||= begin
-        c = Curl::Easy.new
-        c.ssl_verify_peer = false
-        c.ssl_verify_host = false
-        c.http_auth_types = :negotiate
-        c.userpwd = ':'
-      end
+    extend ConfHelpers
 
-      @curl.url = url
-      @curl
+    conf_attr :advisory_url, ''
+    conf_attr :package_prefix, 'rubygem-'
+
+    # Initialize/return singleton curl handle to query errata
+    def self.client
+      @curl ||= begin
+        curl = Curl::Easy.new
+        curl.ssl_verify_peer = false
+        curl.ssl_verify_host = false
+        curl.http_auth_types = :negotiate
+        curl.userpwd = ':'
+        curl
+      end
     end
 
-    def self.versions_for(advisory_url, name, &bl)
-      result = self.client("#{advisory_url}/builds").get
-      versions =
-        JSON.parse(result.body_str).collect { |tag, builds|
-          ErrataBuild.builds_matching(builds, name)
-        }.flatten
+    def self.clear!
+      @cached_url = nil
+      @cached_builds = nil
+      self
+    end
 
+    def self.builds
+      @cached_url    ||= advisory_url
+      @cached_builds ||= nil
+
+      if @cached_url != advisory_url || @cached_builds.nil?
+        client.url     = "#{advisory_url}/builds"
+        @cached_builds = client.get
+        @cached_builds = JSON.parse(client.body_str)
+      end
+
+      @cached_builds
+    end
+
+    def self.versions_for(name, &bl)
+      versions = builds.collect do |tag, builds|
+        ErrataBuild.builds_matching(builds, name)
+      end.flatten
       bl.call(:errata, name, versions) unless(bl.nil?) 
       versions
     end
@@ -44,12 +64,12 @@ module Polisher
 
     def self.build_matches?(build, name)
       pkg,meta = *build.flatten
-      pkg =~ /^rubygem-#{name}-([^-]*)-.*$/
+      pkg =~ /^#{Errata.package_prefix}#{name}-([^-]*)-.*$/
     end
 
     def self.build_version(build, name)
       pkg,meta = *build.flatten
-      pkg.split('-')[2]
+      pkg.gsub(Errata.package_prefix, '').split('-')[1]
     end
   end
 end

@@ -4,11 +4,6 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/gem'
-require 'polisher/fedora'
-require 'polisher/koji'
-require 'polisher/git/pkg'
-require 'polisher/bodhi'
-require 'polisher/yum'
 
 module Polisher
   class VersionChecker
@@ -17,19 +12,15 @@ module Polisher
     FEDORA_TARGET = :fedora
     GIT_TARGET    = :git
     YUM_TARGET    = :yum
-    BODHI_TARGET  = :bodhi # fedora dispatches to bodhi to not enabled by default
+    BODHI_TARGET  = :bodhi  # fedora dispatches to bodhi so not enabled by default
+    ERRATA_TARGET = :errata # not enabled by default
     ALL_TARGETS   = [GEM_TARGET, KOJI_TARGET, FEDORA_TARGET,
                      GIT_TARGET, YUM_TARGET]
 
     # Enable the specified target(s) in the list of target to check
-    def self.check(target)
+    def self.check(*target)
       @check_list ||= []
-      if target.is_a?(Array)
-        target.each { |t| self.check(t) }
-        return
-      end
-
-      @check_list << target
+      target.each { |t| @check_list << t }
     end
 
     def self.should_check?(target)
@@ -53,27 +44,34 @@ module Polisher
       end
 
       if should_check?(FEDORA_TARGET)
+        require 'polisher/fedora'
         versions.merge! :fedora => Fedora.versions_for(name, &bl)
       end
 
       if should_check?(KOJI_TARGET)
+        require 'polisher/koji'
         versions.merge! :koji => Koji.versions_for(name, &bl)
       end
 
       if should_check?(GIT_TARGET)
+        require 'polisher/git/pkg'
         versions.merge! :git => [Git::Pkg.version_for(name, &bl)]
       end
 
       if should_check?(YUM_TARGET)
+        require 'polisher/yum'
         versions.merge! :yum => [Yum.version_for(name, &bl)]
       end
 
       if should_check?(BODHI_TARGET)
+        require 'polisher/bodhi'
         versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
       end
 
-      #bodhi_version   = Bodhi.versions_for(name, &bl)
-      #errata_version  = Errata.version_for('url?', name, &bl)
+      if should_check?(ERRATA_TARGET)
+        require 'polisher/errata'
+        versions.merge! :errata => Errata.versions_for(name, &bl)
+      end
 
       versions
     end
