@@ -81,7 +81,7 @@ module Polisher
     # returns the max.
     def self.version_for(name)
       versions = self.versions_for(name).values
-      versions.inject(Hasn.new(0)) { |total, i| total[i] += 1; total }.first
+      versions.inject(Hash.new(0)) { |total, i| total[i] += 1; total }.first
     end
   end
 
