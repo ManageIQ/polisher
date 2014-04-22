@@ -20,7 +20,7 @@ module Polisher
     # Enable the specified target(s) in the list of target to check
     def self.check(*target)
       @check_list ||= []
-      target.each { |t| @check_list << t }
+      target.flatten.each { |t| @check_list << t }
     end
 
     def self.should_check?(target)
