@@ -65,7 +65,7 @@ module Polisher
       end
 
       it "uses xmlrpc client to retreive versions" do
-        expected = ['listTagged', described_class.koji_tag, nil, false,
+        expected = ['listTagged', described_class.koji_tag, nil, true,
                     nil, false, "rubygem-rails"]
         @client.should_receive(:call).with(*expected).and_return([])
         described_class.versions_for 'rails'
@@ -73,9 +73,9 @@ module Polisher
 
       it "handles multiple koji tags" do
         described_class.should_receive(:koji_tags).and_return(['tag1', 'tag2'])
-        expected1 = ['listTagged', 'tag1', nil, false,
+        expected1 = ['listTagged', 'tag1', nil, true,
                      nil, false, "rubygem-rails"]
-        expected2 = ['listTagged', 'tag2', nil, false,
+        expected2 = ['listTagged', 'tag2', nil, true,
                      nil, false, "rubygem-rails"]
         @client.should_receive(:call).with(*expected1).and_return([])
         @client.should_receive(:call).with(*expected2).and_return([])
