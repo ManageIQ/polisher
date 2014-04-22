@@ -71,7 +71,8 @@ module Polisher
       # koji xmlrpc call
       builds =
         koji_tags.collect do |tag|
-          client.call('listTagged', tag, nil, false, nil, false,
+          #                         tag  event inherit prefix latest
+          client.call('listTagged', tag, nil,  true,   nil,   false,
                       "#{package_prefix}#{name}")
         end.flatten
       versions = builds.collect { |b| b['version'] }
