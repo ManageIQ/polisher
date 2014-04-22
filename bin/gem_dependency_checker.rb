@@ -211,13 +211,15 @@ print_header
 
 if conf[:gemname]
   gem = Polisher::Gem.retrieve(conf[:gemname])
-  gem.versions(:recursive => true, :dev_deps => true) do |tgt, dep, versions|
+  gem.versions(:recursive => true,
+               :dev_deps  => conf[:devel_deps]) do |tgt, dep, versions|
     print_dep(tgt, dep, versions)
   end
 
 elsif conf[:gemspec]
   gem = Polisher::Gem.from_gemspec(conf[:gemspec])
-  gem.versions(:recursive => true, :dev_deps => true) do |tgt, dep, versions|
+  gem.versions(:recursive => true,
+               :dev_deps  => conf[:devel_deps]) do |tgt, dep, versions|
     print_dep(tgt, dep, versions)
   end
 
