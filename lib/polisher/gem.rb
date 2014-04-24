@@ -11,6 +11,7 @@ require 'pathname'
 require 'fileutils'
 require 'awesome_spawn'
 require 'rubygems/installer'
+require 'active_support'
 require 'active_support/core_ext'
 
 require 'polisher/version_checker'
