@@ -5,6 +5,7 @@
 
 require 'gem2rpm'
 require 'versionomy'
+require 'active_support'
 require 'active_support/core_ext'
 
 require 'polisher/core'

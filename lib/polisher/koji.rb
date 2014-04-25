@@ -4,6 +4,7 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'xmlrpc/client'
+require 'active_support'
 require 'active_support/core_ext/kernel/reporting'
 silence_warnings do
   XMLRPC::Config::ENABLE_NIL_PARSER = true
