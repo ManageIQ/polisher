@@ -1,0 +1,11 @@
+# copy to ~/.polisher/config
+---
+koji:
+  package_prefix: rubygem-
+  koji_url: koji.fedoraproject.org/kojihub
+  koji_tag: f21
+git_pkg:
+  dist_git_url: git://pkgs.fedoraproject.org/
+  pkg_cmd: /usr/bin/fedpkg
+  build_tgt: rawhide
+  fetch_tgt: cfme-5.2-rhel-6

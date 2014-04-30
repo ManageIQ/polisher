@@ -32,7 +32,7 @@ module Polisher
       end
   
       def clone
-        AwesomeSpawn.run "#{git_cmd} clone #{url} #{path}"
+        AwesomeSpawn.run! "#{git_cmd} clone #{url} #{path}"
       end
   
       def cloned?
@@ -51,22 +51,22 @@ module Polisher
   
       # Note be careful when invoking:
       def reset!
-        in_repo { AwesomeSpawn.run "#{git_cmd} reset HEAD~ --hard" }
+        in_repo { AwesomeSpawn.run! "#{git_cmd} reset HEAD~ --hard" }
         self
       end
   
       def pull
-        in_repo { AwesomeSpawn.run "#{git_cmd} pull" }
+        in_repo { AwesomeSpawn.run! "#{git_cmd} pull" }
         self
       end
   
       def checkout(tgt)
-        in_repo { AwesomeSpawn.run "#{git_cmd} checkout #{tgt}" }
+        in_repo { AwesomeSpawn.run! "#{git_cmd} checkout #{tgt}" }
         self
       end
   
       def commit(msg)
-        in_repo { AwesomeSpawn.run "#{git_cmd} commit -m '#{msg}'" }
+        in_repo { AwesomeSpawn.run! "#{git_cmd} commit -m '#{msg}'" }
         self
       end
     end # class Repo

@@ -1,4 +1,3 @@
-# Polisher Git Spec
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
@@ -28,7 +27,7 @@ module Polisher
     describe "#clone" do
       it "runs git clone" do
         expected = "/usr/bin/git clone repo_url repo_path"
-        AwesomeSpawn.should_receive(:run).with(expected)
+        AwesomeSpawn.should_receive(:run!).with(expected)
 
         repo = described_class.new :url => 'repo_url'
         repo.should_receive(:path).and_return('repo_path')
@@ -91,7 +90,7 @@ module Polisher
         expected = "/usr/bin/git reset HEAD~ --hard"
         repo = described_class.new
         repo.should_receive(:in_repo).and_yield
-        AwesomeSpawn.should_receive(:run).with(expected)
+        AwesomeSpawn.should_receive(:run!).with(expected)
         repo.reset!
       end
     end
@@ -101,7 +100,7 @@ module Polisher
         expected = "/usr/bin/git pull"
         repo = described_class.new
         repo.should_receive(:in_repo).and_yield
-        AwesomeSpawn.should_receive(:run).with(expected)
+        AwesomeSpawn.should_receive(:run!).with(expected)
         repo.pull
       end
     end
@@ -111,7 +110,7 @@ module Polisher
         expected = "/usr/bin/git checkout master"
         repo = described_class.new
         repo.should_receive(:in_repo).and_yield
-        AwesomeSpawn.should_receive(:run).with(expected)
+        AwesomeSpawn.should_receive(:run!).with(expected)
         repo.checkout('master')
       end
     end
@@ -121,7 +120,7 @@ module Polisher
         expected = "/usr/bin/git commit -m 'msg'"
         repo = described_class.new
         repo.should_receive(:in_repo).and_yield
-        AwesomeSpawn.should_receive(:run).with(expected)
+        AwesomeSpawn.should_receive(:run!).with(expected)
         repo.commit('msg')
       end
     end
@@ -317,6 +316,7 @@ module Polisher
         expected = "/usr/bin/git add pkg_files"
         AwesomeSpawn.should_receive(:run).with(expected)
         AwesomeSpawn.should_receive(:run).at_least(:once)
+                    .and_return(AwesomeSpawn::CommandResult.new('', '', '', 0))
         pkg.commit
       end
 
@@ -324,8 +324,9 @@ module Polisher
         pkg = described_class.new(:name => 'rails', :version => '1.0.0')
         pkg.should_receive(:in_repo).at_least(:once).and_yield
         expected = "/usr/bin/git commit -m 'updated to 1.0.0'"
-        AwesomeSpawn.should_receive(:run).with(expected)
+        AwesomeSpawn.should_receive(:run!).with(expected)
         AwesomeSpawn.should_receive(:run).at_least(:once)
+                    .and_return(AwesomeSpawn::CommandResult.new('', '', '', 0))
         pkg.commit
       end
     end
@@ -363,12 +364,12 @@ module Polisher
         pkg = "#{described_class.dist_git_url}rubygem-rails.git"
         dir = Polisher::GitCache.path_for('rubygem-rails')
         expected = "/usr/bin/git clone #{pkg} #{dir}"
-        AwesomeSpawn.should_receive(:run).with(expected)
+        AwesomeSpawn.should_receive(:run!).with(expected)
         described_class.version_for 'rails'
       end
 
       it "returns version of the package" do
-        AwesomeSpawn.should_receive(:run) # stub out run
+        AwesomeSpawn.should_receive(:run!) # stub out run
 
         spec = Polisher::RPM::Spec.new :version => '1.0.0'
         pkg  = described_class.new
@@ -379,7 +380,7 @@ module Polisher
       end
 
       it "invokes callback with version of package" do
-        AwesomeSpawn.should_receive(:run) # stub out run
+        AwesomeSpawn.should_receive(:run!) # stub out run
 
         spec = Polisher::RPM::Spec.new :version => '1.0.0'
         pkg  = described_class.new

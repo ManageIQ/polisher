@@ -18,24 +18,25 @@ require 'optparse'
 require 'colored'
 require 'polisher/gem'
 require 'polisher/gemfile'
+require 'polisher/core'
 
 ##########################################################
 
-conf = {:format            => nil,
-        :gemfile           => './Gemfile',
-        :gemspec           => nil,
-        :gemname           => nil,
-        :groups            => [],
-        :devel_deps        => false,
-        :highlight_missing => false,
-        :check_fedora      => false,
-        :check_git         => false,
-        :check_koji        => false,
-        :check_rhn         => false,
-        :check_yum         => false,
-        :check_bugzilla    => false,
-        :check_errata      => false,
-        :check_bodhi       => false}
+conf = {:format         => nil,
+        :gemfile        => './Gemfile',
+        :gemspec        => nil,
+        :gemname        => nil,
+        :prefix         => nil,
+        :groups         => [],
+        :devel_deps     => false,
+        :check_fedora   => false,
+        :check_git      => false,
+        :check_koji     => false,
+        :check_rhn      => false,
+        :check_yum      => false,
+        :check_bugzilla => false,
+        :check_errata   => false,
+        :check_bodhi    => false}
 
 optparse = OptionParser.new do |opts|
   opts.on('-h', '--help', 'Display this help screen') do
@@ -63,12 +64,12 @@ optparse = OptionParser.new do |opts|
     conf[:gemname] = g
   end
 
-  opts.on('--[no-]devel', 'Include development dependencies') do |d|
-    conf[:devel_deps] = d
+  opts.on('-p', '--prefix prefix', 'Prefix to append to gem name') do |p|
+    conf[:prefix] = p
   end
 
-  opts.on('-m', '--[no-]missing', 'Highlight missing packages') do |m|
-    conf[:highlight_missing] = m
+  opts.on('--[no-]devel', 'Include development dependencies') do |d|
+    conf[:devel_deps] = d
   end
 
   opts.on('-f', '--[no-]fedora', 'Check fedora for packages') do |f|
@@ -80,7 +81,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('-k', '--koji [url]', 'Check koji for packages') do |k|
-    conf[:check_koji] = k || 'koji.fedoraproject.org/kojihub'
+    conf[:check_koji] = k || true
   end
 
   opts.on('-t', '--koji-tag tag', 'Koji tag to query') do |t|
@@ -122,6 +123,8 @@ if conf[:gemfile].nil? &&
    end
 end
 
+Polisher::Config.set
+
 targets = []
 targets << Polisher::VersionChecker::GEM_TARGET    if conf[:check_gem]
 targets << Polisher::VersionChecker::KOJI_TARGET   if conf[:check_koji]
@@ -131,6 +134,13 @@ targets << Polisher::VersionChecker::YUM_TARGET    if conf[:check_yum]
 targets << Polisher::VersionChecker::BODHI_TARGET  if conf[:check_bodhi]
 targets  = Polisher::VersionChecker::ALL_TARGETS   if targets.empty?
 Polisher::VersionChecker.check targets
+
+if conf[:check_koji]
+  require 'polisher/koji'
+  Polisher::Koji.koji_url conf[:check_koji] if conf[:koji_url].is_a?(String)
+  Polisher::Koji.koji_tag conf[:koji_tag] if conf[:koji_tag]
+  Polisher::Koji.package_prefix conf[:prefix] if conf[:prefix]
+end
 
 @format = conf[:format]
 
