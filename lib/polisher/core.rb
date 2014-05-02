@@ -3,6 +3,8 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'polisher/config'
+
 module ConfHelpers
   # Defines a 'config attribute' or attribute on the class
   # which this is defined in. Accessors to the single shared

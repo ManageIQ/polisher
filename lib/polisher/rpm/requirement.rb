@@ -13,6 +13,15 @@ require 'polisher/gem'
 module Polisher
   module RPM
     class Requirement
+      extend ConfHelpers
+
+      conf_attr :rubygem_prefix, 'rubygem'
+      conf_attr :scl_prefix, '' # set to %{?scl_prefix} to enable scl's
+
+      def self.prefix
+        "#{scl_prefix}#{rubygem_prefix}"
+      end
+
       # Bool indiciating if req is a BR
       attr_accessor :br
 
@@ -69,10 +78,10 @@ module Polisher
         gem_dep.requirement.to_s.split(',').collect { |req|
           expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
           expanded.collect { |e|
-            self.new :name      => "rubygem(#{gem_dep.name})",
-                     :condition => e.first.to_s,
-                     :version   => e.last.to_s,
-                     :br        => br
+            new :name      => "#{prefix}(#{gem_dep.name})",
+                :condition => e.first.to_s,
+                :version   => e.last.to_s,
+                :br        => br
           }
         }.flatten
       end

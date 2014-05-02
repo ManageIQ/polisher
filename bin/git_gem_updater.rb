@@ -18,6 +18,7 @@ require 'nokogiri'
 
 require 'polisher/git'
 require 'polisher/gem'
+require 'polisher/core'
 
 ORIG_DIR = Dir.pwd
 
@@ -45,7 +46,9 @@ optparse = OptionParser.new do|opts|
   end
 end
  
- optparse.parse!
+optparse.parse!
+
+Polisher::Config.set
 
 conf[:gems] += Polisher::Fedora.gems_owned_by(conf[:user]) unless conf[:user].nil?
 
@@ -61,7 +64,7 @@ Dir.chdir conf[:dir]
 conf[:gems].each do |gem_name|
   pkg =
     begin
-      Polisher::Git::Pkg.new(:name => gem_name).clone
+      Polisher::Git::Pkg.new(:name => gem_name).fetch
     rescue => e
       puts "Problem Cloning Package, Skipping: #{e}"
       next

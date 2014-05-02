@@ -15,20 +15,34 @@ require 'polisher/rpm/requirement'
 module Polisher
   module RPM
     class Spec
+      # RPM Spec Requirement Prefix
+      def self.requirement_prefix
+        Requirement.prefix
+      end
+
+      def requirement_prefix
+        self.class.requirement_prefix
+      end
+
+      def self.package_prefix
+        requirement_prefix
+      end
+
       AUTHOR = "#{ENV['USER']} <#{ENV['USER']}@localhost.localdomain>"
   
       COMMENT_MATCHER             = /^\s*#.*/
       GEM_NAME_MATCHER            = /^%global\s*gem_name\s(.*)$/
-      SPEC_NAME_MATCHER           = /^Name:\s*rubygem-(.*)$/
+      SPEC_NAME_MATCHER           = /^Name:\s*#{package_prefix}-(.*)$/
       SPEC_VERSION_MATCHER        = /^Version:\s*(.*)$/
       SPEC_RELEASE_MATCHER        = /^Release:\s*(.*)$/
       SPEC_REQUIRES_MATCHER       = /^Requires:\s*(.*)$/
       SPEC_BUILD_REQUIRES_MATCHER = /^BuildRequires:\s*(.*)$/
-      SPEC_GEM_REQ_MATCHER        = /^.*\s*rubygem\((.*)\)(\s*(.*))?$/
+      SPEC_GEM_REQ_MATCHER        = /^.*\s*#{requirement_prefix}\((.*)\)(\s*(.*))?$/
       SPEC_SUBPACKAGE_MATCHER     = /^%package\s(.*)$/
       SPEC_CHANGELOG_MATCHER      = /^%changelog$/
       SPEC_FILES_MATCHER          = /^%files$/
       SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
+      SPEC_DOC_FILES_MATCHER      = /^%files doc$/
       SPEC_CHECK_MATCHER          = /^%check$/
       
       FILE_MACRO_MATCHERS         =
@@ -46,7 +60,7 @@ module Polisher
       def self.current_author
         ENV['POLISHER_AUTHOR'] || AUTHOR
       end
-  
+
       def initialize(metadata={})
         @metadata = metadata
       end
@@ -60,6 +74,11 @@ module Polisher
         else
           super(method, *args, &block)
         end
+      end
+
+      # Return gem corresponding to spec name/version
+      def upstream_gem
+        @gem ||= Polisher::Gem.from_rubygems gem_name, version
       end
   
       # Return boolean indicating if spec has a %check section
@@ -90,12 +109,50 @@ module Polisher
         # verify we can find a match for that
         gem_dep.requirement.to_s.split(',').all? { |greq|
           Gem2Rpm::Helpers.expand_requirement([greq.split]).all? { |ereq|
-            tereq = Requirement.new :name      => "rubygem(#{gem_dep.name})",
+            tereq = Requirement.new :name      => "#{requirement_prefix}(#{gem_dep.name})",
                                     :condition => ereq.first,
                                     :version   => ereq.last.to_s
             reqs.any? { |req| req.matches?(tereq)}
           }
         }
+      end
+
+      # Return list of gem dependencies for which we have no
+      # corresponding requirements
+      def missing_deps_for(gem)
+        # Comparison by name here assuming if it is in existing spec,
+        # spec author will have ensured versions are correct for their purposes
+        gem.deps.select { |dep| requirements_for_gem(dep.name).empty? }
+      end
+
+      # Return list of gem dev dependencies for which we have
+      # no corresponding requirements
+      def missing_dev_deps_for(gem)
+        # Same note as in #missing_deps_for above
+        gem.dev_deps.select { |dep| build_requirements_for_gem(dep.name).empty? }
+      end
+
+      # Return list of dependencies of upstream gem which
+      # have not been included
+      def excluded_deps
+        missing_deps_for(upstream_gem)
+      end
+
+      # Return boolean indicating if the specified gem is on excluded list
+      def excludes_dep?(gem_name)
+        excluded_deps.any? { |d| d.name == gem_name }
+      end
+
+      # Return list of dev dependencies of upstream gem which
+      # have not been included
+      def excluded_dev_deps
+        missing_dev_deps_for(upstream_gem)
+      end
+
+      # Return boolean indicating if the specified gem is on
+      # excluded dev dep list
+      def excludes_dev_dep?(gem_name)
+        excluded_dev_deps.any? { |d| d.name == gem_name }
       end
 
       # Return all gem Requires
@@ -228,16 +285,14 @@ module Polisher
         @metadata[:requires] =
           non_gem_requirements +
           extra_gem_requirements(new_source) +
-          new_source.deps.collect { |r|
-            RPM::Requirement.from_gem_dep(r)
-          }.flatten
-  
+          new_source.deps.select { |r| !excludes_dep?(r.name) }
+                    .collect { |r| RPM::Requirement.from_gem_dep(r) }.flatten
+
         @metadata[:build_requires] =
           non_gem_build_requirements +
           extra_gem_build_requirements(new_source) +
-          new_source.dev_deps.collect { |r|
-            RPM::Requirement.from_gem_dep(r, true)
-          }.flatten
+          new_source.dev_deps.select { |r| !excludes_dev_dep?(r.name) }
+                    .collect { |r| RPM::Requirement.from_gem_dep(r, true) }.flatten
       end
   
       # Internal helper to update spec files from new source
@@ -257,7 +312,8 @@ module Polisher
           }
         }
   
-        @metadata[:new_files] = to_add
+        @metadata[:new_files] = to_add.select { |f| !Gem.doc_file?(f) }
+        @metadata[:new_docs]  = to_add - @metadata[:new_files]
       end
   
       # Internal helper to update spec metadata from new source
@@ -318,7 +374,15 @@ EOS
         lfp = contents.index SPEC_CHANGELOG_MATCHER if lfp.nil?
   
         contents.insert lfp - 1, @metadata[:new_files].join("\n") + "\n"
-  
+
+        # add new doc files
+        fp  = contents.index SPEC_DOC_FILES_MATCHER
+        fp  = contents.index SPEC_FILES_MATCHER if fp.nil?
+        lfp = contents.index SPEC_SUBPKG_FILES_MATCHER, fp + 1
+        lfp = contents.index SPEC_CHANGELOG_MATCHER if lfp.nil?
+
+        contents.insert lfp - 1, @metadata[:new_docs].join("\n") + "\n"
+
         # return new contents
         contents
       end
