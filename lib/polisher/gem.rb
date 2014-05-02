@@ -30,7 +30,8 @@ module Polisher
                     /.*.gemspec/, /Gemfile.*/, 'Rakefile',
                     /rspec.*/, '.yardopts', '.rvmrc']
 
-    # TODO also mark certain files to be tagged as %{doc}
+    # Common files shipped in gems that we should mark as doc
+    DOC_FILES = [/CHANGELOG.*/, /CONTRIBUTING.*/, /README.*/]
 
     attr_accessor :spec
     attr_accessor :name
@@ -49,10 +50,17 @@ module Polisher
       @dev_deps = args[:dev_deps] || []
     end
 
-    # Return bool indiicating if the specified file is on the IGNORE_FILES list
+    # Return bool indicating if the specified file is on the IGNORE_FILES list
     def self.ignorable_file?(file)
       IGNORE_FILES.any? do |ignore|
         ignore.is_a?(Regexp) ? ignore.match(file) : ignore == file
+      end
+    end
+
+    # Return bool indicating if the specified file is on the DOC_FILES list
+    def self.doc_file?(file)
+      DOC_FILES.any? do |doc|
+        doc.is_a?(Regexp) ? doc.match(file) : doc == file
       end
     end
 

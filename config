@@ -9,3 +9,5 @@ git_pkg:
   pkg_cmd: /usr/bin/fedpkg
   build_tgt: rawhide
   fetch_tgt: cfme-5.2-rhel-6
+rpm:
+  #scl_prefix: '%{?scl_prefix}' # if using scl's

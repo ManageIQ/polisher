@@ -11,7 +11,8 @@ module Polisher
   class Config
     CONF    = "#{ENV['HOME']}/.polisher/config"
     TARGETS = [['koji',    'polisher/koji',    'Koji'],
-               ['distgit', 'polisher/git/pkg', 'Git::Pkg']]
+               ['distgit', 'polisher/git/pkg', 'Git::Pkg'],
+               ['rpm',     'polisher/rpm/spec', 'RPM::Requirement']]
 
     def self.opts
       @opts ||=  File.exist?(CONF) ? YAML.load_file(CONF) : {}

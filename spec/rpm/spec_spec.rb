@@ -116,12 +116,16 @@ module Polisher::RPM
       it "updates dependencies from gem" do
         spec = described_class.new :requires => [Requirement.parse('rubygem(rake)'),
                                                  Requirement.parse('rubygem(activerecord)')],
-                                     :build_requires => []
+                                   :build_requires => []
         gem  = Polisher::Gem.new :deps => [::Gem::Dependency.new('rake'),
                                            ::Gem::Dependency.new('rails', '~> 10')],
                                  :dev_deps => [::Gem::Dependency.new('rspec', :development)]
   
-        spec.should_receive(:update_files_from) # stub out files update
+        # stub out a few methods
+        spec.should_receive(:excluded_deps).at_least(:once).and_return([])
+        spec.should_receive(:excluded_dev_deps).at_least(:once).and_return([])
+        spec.should_receive(:update_files_from)
+
         spec.update_to(gem)
           spec.requires.should == [Requirement.parse('rubygem(activerecord)'),
                                    Requirement.parse('rubygem(rake) >= 0'),
