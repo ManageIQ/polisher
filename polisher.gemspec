@@ -28,17 +28,16 @@ Gem::Specification.new do |s|
                      'git_gem_updater.rb', 'ruby_rpm_spec_updater.rb']
   s.require_paths = ['lib']
 
-  # TODO tighten up deps, some may be optional
-  s.add_dependency('json')
-  s.add_dependency('curb')
-  s.add_dependency('activesupport')
-  s.add_dependency('i18n')
-  s.add_dependency('bundler')
-  s.add_dependency('pkgwat')
   s.add_dependency('colored')
-  s.add_dependency('awesome_spawn')
-  s.add_dependency('gem2rpm')
-  s.add_dependency('versionomy')
+  s.add_dependency('activesupport')
   s.add_development_dependency('rspec', '>= 2.0.0')
   s.add_development_dependency('coveralls')
+  s.add_development_dependency('json')
+  s.add_development_dependency('curb')
+  s.add_development_dependency('i18n')
+  s.add_development_dependency('bundler')
+  s.add_development_dependency('pkgwat')
+  s.add_development_dependency('awesome_spawn')
+  s.add_development_dependency('gem2rpm')
+  s.add_development_dependency('versionomy')
 end

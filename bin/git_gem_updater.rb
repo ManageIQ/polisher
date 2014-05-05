@@ -11,10 +11,7 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'colored'
-require 'curb'
-require 'json'
 require 'optparse'
-require 'nokogiri'
 
 require 'polisher/git'
 require 'polisher/gem'
