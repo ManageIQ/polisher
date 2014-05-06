@@ -72,7 +72,10 @@ class String
   # with their macro correspondences
   def rpmize
     require 'polisher/rpm/spec'
+    fmm = Polisher::RPM::Spec::FILE_MACRO_MATCHERS
     fmr = Polisher::RPM::Spec::FILE_MACRO_REPLACEMENTS.invert
-    fmr.keys.inject(self) { |file, r| file.gsub(r, fmr[r]) }
+    f = fmr.keys.inject(self) { |file, r| file.gsub(r, fmr[r]) }
+    f = fmm.any? { |matcher| f =~ /^#{matcher}.*/ } ? f : "%{gem_instdir}/#{f}"
+    f
   end
 end

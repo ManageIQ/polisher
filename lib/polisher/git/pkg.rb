@@ -167,7 +167,7 @@ module Polisher
         def build_srpm
           in_repo do
             gem = spec.upstream_gem
-            FileUtils.ln_s gem.gem_path, gem.file_name unless File.exist?(gem.gem_path)
+            FileUtils.ln_s gem.gem_path, gem.file_name unless File.exist?(gem.file_name)
             result = AwesomeSpawn.run "#{pkg_cmd} srpm"
             raise result.error unless result.exit_status == 0
           end
