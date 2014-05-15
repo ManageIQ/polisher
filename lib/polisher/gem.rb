@@ -92,6 +92,20 @@ module Polisher
         self.new metadata
       end
 
+      # Retrieve all versions of gem available on rubygems
+      def self.remote_versions_for(name)
+        client.url = "https://rubygems.org/api/v1/versions/#{name}.json"
+        client.follow_location = true
+        client.http_get
+        json = JSON.parse(client.body_str)
+        json.collect { |version| version['number'] }
+      end
+
+      # Retieve latest version of gem available on rubygems
+      def self.latest_version_of(name)
+        remote_versions_for(name).first
+      end
+
       # Return new instance of Gem from Gemspec
       def self.from_gemspec(gemspec)
         gemspec  =

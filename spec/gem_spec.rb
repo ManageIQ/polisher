@@ -70,15 +70,73 @@ module Polisher
       end
     end
 
+    describe "#remote_versions_for" do
+      it "retrieves versions from rubygems.org" do
+        curl = Curl::Easy.new
+        described_class.should_receive(:client)
+                       .at_least(:once).and_return(curl)
+        curl.should_receive(:http_get)
+
+        # actual output too verbose, just including bits we need
+        curl.should_receive(:body_str)
+            .and_return([{'number' => 1.1}, {'number' => 2.2}].to_json)
+        described_class.remote_versions_for('polisher').should == [1.1, 2.2]
+        curl.url.should == "https://rubygems.org/api/v1/versions/polisher.json"
+      end
+    end
+
+    describe "#lastest_version_of" do
+      it "retrieves latests version of gem available on rubygems.org" do
+        described_class.should_receive(:remote_versions_for)
+                       .with('polisher')
+                       .and_return([2.2, 1.1])
+        described_class.latest_version_of('polisher').should == 2.2
+      end
+    end
 
     describe "#download_gem" do
       context "gem in GemCache" do
-        it "returns GemCache gem"
+        it "returns GemCache gem" do
+          gem = described_class.new
+          GemCache.should_receive(:get).with('polisher', '1.1')
+                                       .and_return(gem)
+          described_class.download_gem('polisher', '1.1').should == gem
+        end
       end
 
-      it "uses curl to download gem"
-      it "sets gem in gem cached"
-      it "returns downloaded gem binary contents"
+      it "uses curl to download gem" do
+        GemCache.should_receive(:get).and_return(nil)
+        curl = Curl::Easy.new
+        described_class.should_receive(:client)
+                       .at_least(:once).and_return(curl)
+        curl.should_receive(:http_get)
+        curl.should_receive(:body_str).and_return('') # stub out body_str
+
+        described_class.download_gem 'polisher', '2.2'
+        curl.url.should == "https://rubygems.org/gems/polisher-2.2.gem"
+      end
+
+      it "sets gem in gem cache" do
+        GemCache.should_receive(:get).and_return(nil)
+        curl = Curl::Easy.new
+        described_class.should_receive(:client)
+                       .at_least(:once).and_return(curl)
+        curl.stub(:http_get) # stub out http_get
+        curl.should_receive(:body_str).and_return('gem')
+        GemCache.should_receive(:set)
+                .with('polisher', '1.1', 'gem')
+        described_class.download_gem 'polisher', '1.1'
+      end
+
+      it "returns downloaded gem binary contents" do
+        GemCache.should_receive(:get).and_return(nil)
+        curl = Curl::Easy.new
+        described_class.should_receive(:client)
+                       .at_least(:once).and_return(curl)
+        curl.stub(:http_get) # stub out http_get
+        curl.should_receive(:body_str).and_return('gem')
+        described_class.download_gem('polisher', '1.1').should == 'gem'
+      end
     end
 
     describe "#download_gem_path" do
