@@ -96,6 +96,38 @@ module Polisher
         cb.should_receive(:call).with(:koji, 'rails', ['1.0.0'])
         described_class.versions_for('rails', &cb)
       end
+    end # describe versions_for
+
+    describe "#build" do
+      it "runs build_cmd" do
+        result = AwesomeSpawn::CommandResult.new "", "", "", 0
+        expected = "#{described_class.build_cmd} build  #{described_class.build_tgt} srpm"
+        AwesomeSpawn.should_receive(:run).with(expected).and_return(result)
+        described_class.build :srpm => 'srpm'
+      end
+
+      it "runs scratch build" do
+        result = AwesomeSpawn::CommandResult.new "", "", "", 0
+        expected = "#{described_class.build_cmd} build --scratch f20 srpm"
+        AwesomeSpawn.should_receive(:run).with(expected).and_return(result)
+        described_class.build :target => 'f20', :srpm => 'srpm', :scratch => true
+      end
+
+      it "parses & returns url from build output" do
+        result = AwesomeSpawn::CommandResult.new "", "output", "", 0
+        AwesomeSpawn.should_receive(:run).and_return(result)
+        described_class.should_receive(:parse_url).with('output').and_return('url')
+        described_class.build.should == 'url'
+      end
+
+      describe "non-zero build exit status" do
+        it "raises runtime error with build url" do
+          result = AwesomeSpawn::CommandResult.new "", "", "", 1
+          AwesomeSpawn.should_receive(:run).and_return(result)
+          described_class.should_receive(:parse_url).and_return('url')
+          lambda { described_class.build }.should raise_error(RuntimeError, 'url')
+        end
+      end
     end
   end # describe Koji
 end # module Polisher
