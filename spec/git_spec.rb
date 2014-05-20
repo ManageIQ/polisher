@@ -341,11 +341,10 @@ module Polisher
     end
 
     describe "#scratch_build" do
-      it "uses build command to build srpm" do
+      it "uses koji to build srpm" do
         pkg = described_class.new(:name => 'rails', :version => '1.0.0')
         pkg.should_receive(:in_repo).and_yield
-        expected = "/usr/bin/koji build --scratch rawhide rubygem-rails-1.0.0-1.*.src.rpm"
-        AwesomeSpawn.should_receive(:run).with(expected)
+        Koji.should_receive(:build).with(:srpm => pkg.srpm, :scratch => true)
         pkg.scratch_build
       end
     end

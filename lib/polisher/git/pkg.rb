@@ -7,6 +7,7 @@ require 'polisher/error'
 require 'polisher/git/repo'
 require 'polisher/rpm/spec'
 require 'polisher/component'
+require 'polisher/koji'
 
 module Polisher
   module Git
@@ -18,8 +19,6 @@ module Polisher
 
         conf_attr :rpm_prefix,   'rubygem-'
         conf_attr :pkg_cmd,      '/usr/bin/fedpkg'
-        conf_attr :build_cmd,    '/usr/bin/koji'
-        conf_attr :build_tgt,    'rawhide'
         conf_attr :md5sum_cmd,   '/usr/bin/md5sum'
         conf_attr :dist_git_url, 'git://pkgs.fedoraproject.org/'
         conf_attr :fetch_tgt,    'master'
@@ -155,9 +154,10 @@ module Polisher
 
         # Run a scratch build
         def scratch_build
-          # TODO if build fails, raise error, else return output
-          cmd = "#{build_cmd} build --scratch #{build_tgt} #{srpm}"
-          in_repo { AwesomeSpawn.run(cmd) }
+          in_repo do
+            Koji.build :srpm    => srpm,
+                       :scratch => true
+          end
           self
         end
 

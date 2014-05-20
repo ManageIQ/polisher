@@ -7,7 +7,8 @@ require 'polisher/core'
 require 'polisher/component'
 
 module Polisher
-  deps = ['xmlrpc/client', 'active_support', 'active_support/core_ext/kernel/reporting']
+  deps = ['awesome_spawn', 'xmlrpc/client', 'active_support',
+          'active_support/core_ext/kernel/reporting']
   Component.verify("Koji", *deps) do
     silence_warnings do
       XMLRPC::Config::ENABLE_NIL_PARSER = true
@@ -17,11 +18,14 @@ module Polisher
     class Koji
       extend ConfHelpers
 
-      # TODO Koji#build (on class or instance?)
-
       conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
       conf_attr :koji_tag, 'f21'
       conf_attr :package_prefix, 'rubygem-'
+
+      # XXX don't like having to shell out to koji but quickest
+      # way to get an authenticated session so as to launch builds
+      conf_attr :build_cmd, '/usr/bin/koji'
+      conf_attr :build_tgt,    'rawhide'
 
       def self.koji_tags
         [koji_tag].flatten
@@ -80,6 +84,27 @@ module Polisher
         bl.call(:koji, name, versions) unless(bl.nil?)
         versions
       end
+
+      # Run a build against the specified target using the specified rpm
+      def self.build(args = {})
+        target  = args[:target] || build_tgt
+        srpm    = args[:srpm]
+        scratch = args[:scratch] ? '--scratch' : ''
+
+        cmd = "#{build_cmd} build #{scratch} #{target} #{srpm}"
+        result = AwesomeSpawn.run(cmd)
+        url = parse_url(result.output)
+        raise url if result.exit_status != 0
+        url
+      end
+
+      # Parse a koji build url from output
+      def self.parse_url(output)
+        task_info = output.lines.detect { |l| l =~ /Task info:.*/ }
+        task_info ? task_info.split.last : ''
+      end
+
+      # def self.build_logs(url) # TODO
 
       # Return diff between list of packages in two tags in koji
       def self.diff(tag1, tag2)
