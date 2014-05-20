@@ -44,33 +44,57 @@ module Polisher
       end
 
       if should_check?(FEDORA_TARGET)
-        require 'polisher/fedora'
-        versions.merge! :fedora => Fedora.versions_for(name, &bl)
+        begin
+          require 'polisher/fedora'
+          versions.merge! :fedora => Fedora.versions_for(name, &bl)
+        rescue
+          versions.merge! :fedora => unknown_version(:fedora, name, &bl)
+        end
       end
 
       if should_check?(KOJI_TARGET)
-        require 'polisher/koji'
-        versions.merge! :koji => Koji.versions_for(name, &bl)
+        begin
+          require 'polisher/koji'
+          versions.merge! :koji => Koji.versions_for(name, &bl)
+        rescue
+          versions.merge! :koji => unknown_version(:koji, name, &bl)
+        end
       end
 
       if should_check?(GIT_TARGET)
-        require 'polisher/git/pkg'
-        versions.merge! :git => [Git::Pkg.version_for(name, &bl)]
+        begin
+          require 'polisher/git/pkg'
+          versions.merge! :git => [Git::Pkg.version_for(name, &bl)]
+        rescue
+          versions.merge! :git => unknown_version(:git, name, &bl)
+        end
       end
 
       if should_check?(YUM_TARGET)
-        require 'polisher/yum'
-        versions.merge! :yum => [Yum.version_for(name, &bl)]
+        begin
+          require 'polisher/yum'
+          versions.merge! :yum => [Yum.version_for(name, &bl)]
+        rescue
+          versions.merge! :yum => unknown_version(:yum, name, &bl)
+        end
       end
 
       if should_check?(BODHI_TARGET)
-        require 'polisher/bodhi'
-        versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
+        begin
+          require 'polisher/bodhi'
+          versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
+        rescue
+          versions.merge! :bodhi => unknown_version(:bodhi, name, &bl)
+        end
       end
 
       if should_check?(ERRATA_TARGET)
-        require 'polisher/errata'
-        versions.merge! :errata => Errata.versions_for(name, &bl)
+        begin
+          require 'polisher/errata'
+          versions.merge! :errata => Errata.versions_for(name, &bl)
+        rescue
+          versions.merge! :errata => unknown_version(:errata, name, &bl)
+        end
       end
 
       versions
@@ -82,6 +106,11 @@ module Polisher
     def self.version_for(name)
       versions = self.versions_for(name).values
       versions.inject(Hash.new(0)) { |total, i| total[i] += 1; total }.first
+    end
+
+    # Invoke block for specified target w/ an 'unknown' version
+    def self.unknown_version(tgt, name)
+      yield tgt, name, [:unknown]
     end
   end
 
