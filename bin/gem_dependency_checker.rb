@@ -174,6 +174,14 @@ def format_tgt(tgt)
   end
 end
 
+def format_unknown_tgt(tgt)
+  if @format.nil?
+    "#{tgt.to_s.red.bold}: " + "unknown".yellow
+  else
+    format_tgt("#{tgt} (unknown)")
+  end
+end
+
 def format_tgt_with_versions(tgt, versions)
   if @format.nil?
     "#{tgt.to_s.green.bold}: #{versions.join(', ').yellow} "
@@ -209,9 +217,12 @@ def print_dep(tgt, dep, versions)
     @last_dep = dep
   end
 
-  if versions.nil? || versions.empty? ||
-     versions.size == 1 && versions[0].nil?
+  if versions.blank? || (versions.size == 1 && versions.first.blank?)
     print format_tgt(tgt)
+
+  elsif versions.size == 1 && versions.first == :unknown
+    print format_unknown_tgt(tgt)
+
   else
     print format_tgt_with_versions(tgt, versions)
   end
