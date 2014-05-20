@@ -349,6 +349,7 @@ module Polisher
         pkg.should_receive(:in_repo).and_yield
         pkg.should_receive(:spec).and_return(spec)
         spec.should_receive(:upstream_gem).and_return(gem)
+        FileUtils.stub(:ln_s) # stub out ln
         result = AwesomeSpawn::CommandResult.new "", "", "", 0
         AwesomeSpawn.should_receive(:run)
                     .with("/usr/bin/fedpkg srpm")
@@ -364,6 +365,7 @@ module Polisher
           pkg.should_receive(:in_repo).and_yield
           pkg.should_receive(:spec).and_return(spec)
           spec.should_receive(:upstream_gem).and_return(gem)
+          FileUtils.stub(:ln_s) # stub out ln
           result = AwesomeSpawn::CommandResult.new "", "", "cmd_error", 1
           AwesomeSpawn.should_receive(:run)
                       .and_return(result)

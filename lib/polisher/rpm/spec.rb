@@ -76,15 +76,15 @@ module Polisher
 
         # Return list of all files in the spec
         def files
-          pkg_files.collect { |pkg, spec_files| spec_files }.flatten
+          pkg_files.collect { |_pkg, spec_files| spec_files }.flatten
         end
 
         # Return subpkg containing the specified file
         def subpkg_containing(file)
-          pkg_files.each { |pkg, spec_files|
+          pkg_files.each do |pkg, spec_files|
             return pkg if spec_files.include?(file)
-          }
-          return nil
+          end
+          nil
         end
 
         # Return gem corresponding to spec name/version
@@ -212,7 +212,7 @@ module Polisher
           # If spec file for which gemfile.gsub(/^specfile/)
           # is different than the gemfile the spec contains the gemfile
           #
-          # TODO need to incorporate regex matching into this
+          # TODO: need to incorporate regex matching into this
           gem_file.gsub(/^#{spec_file.unrpmize}/, '') != gem_file
         end
 
@@ -230,7 +230,7 @@ module Polisher
 
         # Return list of files in upstream gem which have not been included
         def excluded_files
-          # TODO also append files marked as %{exclude} (or handle elsewhere?)
+          # TODO: also append files marked as %{exclude} (or handle elsewhere?)
           missing_files_for(upstream_gem)
         end
 
@@ -240,13 +240,13 @@ module Polisher
         end
 
         # Return extra package file _not_ in the specified gem
-        def extra_gem_files(gem=nil)
+        def extra_gem_files(gem = nil)
           gem ||= upstream_gem
           pkg_extra = {}
-          pkg_files.each { |pkg, files|
+          pkg_files.each do |pkg, files|
             extra = files.select { |spec_file| !gem.has_file_satisfied_by?(spec_file) }
             pkg_extra[pkg] = extra unless extra.empty?
-          }
+          end
           pkg_extra
         end
 
@@ -315,7 +315,7 @@ module Polisher
               tgt = subpkg_name.nil? ? meta[:gem_name] : subpkg_name
 
               if l =~ SPEC_EXCLUDED_FILE_MATCHER
-                sl = $1
+                sl = Regexp.last_match(1)
                 meta[:pkg_excludes] ||= {}
                 meta[:pkg_excludes][tgt] ||= []
                 meta[:pkg_excludes][tgt] << sl unless sl.blank?
@@ -343,6 +343,7 @@ module Polisher
           update_deps_from(new_source)
           update_files_from(new_source)
           update_metadata_from(new_source)
+          update_contents
         end
 
         private
@@ -368,17 +369,17 @@ module Polisher
           # minus excluded files minus duplicates (files taken care by other
           # dirs on list)
           #
-          # TODO also detect / add files from SOURCES & PATCHES
+          # TODO: also detect / add files from SOURCES & PATCHES
           gem_files = new_source.file_paths - excluded_files
-          gem_files.reject! { |file|
-            gem_files.any? { |other|
+          gem_files.reject! do |file|
+            gem_files.any? do |other|
               other != file && self.class.file_satisfies?(other, file)
-            }
-          }
+            end
+          end
 
           @metadata[:new_files] = {}
           @metadata[:pkg_excludes] ||= {}
-          gem_files.each { |gem_file|
+          gem_files.each do |gem_file|
             pkg = subpkg_containing(gem_file)
             pkg = gem_name if pkg.nil?
             if Gem.ignorable_file?(gem_file)
@@ -393,12 +394,12 @@ module Polisher
               @metadata[:new_files][pkg] ||= []
               @metadata[:new_files][pkg] << gem_file.rpmize
             end
-          }
+          end
 
-          extra_gem_files.each { |pkg, gem_files|
+          extra_gem_files.each do |pkg, files|
             @metadata[:new_files][pkg] ||= []
-            @metadata[:new_files][pkg]  += gem_files.collect { |file| file.rpmize }
-          }
+            @metadata[:new_files][pkg]  += files.collect { |file| file.rpmize }
+          end
         end
 
         # Internal helper to update spec metadata from new source
@@ -419,62 +420,97 @@ EOS
           @metadata[:changelog_entries].unshift changelog_entry.rstrip
         end
 
+        def update_metadata_contents
+          # replace version / release
+          @metadata[:contents].gsub!(SPEC_VERSION_MATCHER,
+                                     "Version: #{@metadata[:version]}")
+          @metadata[:contents].gsub!(SPEC_RELEASE_MATCHER,
+                                     "Release: #{@metadata[:release]}")
+        end
+
+        def update_changelog
+          # add changelog entry
+          cp  = @metadata[:contents].index SPEC_CHANGELOG_MATCHER
+          cpn = cp.nil? ? (@metadata[:contents].length - 1) :
+                          (@metadata[:contents].index "\n", cp) + 1
+          @metadata[:contents] = @metadata[:contents][0...cpn] +
+                                 @metadata[:changelog_entries].join("\n\n")
+        end
+
+        def requires_contents
+          @metadata[:requires].collect { |r| "Requires: #{r.str}" }.join("\n")
+        end
+
+        def build_requires_contents
+          @metadata[:build_requires].collect { |r| "BuildRequires: #{r.str}" }
+                                    .join("\n")
+        end
+
+        def update_requires
+          # update requires/build requires
+          rp   = @metadata[:contents].index SPEC_REQUIRES_MATCHER
+          brp  = @metadata[:contents].index SPEC_BUILD_REQUIRES_MATCHER
+          tp   = rp < brp ? rp : brp
+
+          pp   = @metadata[:contents].index SPEC_SUBPACKAGE_MATCHER
+          pp   = -1 if pp.nil?
+
+          lrp  = @metadata[:contents].rindex SPEC_REQUIRES_MATCHER, pp
+          lbrp = @metadata[:contents].rindex SPEC_BUILD_REQUIRES_MATCHER, pp
+          ltp  = lrp > lbrp ? lrp : lbrp
+
+          ltpn = @metadata[:contents].index "\n", ltp
+
+          @metadata[:contents].slice!(tp...ltpn)
+          @metadata[:contents].insert tp, requires_contents + "\n" +
+                                          build_requires_contents
+        end
+
+        def new_files_contents_for(pkg)
+          title = pkg == gem_name ? "%files\n" : "%files #{pkg}\n"
+          contents = @metadata[:new_files][pkg].join("\n") + "\n"
+          title + contents
+        end
+
+        def new_subpkg_files_contents
+          @metadata[:new_files].keys
+            .select { |pkg| pkg != gem_name }
+            .collect { |pkg| new_files_contents_for(pkg) }.join("\n\n") + "\n\n"
+        end
+
+        def excludes_contents
+          @metadata[:pkg_excludes][gem_name]
+            .collect { |exclude| "%exclude #{exclude}" }
+            .join("\n") + "\n\n"
+        end
+
+        def update_files
+          # update files
+          fp = @metadata[:contents].index SPEC_FILES_MATCHER
+          lfp = @metadata[:contents].index SPEC_CHANGELOG_MATCHER
+          @metadata[:contents].slice!(fp...lfp)
+
+          contents = new_files_contents_for(gem_name) +
+                     excludes_contents +
+                     new_subpkg_files_contents
+
+          @metadata[:contents].insert fp, contents
+        end
+
+        def update_contents
+          update_metadata_contents
+          update_changelog
+          update_requires
+          update_files
+        end
+
         public
 
-        # Return properly formatted rpmspec as string
+        # Return contents of spec as string
         #
         # @return [String] string representation of rpm spec
         def to_string
-          contents = @metadata[:contents]
-
-          # replace version / release
-          contents.gsub!(SPEC_VERSION_MATCHER, "Version: #{@metadata[:version]}")
-          contents.gsub!(SPEC_RELEASE_MATCHER, "Release: #{@metadata[:release]}")
-
-          # add changelog entry
-          cp  = contents.index SPEC_CHANGELOG_MATCHER
-          cpn = contents.index "\n", cp
-          contents = contents[0...cpn+1] +
-                     @metadata[:changelog_entries].join("\n\n")
-
-          # update requires/build requires
-          rp   = contents.index SPEC_REQUIRES_MATCHER
-          brp  = contents.index SPEC_BUILD_REQUIRES_MATCHER
-          tp   = rp < brp ? rp : brp
-
-          pp   = contents.index SPEC_SUBPACKAGE_MATCHER
-          pp   = -1 if pp.nil?
-
-          lrp  = contents.rindex SPEC_REQUIRES_MATCHER, pp
-          lbrp = contents.rindex SPEC_BUILD_REQUIRES_MATCHER, pp
-          ltp  = lrp > lbrp ? lrp : lbrp
-
-          ltpn = contents.index "\n", ltp
-
-          contents.slice!(tp...ltpn)
-          contents.insert tp,
-            (@metadata[:requires].collect { |r| "Requires: #{r.str}" } +
-             @metadata[:build_requires].collect { |r| "BuildRequires: #{r.str}" }).join("\n")
-
-          # update files
-           fp = contents.index SPEC_FILES_MATCHER
-          lfp = contents.index SPEC_CHANGELOG_MATCHER
-
-          contents.slice!(fp...lfp)
-          contents.insert fp, "%files\n" +
-                              @metadata[:new_files][gem_name].join("\n") + "\n" +
-                              @metadata[:pkg_excludes][gem_name]
-                                .collect { |exclude| "%exclude #{exclude}" }
-                                .join("\n") + "\n\n" +
-                              @metadata[:new_files].keys
-                                .select { |pkg| pkg != gem_name }
-                                .collect { |pkg|
-                                  "%files #{pkg}\n" +
-                                  @metadata[:new_files][pkg].join("\n")
-                                }.join("\n\n") + "\n\n"
-
-          # return new contents
-          contents
+          @metadata[:contents]
         end
 
         # Compare this spec to a sepecified upstream gem source

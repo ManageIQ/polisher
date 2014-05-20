@@ -75,7 +75,9 @@ class String
     fmm = Polisher::RPM::Spec::FILE_MACRO_MATCHERS
     fmr = Polisher::RPM::Spec::FILE_MACRO_REPLACEMENTS.invert
     f = fmr.keys.inject(self) { |file, r| file.gsub(r, fmr[r]) }
-    f = fmm.any? { |matcher| f =~ /^#{matcher}.*/ } ? f : "%{gem_instdir}/#{f}"
+
+    special = (fmm + fmr.values).any? { |matcher| f =~ /^#{matcher}.*/ }
+    f = special ? f : "%{gem_instdir}/#{f}"
     f
   end
 end
