@@ -3,6 +3,8 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'fileutils'
+
 require 'polisher/error'
 require 'polisher/git/repo'
 require 'polisher/rpm/spec'
@@ -53,6 +55,7 @@ module Polisher
 
         # Return handle to instance of Polisher::RPM::Spec corresponding to spec
         def spec
+          @spec, @dirty_spec = nil, false if @dirty_spec
           @spec ||= in_repo { Polisher::RPM::Spec.parse File.read(spec_file) }
         end
 
@@ -111,11 +114,16 @@ module Polisher
           self
         end
 
+        def update_metadata(gem)
+          @version = gem.version
+        end
+
         # Update the local spec to the specified gem version
         def update_spec_to(gem)
           in_repo do
             spec.update_to(gem)
             File.write(spec_file, spec.to_string)
+            @dirty_spec = true
           end
         end
 
@@ -140,7 +148,8 @@ module Polisher
         #
         # @param [Polisher::Gem] gem instance of gem containing metadata to update to
         def update_to(gem)
-          update_spec_to  gem
+          update_metadata gem
+          update_spec_to gem
           gen_sources_for gem
           ignore gem
           self
@@ -156,7 +165,12 @@ module Polisher
 
         # Build the srpm
         def build_srpm
-          in_repo { AwesomeSpawn.run "#{pkg_cmd} srpm" }
+          in_repo do
+            gem = spec.upstream_gem
+            FileUtils.ln_s gem.gem_path, gem.file_name unless File.exist?(gem.gem_path)
+            result = AwesomeSpawn.run "#{pkg_cmd} srpm"
+            raise result.error unless result.exit_status == 0
+          end
           self
         end
 

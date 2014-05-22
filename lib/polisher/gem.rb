@@ -34,6 +34,10 @@ module Polisher
 
       attr_accessor :path
 
+      def file_name
+        "#{name}-#{version}.gem"
+      end
+
       def initialize(args={})
         @spec     = args[:spec]
         @name     = args[:name]
