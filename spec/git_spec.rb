@@ -358,37 +358,36 @@ module Polisher
       end
     end
 
-    describe "#version_for" do
-      it "uses git to retrieve the package" do
-        pkg = "#{described_class.dist_git_url}rubygem-rails.git"
-        dir = Polisher::GitCache.path_for('rubygem-rails')
-        expected = "/usr/bin/git clone #{pkg} #{dir}"
-        AwesomeSpawn.should_receive(:run!).with(expected)
-        described_class.version_for 'rails'
+    describe "#versions_for" do
+      it "git fetches the package" do
+        pkg = described_class.new
+        described_class.should_receive(:new)
+                       .with(:name => 'rails')
+                       .and_return(pkg)
+        pkg.should_receive(:fetch).with(described_class.fetch_tgt)
+        described_class.versions_for 'rails'
       end
 
       it "returns version of the package" do
-        AwesomeSpawn.should_receive(:run!) # stub out run
-
         spec = Polisher::RPM::Spec.new :version => '1.0.0'
         pkg  = described_class.new
+        pkg.should_receive(:fetch) # stub out fetch
         described_class.should_receive(:new).and_return(pkg)
         pkg.should_receive(:spec).and_return(spec)
 
-        described_class.version_for('rails').should == '1.0.0'
+        described_class.versions_for('rails').should == ['1.0.0']
       end
 
       it "invokes callback with version of package" do
-        AwesomeSpawn.should_receive(:run!) # stub out run
-
         spec = Polisher::RPM::Spec.new :version => '1.0.0'
         pkg  = described_class.new
+        pkg.should_receive(:fetch) # stub out fetch
         described_class.should_receive(:new).and_return(pkg)
         pkg.should_receive(:spec).and_return(spec)
 
         cb = proc {}
         cb.should_receive(:call).with(:git, 'rails', ['1.0.0'])
-        described_class.version_for('rails', &cb)
+        described_class.versions_for('rails', &cb)
       end
     end
   end # describe Git::Pkg

@@ -64,7 +64,7 @@ module Polisher
       if should_check?(GIT_TARGET)
         begin
           require 'polisher/git/pkg'
-          versions.merge! :git => [Git::Pkg.version_for(name, &bl)]
+          versions.merge! :git => Git::Pkg.versions_for(name, &bl)
         rescue
           versions.merge! :git => unknown_version(:git, name, &bl)
         end
