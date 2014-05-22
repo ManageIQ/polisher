@@ -23,6 +23,7 @@ require 'polisher/core'
 ##########################################################
 
 conf = {:format         => nil,
+        :log_level      => :info,
         :gemfile        => './Gemfile',
         :gemspec        => nil,
         :gemname        => nil,
@@ -46,6 +47,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on("--format val", 'Format which to render output') do |f|
     conf[:format] = f
+  end
+
+  opts.on("--log-level level", "Log verbosity") do |l|
+    conf[:log_level] = l.intern
   end
 
   opts.on('--gemfile file', 'Location of the gemfile to parse') do |g|
@@ -123,6 +128,7 @@ if conf[:gemfile].nil? &&
    end
 end
 
+Polisher::Logging.level = conf[:log_level]
 Polisher::Config.set
 
 targets = []
