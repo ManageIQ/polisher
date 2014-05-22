@@ -254,7 +254,8 @@ elsif conf[:gemfile]
     exit 1
   end
 
-  gemfile.dependency_versions do |tgt, dep, versions|
+  gemfile.dependency_versions :recursive => true,
+                              :dev_deps  => conf[:devel_deps] do |tgt, dep, versions|
     print_dep(tgt, dep, versions)
   end
 end
