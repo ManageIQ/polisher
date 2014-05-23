@@ -4,9 +4,12 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/gem'
+require 'polisher/logger'
 
 module Polisher
   class VersionChecker
+    extend Logging
+
     GEM_TARGET    = :gem
     KOJI_TARGET   = :koji
     FEDORA_TARGET = :fedora
@@ -40,14 +43,21 @@ module Polisher
       versions = {}
 
       if should_check?(GEM_TARGET)
-        versions.merge! :gem => Gem.local_versions_for(name, &bl)
+        logger.debug "versions_for<gem>(#{name})..."
+        gem_versions = Gem.local_versions_for(name, &bl)
+        logger.debug gem_versions
+        versions.merge! :gem => gem_versions
       end
 
       if should_check?(FEDORA_TARGET)
         begin
           require 'polisher/fedora'
-          versions.merge! :fedora => Fedora.versions_for(name, &bl)
+          logger.debug "versions_for<fedora>(#{name})..."
+          fedora_versions = Fedora.versions_for(name, &bl)
+          logger.debug fedora_versions
+          versions.merge! :fedora => fedora_versions
         rescue
+          logger.debug 'unknown'
           versions.merge! :fedora => unknown_version(:fedora, name, &bl)
         end
       end
@@ -55,8 +65,12 @@ module Polisher
       if should_check?(KOJI_TARGET)
         begin
           require 'polisher/koji'
-          versions.merge! :koji => Koji.versions_for(name, &bl)
+          logger.debug "versions_for<koji>(#{name})..."
+          koji_versions = Koji.versions_for(name, &bl)
+          logger.debug koji_versions
+          versions.merge! :koji => koji_versions
         rescue
+          logger.debug 'unknown'
           versions.merge! :koji => unknown_version(:koji, name, &bl)
         end
       end
@@ -64,8 +78,12 @@ module Polisher
       if should_check?(GIT_TARGET)
         begin
           require 'polisher/git/pkg'
-          versions.merge! :git => [Git::Pkg.version_for(name, &bl)]
+          logger.debug "versions_for<git>(#{name})..."
+          git_versions = Git::Pkg.versions_for(name, &bl)
+          logger.debug git_versions
+          versions.merge! :git => git_versions
         rescue
+          logger.debug 'unknown'
           versions.merge! :git => unknown_version(:git, name, &bl)
         end
       end
@@ -73,8 +91,12 @@ module Polisher
       if should_check?(YUM_TARGET)
         begin
           require 'polisher/yum'
-          versions.merge! :yum => [Yum.version_for(name, &bl)]
+          logger.debug "versions_for<yum>(#{name})..."
+          yum_versions = [Yum.version_for(name, &bl)]
+          versions.merge! :yum => yum_versions
+          logger.debug yum_versions
         rescue
+          logger.debug 'unknown'
           versions.merge! :yum => unknown_version(:yum, name, &bl)
         end
       end
@@ -82,8 +104,12 @@ module Polisher
       if should_check?(BODHI_TARGET)
         begin
           require 'polisher/bodhi'
-          versions.merge! :bodhi => Bodhi.versions_for(name, &bl)
+          logger.debug "versions_for<bodhi>(#{name})..."
+          bodhi_versions = Bodhi.versions_for(name, &bl)
+          versions.merge! :bodhi => bodhi_versions
+          logger.debug bodhi_versions
         rescue
+          logger.debug 'unknown'
           versions.merge! :bodhi => unknown_version(:bodhi, name, &bl)
         end
       end
@@ -91,8 +117,12 @@ module Polisher
       if should_check?(ERRATA_TARGET)
         begin
           require 'polisher/errata'
-          versions.merge! :errata => Errata.versions_for(name, &bl)
+          logger.debug "versions_for<errata>(#{name})..."
+          errata_versions = Errata.versions_for(name, &bl)
+          versions.merge! :errata => errata_versions
+          logger.debug errata_versions
         rescue
+          logger.debug 'unknown'
           versions.merge! :errata => unknown_version(:errata, name, &bl)
         end
       end

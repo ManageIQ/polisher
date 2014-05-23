@@ -23,6 +23,10 @@ module Polisher
         conf_attr :dist_git_url, 'git://pkgs.fedoraproject.org/'
         conf_attr :fetch_tgt,    'master'
 
+        def self.fetch_tgts
+          [fetch_tgt].flatten
+        end
+
         def initialize(args={})
           @name    = args[:name]
           @version = args[:version]
@@ -93,10 +97,11 @@ module Polisher
         end
 
         # Clone / init GitPkg
-        def fetch
+        def fetch(target = nil)
+          target = self.class.fetch_tgts.first if target.nil?
           clone unless cloned?
           raise Exception, "Dead package detected" if dead?
-          checkout fetch_tgt
+          checkout target
           reset!
           pull
 
@@ -168,25 +173,28 @@ module Polisher
           self
         end
 
-        # Retrieve list of the version of the specified package in git
+        # Retrieve list of the versions of the specified package in git
         #
         # @param [String] name name of package to lookup
         # @param [Callable] bl optional block to invoke with version retrieved
-        # @return [String] version retrieved, or nil if none found
-        def self.version_for(name, &bl)
+        # @return [Array<String>] versions retrieved, or empty array if none found
+        def self.versions_for(name, &bl)
           version = nil
           gitpkg = self.new :name => name
           gitpkg.url = "#{dist_git_url}#{gitpkg.rpm_name}.git"
-          gitpkg.git_clone
-          begin
-            version = gitpkg.spec.version
-          rescue => e
+          versions = []
+          fetch_tgts.each do |tgt|
+            begin
+              gitpkg.fetch tgt
+              versions << gitpkg.spec.version
+            rescue
+            end
           end
 
-          bl.call(:git, name, [version]) unless(bl.nil?)
-          version
+          bl.call(:git, name, versions) unless(bl.nil?)
+          versions
         end
       end # module Pkg
-    end # Component.verify("Git::Pkgrrata")
+    end # Component.verify("Git::Pkg")
   end # module Git
 end # module Polisher
