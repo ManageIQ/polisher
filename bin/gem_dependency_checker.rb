@@ -50,7 +50,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on("--log-level level", "Log verbosity") do |l|
-    conf[:log_level] = l.intern
+    conf[:log_level] = l.to_sym
   end
 
   opts.on('--gemfile file', 'Location of the gemfile to parse') do |g|

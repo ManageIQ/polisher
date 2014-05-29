@@ -8,12 +8,15 @@ require 'polisher/git/repo'
 require 'polisher/rpm/spec'
 require 'polisher/component'
 require 'polisher/koji'
+require 'polisher/logger'
 
 module Polisher
   module Git
     Component.verify("Git::Pkg", 'awesome_spawn') do
       # Git Based Package
       class Pkg < Repo
+        extend Logging
+
         attr_accessor :name
         attr_accessor :version
 
@@ -187,11 +190,12 @@ module Polisher
             begin
               gitpkg.fetch tgt
               versions << gitpkg.spec.version
-            rescue
+            rescue => e
+              logger.warn "error retrieving #{name} from #{gitpkg.url}/#{tgt}(distgit): #{e}"
             end
           end
 
-          bl.call(:git, name, versions) unless(bl.nil?)
+          bl.call(:git, name, versions) unless bl.nil?
           versions
         end
       end # module Pkg
