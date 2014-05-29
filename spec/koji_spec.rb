@@ -82,6 +82,25 @@ module Polisher
         described_class.versions_for 'rails'
       end
 
+      it "handles multiple koji prefixes" do
+        @prefix = ['rubygem-', 'ruby193-rubygem-']
+        described_class.should_receive(:package_prefix).twice.and_return(['rubygem-', 'ruby193-rubygem-'])
+        described_class.should_receive(:koji_tags).and_return(['tag1', 'tag2'])
+        expected1 = ['listTagged', 'tag1', nil, true,
+                     nil, false, "rubygem-rails"]
+        expected2 = ['listTagged', 'tag2', nil, true,
+                     nil, false, "rubygem-rails"]
+        expected3 = ['listTagged', 'tag1', nil, true,
+                     nil, false, "ruby193-rubygem-rails"]
+        expected4 = ['listTagged', 'tag2', nil, true,
+                     nil, false, "ruby193-rubygem-rails"]
+        @client.should_receive(:call).with(*expected1).and_return([])
+        @client.should_receive(:call).with(*expected2).and_return([])
+        @client.should_receive(:call).with(*expected3).and_return([])
+        @client.should_receive(:call).with(*expected4).and_return([])
+        described_class.versions_for 'rails'
+      end
+
       it "returns versions" do
         versions = [{'version' => '1.0.0'}]
         @client.should_receive(:call).and_return(versions)

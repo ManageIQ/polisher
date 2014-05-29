@@ -31,6 +31,10 @@ module Polisher
         [koji_tag].flatten
       end
 
+      def self.package_prefixes
+        [package_prefix].flatten
+      end
+
       # Retrieve shared instance of xmlrpc client to use
       def self.client
         @client ||= begin
@@ -76,11 +80,13 @@ module Polisher
         # koji xmlrpc call
         builds =
           koji_tags.collect do |tag|
-            #                         tag  event inherit prefix latest
-            client.call('listTagged', tag, nil,  true,   nil,   false,
-                        "#{package_prefix}#{name}")
+            package_prefixes.collect do |prefix|
+              #                         tag  event inherit prefix latest
+              client.call('listTagged', tag, nil,  true,   nil,   false,
+                          "#{prefix}#{name}")
+            end
           end.flatten
-        versions = builds.collect { |b| b['version'] }
+        versions = builds.collect { |b| b['version'] }.uniq
         bl.call(:koji, name, versions) unless(bl.nil?)
         versions
       end
