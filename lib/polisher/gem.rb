@@ -34,7 +34,7 @@ module Polisher
 
       attr_accessor :path
 
-      def initialize(args={})
+      def initialize(args = {})
         @spec     = args[:spec]
         @name     = args[:name]
         @version  = args[:version]
@@ -80,16 +80,16 @@ module Polisher
         metadata[:version] = specj['version']
 
         metadata[:deps] =
-          specj['dependencies']['runtime'].collect { |d|
+          specj['dependencies']['runtime'].collect do |d|
             ::Gem::Dependency.new d['name'], *d['requirements'].split(',')
-          }
+          end
 
         metadata[:dev_deps] =
-          specj['dependencies']['development'].collect { |d|
+          specj['dependencies']['development'].collect do |d|
             ::Gem::Dependency.new d['name'], d['requirements'].split(',')
-          }
+          end
 
-        self.new metadata
+        new metadata
       end
 
       # Retrieve all versions of gem available on rubygems
@@ -110,7 +110,7 @@ module Polisher
       def self.from_gemspec(gemspec)
         gemspec  =
           ::Gem::Specification.load(gemspec) if !gemspec.is_a?(::Gem::Specification) &&
-                                                 File.exists?(gemspec)
+                                                 File.exist?(gemspec)
 
         metadata           = {}
         metadata[:spec]    = gemspec
@@ -127,12 +127,12 @@ module Polisher
             dep.type == :development
           }.collect { |dep| dep }
 
-        self.new metadata
+        new metadata
       end
 
       # Return new instance of Gem from rubygem
       def self.from_gem(gem_path)
-        gem = self.parse :gemspec => ::Gem::Package.new(gem_path).spec
+        gem = parse :gemspec => ::Gem::Package.new(gem_path).spec
         gem.path = gem_path
         gem
       end
@@ -145,17 +145,17 @@ module Polisher
       # @return [Polisher::Gem] gem instantiated from gemspec metadata
       def self.parse(args={})
         if args.is_a?(String)
-          return self.from_json args
+          return from_json args
 
-        elsif args.has_key?(:gemspec)
-          return self.from_gemspec args[:gemspec]
+        elsif args.key?(:gemspec)
+          return from_gemspec args[:gemspec]
 
-        elsif args.has_key?(:gem)
-          return self.from_gem args[:gem]
+        elsif args.key?(:gem)
+          return from_gem args[:gem]
 
         end
 
-        self.new
+        new
       end
 
       # Return handler to internal curl helper
@@ -188,7 +188,7 @@ module Polisher
       # return instance of Polisher::Gem class corresponding to it
       def self.from_rubygems(name, version)
         download_gem name, version
-        self.from_gem downloaded_gem_path(name, version)
+        from_gem downloaded_gem_path(name, version)
       end
 
       # Returns path to downloaded gem
@@ -196,7 +196,7 @@ module Polisher
       # @return [String] path to downloaded gem
       def self.downloaded_gem_path(name, version)
         # ensure gem is downloaded
-        self.download_gem(name, version)
+        download_gem name, version
         GemCache.path_for(name, version)
       end
 
@@ -219,10 +219,10 @@ module Polisher
         pkg = ::Gem::Installer.new gem_path, :unpack => true
 
         if bl
-          Dir.mktmpdir { |dir|
-            pkg.unpack dir
-            bl.call dir
-          }
+          Dir.mktmpdir do |tmpdir|
+            pkg.unpack tmpdir
+            bl.call tmpdir
+          end
         else
           dir = Dir.mktmpdir
           pkg.unpack dir
@@ -233,8 +233,8 @@ module Polisher
 
       # Iterate over each file in gem invoking block with path
       def each_file(&bl)
-        self.unpack do |dir|
-          Pathname(dir).find do |path|
+        unpack do |dir|
+          Pathname(dir).detect do |path|
             next if path.to_s == dir.to_s
             pathstr = path.to_s.gsub("#{dir}/", '')
             bl.call pathstr unless pathstr.blank?
@@ -248,7 +248,7 @@ module Polisher
       def file_paths
         @file_paths ||= begin
           files = []
-          self.each_file do |path|
+          each_file do |path|
             files << path
           end
           files
@@ -262,7 +262,7 @@ module Polisher
       def self.retrieve(name)
         gem_json_path = "https://rubygems.org/api/v1/gems/#{name}.json"
         spec = Curl::Easy.http_get(gem_json_path).body_str
-        gem  = self.parse spec
+        gem  = parse spec
         gem
       end
 
@@ -275,30 +275,30 @@ module Polisher
       # dependencies should also be retrieved
       # @return [Hash<name,versions>] hash of name to list of versions for gem
       # (and dependencies if specified)
-      def versions(args={}, &bl)
+      def versions(args = {}, &bl)
         recursive = args[:recursive]
         dev_deps  = args[:dev_deps]
         versions  = args[:versions] || {}
 
-        gem_versions = Polisher::VersionChecker.versions_for(self.name, &bl)
-        versions.merge!({ self.name => gem_versions })
+        gem_versions = Polisher::VersionChecker.versions_for(name, &bl)
+        versions.merge! name => gem_versions
         args[:versions] = versions
 
         if recursive
-          self.deps.each { |dep|
-            unless versions.has_key?(dep.name)
+          deps.each do |dep|
+            unless versions.key?(dep.name)
               gem = Polisher::Gem.retrieve(dep.name)
               versions.merge! gem.versions(args, &bl)
             end
-          }
+          end
 
           if dev_deps
-            self.dev_deps.each { |dep|
-              unless versions.has_key?(dep.name)
+            dev_deps.each do |dep|
+              unless versions.key?(dep.name)
                 gem = Polisher::Gem.retrieve(dep.name)
                 versions.merge! gem.versions(args, &bl)
               end
-            }
+            end
           end
         end
         versions
@@ -309,7 +309,7 @@ module Polisher
         out = nil
 
         begin
-          this_dir  = self.unpack
+          this_dir  = unpack
           other_dir = other.is_a?(Polisher::Gem) ? other.unpack :
                      (other.is_a?(Polisher::Git::Repo) ? other.path : other)
           result = AwesomeSpawn.run("#{DIFF_CMD} -r #{this_dir} #{other_dir}")

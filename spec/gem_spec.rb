@@ -11,10 +11,10 @@ module Polisher
   describe Gem do
     describe "#initialize" do
       it "sets gem attributes" do
-        gem = Polisher::Gem.new :name => 'rails',
-                                :version => '4.0.0',
-                                :deps => ['activesupport', 'activerecord'],
-                                :dev_deps => ['rake']
+        gem = described_class.new :name     => 'rails',
+                                  :version  => '4.0.0',
+                                  :deps     => %w(activesupport activerecord),
+                                  :dev_deps => ['rake']
         gem.name.should == 'rails'
         gem.version.should == '4.0.0'
         gem.deps.should == ['activesupport', 'activerecord']
@@ -25,33 +25,67 @@ module Polisher
     describe "#ignorable_file?" do
       context "args matches an ignorable file" do
         it "returns true" do
-          Polisher::Gem.ignorable_file?('foo.gemspec').should be_true
-          Polisher::Gem.ignorable_file?('Gemfile').should be_true
+          described_class.ignorable_file?('foo.gemspec').should be_true
+          described_class.ignorable_file?('Gemfile').should be_true
         end
       end
 
       context "args does not match an ignorable file" do
         it "returns false" do
-          Polisher::Gem.ignorable_file?('.rvmra').should be_false
-          Polisher::Gem.ignorable_file?('foo.gemspoc').should be_false
+          described_class.ignorable_file?('.rvmra').should be_false
+          described_class.ignorable_file?('foo.gemspoc').should be_false
+        end
+      end
+    end
+
+    describe "#doc_file?" do
+      context "file is on doc file list" do
+        it "returns true" do
+          described_class.doc_file?('CHANGELOG').should be_true
+        end
+      end
+
+      context "file is not on doc file list" do
+        it "returns false" do
+          described_class.doc_file?('foobar.rb').should be_false
         end
       end
     end
 
     describe "#local_versions_for" do
-      it "returns versions of specified gem in local db"
-      it "invokes cb with versions retrieved"
+      before(:each) do
+        # XXX clear the cached version of the gem specification db
+        described_class.instance_variable_set(:@local_db, nil)
+
+        gem1 = ::Gem::Specification.new 'rake', '1.0'
+        gem2 = ::Gem::Specification.new 'rake', '2.0'
+        gem3 = ::Gem::Specification.new 'rails', '3.0'
+        ::Gem::Specification.should_receive(:all).and_return([gem1, gem2, gem3])
+
+        @version1 = ::Gem::Version.new '1.0'
+        @version2 = ::Gem::Version.new '2.0'
+      end
+
+      it "returns versions of specified gem in local db" do
+        described_class.local_versions_for('rake').should == [@version1, @version2]
+      end
+
+      it "invokes cb with versions retrieved" do
+        cb = proc {}
+        cb.should_receive(:call).with(:local_gem, 'rake', [@version1, @version2])
+        described_class.local_versions_for('rake', &cb)
+      end
     end
 
     describe "#parse" do
       it "returns new gem" do
-        gem = Polisher::Gem.parse
-        gem.should be_an_instance_of(Polisher::Gem)
+        gem = described_class.parse
+        gem.should be_an_instance_of(described_class)
       end
 
       it "parses gem from gem spec" do
         spec = Polisher::Test::GEM_SPEC
-        gem  = Polisher::Gem.parse(:gemspec => spec[:path])
+        gem  = described_class.parse(:gemspec => spec[:path])
         gem.name.should     == spec[:name]
         gem.version.should  == spec[:version]
         gem.deps.should     == spec[:deps]
@@ -62,7 +96,7 @@ module Polisher
 
       it "parses gem from metadata hash" do
         gemj = Polisher::Test::GEM_JSON
-        gem = Polisher::Gem.parse gemj[:json]
+        gem = described_class.parse gemj[:json]
         gem.name.should     == gemj[:name]
         gem.version.should  == gemj[:version]
         gem.deps.should     == gemj[:deps]
@@ -141,32 +175,32 @@ module Polisher
 
     describe "#download_gem_path" do
       it "downloads gem" do
-        gem = Polisher::Gem.new
-        Polisher::Gem.should_receive(:download_gem)
+        gem = described_class.new
+        described_class.should_receive(:download_gem)
         gem.downloaded_gem_path
       end
 
       it "returns gem cache path for gem" do
         # stub out d/l
-        gem = Polisher::Gem.new :name => 'rails', :version => '1.0'
-        Polisher::Gem.should_receive(:download_gem)
-        Polisher::GemCache.should_receive(:path_for).
-                           with('rails', '1.0').
-                           at_least(:once).
-                           and_return('rails_path')
+        gem = described_class.new :name => 'rails', :version => '1.0'
+        described_class.should_receive(:download_gem)
+        Polisher::GemCache.should_receive(:path_for)
+                          .with('rails', '1.0')
+                          .at_least(:once)
+                          .and_return('rails_path')
         gem.downloaded_gem_path.should == 'rails_path'
       end
     end
 
     describe "#gem_path" do
       it "returns specified path" do
-        gem = Polisher::Gem.new :path => 'gem_path'
+        gem = described_class.new :path => 'gem_path'
         gem.gem_path.should == 'gem_path'
       end
 
       context "specified path is null" do
         it "returns downloaded gem path" do
-          gem = Polisher::Gem.new
+          gem = described_class.new
           gem.should_receive(:downloaded_gem_path).and_return('gem_path')
           gem.gem_path.should == 'gem_path'
         end
@@ -184,21 +218,25 @@ module Polisher
     end
 
     describe "#file_paths" do
-      it "returns list of file paths in gem"
+      it "returns list of file paths in gem" do
+        gem = described_class.new
+        gem.should_receive(:each_file).and_yield('file1').and_yield('file2')
+        gem.file_paths.should == %w(file1 file2)
+      end
     end
 
     describe "#retrieve" do
-      before(:each) do
-        @local_gem = Polisher::Test::LOCAL_GEM
-      end
-
       it "returns gem retrieved from rubygems" do
-        gem = Polisher::Gem.retrieve(@local_gem[:name])
-        gem.should be_an_instance_of(Polisher::Gem)
-        gem.name.should     == @local_gem[:name]
-        gem.version.should  == @local_gem[:version]
-        gem.deps.should     == @local_gem[:deps]
-        gem.dev_deps.should == @local_gem[:dev_deps]
+        curl = Curl::Easy.new
+        curl.should_receive(:body_str).and_return('spec')
+
+        url = "https://rubygems.org/api/v1/gems/rails.json"
+        Curl::Easy.should_receive(:http_get).with(url).and_return(curl)
+
+        gem = described_class.new
+        described_class.should_receive(:parse).with('spec').and_return(gem)
+
+        described_class.retrieve('rails').should == gem
       end
     end
 
@@ -215,8 +253,8 @@ module Polisher
 
     describe "#diff" do
       before(:each) do
-        @gem1 = Polisher::Gem.new
-        @gem2 = Polisher::Gem.new
+        @gem1 = described_class.new
+        @gem2 = described_class.new
 
         @result = AwesomeSpawn::CommandResult.new '', 'diff_out', '', 0
       end
@@ -224,9 +262,9 @@ module Polisher
       it "runs diff against unpacked local and other gems and returns output" do
         @gem1.should_receive(:unpack).and_return('dir1')
         @gem2.should_receive(:unpack).and_return('dir2')
-        AwesomeSpawn.should_receive(:run).
-          with("#{Polisher::Gem::DIFF_CMD} -r dir1 dir2").
-          and_return(@result)
+        AwesomeSpawn.should_receive(:run)
+          .with("#{described_class::DIFF_CMD} -r dir1 dir2")
+          .and_return(@result)
         @gem1.diff(@gem2).should == @result.output
       end
 
