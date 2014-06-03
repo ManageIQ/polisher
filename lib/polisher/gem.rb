@@ -24,7 +24,7 @@ module Polisher
                       /rspec.*/, '.yardopts', '.rvmrc']
 
       # Common files shipped in gems that we should mark as doc
-      DOC_FILES = [/CHANGELOG.*/, /CONTRIBUTING.*/, /README.*/]
+      DOC_FILES = [/\/?CHANGELOG.*/, /\/?CONTRIBUTING.*/, /\/?README.*/, /\/?.*LICENSE/]
 
       attr_accessor :spec
       attr_accessor :name
@@ -33,6 +33,10 @@ module Polisher
       attr_accessor :dev_deps
 
       attr_accessor :path
+
+      def file_name
+        "#{name}-#{version}.gem"
+      end
 
       def initialize(args={})
         @spec     = args[:spec]
@@ -55,6 +59,11 @@ module Polisher
         DOC_FILES.any? do |doc|
           doc.is_a?(Regexp) ? doc.match(file) : doc == file
         end
+      end
+
+      # Return bool indicating if spec file satisfies any file in gem
+      def has_file_satisfied_by?(spec_file)
+        file_paths.any? { |gem_file| RPM::Spec.file_satisfies?(spec_file, gem_file) }
       end
 
       # Retrieve list of the versions of the specified gem installed locally

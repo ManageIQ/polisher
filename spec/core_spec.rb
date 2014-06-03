@@ -60,5 +60,11 @@ describe String do
     it "returns string with rpm macros swapped in" do
       "bin".rpmize.should == "%{_bindir}"
     end
+
+    it "prefixes %{gem_instdir} to non-special files" do
+      "spec".rpmize.should == "%{gem_instdir}/spec"
+      "lib".rpmize.should == "%{gem_libdir}"
+      "%{gem_cache}".rpmize.should == "%{gem_cache}"
+    end
   end
 end # describe String

@@ -3,6 +3,7 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/git'
+require 'polisher/gem'
 require 'pathname'
 
 module Polisher
@@ -289,7 +290,16 @@ module Polisher
       end
     end
 
+    describe "#update_metadata" do
+      it "sets pkg version" do
+        pkg = described_class.new
+        pkg.update_metadata(Polisher::Gem.new(:version => '5.0'))
+        pkg.version.should == '5.0'
+      end
+    end
+
     describe "#update_spec_to" do
+      it "updates spec metadata"
       it "updates spec version"
       it "updates spec release"
     end
@@ -333,10 +343,34 @@ module Polisher
 
     describe "#build_srpm" do
       it "uses package command to build srpm" do
-        pkg = described_class.new
+        gem  = Polisher::Gem.new
+        spec = RPM::Spec.new
+        pkg  = described_class.new
         pkg.should_receive(:in_repo).and_yield
-        AwesomeSpawn.should_receive(:run).with("/usr/bin/fedpkg srpm")
+        pkg.should_receive(:spec).and_return(spec)
+        spec.should_receive(:upstream_gem).and_return(gem)
+        FileUtils.stub(:ln_s) # stub out ln
+        result = AwesomeSpawn::CommandResult.new "", "", "", 0
+        AwesomeSpawn.should_receive(:run)
+                    .with("/usr/bin/fedpkg srpm")
+                    .and_return(result)
         pkg.build_srpm
+      end
+
+      context "package command fails" do
+        it "raises RuntimeError with the command stderr" do
+          gem  = Polisher::Gem.new
+          spec = RPM::Spec.new
+          pkg  = described_class.new
+          pkg.should_receive(:in_repo).and_yield
+          pkg.should_receive(:spec).and_return(spec)
+          spec.should_receive(:upstream_gem).and_return(gem)
+          FileUtils.stub(:ln_s) # stub out ln
+          result = AwesomeSpawn::CommandResult.new "", "", "cmd_error", 1
+          AwesomeSpawn.should_receive(:run)
+                      .and_return(result)
+          expect { pkg.build_srpm }.to raise_error(RuntimeError, "cmd_error")
+        end
       end
     end
 

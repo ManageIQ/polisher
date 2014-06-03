@@ -9,6 +9,14 @@ require 'polisher/gem'
 
 module Polisher
   describe Gem do
+    describe "#file_name" do
+      it "returns name-version.gem" do
+        expected = 'rails-4.0.0.gem'
+        Polisher::Gem.new(:name => 'rails', :version => '4.0.0')
+                     .file_name.should == expected
+      end
+    end
+
     describe "#initialize" do
       it "sets gem attributes" do
         gem = Polisher::Gem.new :name => 'rails',
@@ -34,6 +42,52 @@ module Polisher
         it "returns false" do
           Polisher::Gem.ignorable_file?('.rvmra').should be_false
           Polisher::Gem.ignorable_file?('foo.gemspoc').should be_false
+        end
+      end
+    end
+
+    describe "#doc_file?" do
+      context "file is on doc files list" do
+        it "returns true" do
+          Polisher::Gem.doc_file?("CHANGELOG").should be_true
+          Polisher::Gem.doc_file?("CHANGELOG.md").should be_true
+        end
+      end
+
+      context "file is not on doc files list" do
+        it "returns false" do
+          Polisher::Gem.doc_file?("lib").should be_false
+          Polisher::Gem.doc_file?(".yardopts").should be_false
+        end
+      end
+    end
+
+    describe "#has_file_satisfied_by?" do
+      context "specified spec file satisfies at least one gem file" do
+        it "returns true" do
+          spec_file = 'spec_file'
+          gem_file  = 'gem_file'
+          RPM::Spec.should_receive(:file_satisfies?)
+                   .with(spec_file, gem_file)
+                   .and_return(true)
+
+          gem = Polisher::Gem.new
+          gem.should_receive(:file_paths).and_return([gem_file])
+          gem.has_file_satisfied_by?(spec_file).should be_true
+        end
+      end
+
+      context "specified spec file does not satisfy any gem files" do
+        it "returns false" do
+          spec_file = 'spec_file'
+          gem_file  = 'gem_file'
+          RPM::Spec.should_receive(:file_satisfies?)
+                   .with(spec_file, gem_file)
+                   .and_return(false)
+
+          gem = Polisher::Gem.new
+          gem.should_receive(:file_paths).and_return([gem_file])
+          gem.has_file_satisfied_by?(spec_file).should be_false
         end
       end
     end
