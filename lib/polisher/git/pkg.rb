@@ -30,7 +30,7 @@ module Polisher
           [fetch_tgt].flatten
         end
 
-        def initialize(args={})
+        def initialize(args = {})
           @name    = args[:name]
           @version = args[:version]
           super(args)
@@ -38,12 +38,12 @@ module Polisher
 
         # Return full rpm name of package containing optional prefix
         def rpm_name
-          @rpm_name ||= "#{rpm_prefix}#{self.name}"
+          @rpm_name ||= "#{rpm_prefix}#{name}"
         end
 
         # Return full srpm file name of package
         def srpm
-          @srpm ||= "#{rpm_name}-#{self.version}-1.*.src.rpm"
+          @srpm ||= "#{rpm_name}-#{version}-1.*.src.rpm"
         end
 
         # Return full spec file name
@@ -73,7 +73,7 @@ module Polisher
         # Override clone to use PKG_PCMD
         # @override
         def clone
-          self.clobber!
+          clobber!
           Dir.mkdir path unless File.directory? path
           in_repo do
             result = AwesomeSpawn.run "#{pkg_cmd} clone #{rpm_name}"
@@ -96,7 +96,7 @@ module Polisher
 
         # Return boolean indicating if package is marked as dead (retired/obsolete/etc)
         def dead?
-          in_repo { File.exists?('dead.package') }
+          in_repo { File.exist?('dead.package') }
         end
 
         # Clone / init GitPkg
@@ -130,7 +130,7 @@ module Polisher
         # Update git ignore to ignore gem
         def ignore(gem)
           in_repo do
-            nl = File.exists?('.gitignore') ? "\n" : ''
+            nl = File.exist?('.gitignore') ? "\n" : ''
             content = "#{nl}#{gem.name}-#{gem.version}.gem"
             File.open(".gitignore", 'a') { |f| f.write content }
           end
@@ -140,7 +140,7 @@ module Polisher
         #
         # @param [Polisher::Gem] gem instance of gem containing metadata to update to
         def update_to(gem)
-          update_spec_to  gem
+          update_spec_to gem
           gen_sources_for gem
           ignore gem
           self
@@ -148,7 +148,7 @@ module Polisher
 
         # Override commit, generate a default msg, always add pkg files
         # @override
-        def commit(msg=nil)
+        def commit(msg = nil)
           in_repo { AwesomeSpawn.run "#{git_cmd} add #{pkg_files.join(' ')}" }
           super(msg.nil? ? "updated to #{version}" : msg)
           self
@@ -183,7 +183,7 @@ module Polisher
         # @return [Array<String>] versions retrieved, or empty array if none found
         def self.versions_for(name, &bl)
           version = nil
-          gitpkg = self.new :name => name
+          gitpkg = new :name => name
           gitpkg.url = "#{dist_git_url}#{gitpkg.rpm_name}.git"
           versions = []
           fetch_tgts.each do |tgt|

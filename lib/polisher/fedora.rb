@@ -23,10 +23,10 @@ module Polisher
         client.url = "#{PACKAGE_LIST}#{user}"
         client.http_get
         packages = client.body_str
-        # TODO instantiate Polisher::Gem instances & return
-        Nokogiri::HTML(packages).xpath("//a[@class='PackageName']").
-                                 select { |i| i.text =~ /rubygem-.*/ }.
-                                 collect { |i| i.text.gsub(/rubygem-/, '') }
+        # TODO: instantiate Polisher::Gem instances & return
+        Nokogiri::HTML(packages).xpath("//a[@class='PackageName']")
+                                .select { |i| i.text =~ /rubygem-.*/ }
+                                .collect { |i| i.text.gsub(/rubygem-/, '') }
       end
 
       # Retrieve list of the versions of the specified package in the various
@@ -37,8 +37,8 @@ module Polisher
       # @return [Array<String>] list of versions in Fedora
       def self.versions_for(name, &bl)
         # simply dispatch to bodhi to get latest updates
-        Polisher::Bodhi.versions_for name do |target,name,versions|
-          bl.call(:fedora, name, versions) unless(bl.nil?)
+        Polisher::Bodhi.versions_for name do |_target, pkg_name, versions|
+          bl.call(:fedora, pkg_name, versions) unless bl.nil?
         end
       end
     end # class Fedora

@@ -203,14 +203,14 @@ module Polisher
 
       context "dead.package exists" do
         it "returns true" do
-          File.should_receive(:exists?).with('dead.package').and_return(true)
+          File.should_receive(:exist?).with('dead.package').and_return(true)
           @pkg.should be_dead
         end
       end
 
       context "dead.package does not exist" do
         it "returns false" do
-          File.should_receive(:exists?).with('dead.package').and_return(false)
+          File.should_receive(:exist?).with('dead.package').and_return(false)
           @pkg.should_not be_dead
         end
       end

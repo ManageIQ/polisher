@@ -21,10 +21,10 @@ module Polisher
         out = result.output
 
         if out.include?("Version")
-          version = out.lines.to_a.find { |l| l =~ /^Version.*/ }
+          version = out.lines.to_a.detect { |l| l =~ /^Version.*/ }
           version = version.split(':').last.strip
         end
-        bl.call(:yum, name, [version]) unless(bl.nil?)
+        bl.call(:yum, name, [version]) unless bl.nil?
         version
       end
     end

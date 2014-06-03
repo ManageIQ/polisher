@@ -47,7 +47,7 @@ module Polisher
       # Return bool indiciating if koji has a build exactly
       # matching the specified version
       def self.has_build?(name, version)
-        versions = self.versions_for name
+        versions = versions_for name
         versions.include?(version)
       end
 
@@ -55,9 +55,7 @@ module Polisher
       # satisfies the specified ruby dependency
       def self.has_build_satisfying?(name, version)
         dep = ::Gem::Dependency.new name, version
-        self.versions_for(name).any? { |v|
-          dep.match?(name, v)
-        }
+        versions_for(name).any? { |v| dep.match?(name, v) }
       end
 
       # Return list of tags for which a package exists
@@ -87,7 +85,7 @@ module Polisher
             end
           end.flatten
         versions = builds.collect { |b| b['version'] }.uniq
-        bl.call(:koji, name, versions) unless(bl.nil?)
+        bl.call(:koji, name, versions) unless bl.nil?
         versions
       end
 
@@ -119,7 +117,7 @@ module Polisher
         builds  = {}
         builds1.each do |build|
           name         = build['package_name']
-          build2       = builds2.find { |b| b['name'] == name }
+          build2       = builds2.detect { |b| b['name'] == name }
           version1     = build['version']
           version2     = build2 && build2['version']
           builds[name] = {tag1 => version1, tag2 => version2}
