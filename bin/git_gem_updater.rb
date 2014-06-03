@@ -71,7 +71,11 @@ conf[:gems].each do |gem_name|
   pkg.update_to(gem)
   # TODO append gem dependencies to conf[:gems] list
 
-  pkg.build
+  begin
+    pkg.build
+  rescue => e
+    puts "Warning: scratch build failed: #{e}".bold.red
+  end
 
   unless pkg.spec.has_check?
     puts "Warning: no %check section in spec, "\
