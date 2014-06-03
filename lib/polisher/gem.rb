@@ -24,7 +24,7 @@ module Polisher
                       /rspec.*/, '.yardopts', '.rvmrc']
 
       # Common files shipped in gems that we should mark as doc
-      DOC_FILES = [/CHANGELOG.*/, /CONTRIBUTING.*/, /README.*/]
+      DOC_FILES = [/\/?CHANGELOG.*/, /\/?CONTRIBUTING.*/, /\/?README.*/, /\/?.*LICENSE/]
 
       attr_accessor :spec
       attr_accessor :name
