@@ -140,7 +140,7 @@ module Polisher::RPM
         gem.should_receive(:file_paths).at_least(:once).
             and_return(['/foo', '/foo/bar', '/baz'])
         spec.update_to(gem)
-        spec.new_files.should == ['/baz']
+        spec.new_files.should == ['%{gem_instdir}//baz']
       end
   
       it "updates metadata from gem" do
