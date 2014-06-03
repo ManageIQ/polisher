@@ -3,6 +3,7 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/git'
+require 'polisher/gem'
 require 'pathname'
 
 module Polisher
@@ -289,7 +290,16 @@ module Polisher
       end
     end
 
+    describe "#update_metadata" do
+      it "sets pkg version" do
+        pkg = described_class.new
+        pkg.update_metadata(Polisher::Gem.new(:version => '5.0'))
+        pkg.version.should == '5.0'
+      end
+    end
+
     describe "#update_spec_to" do
+      it "updates spec metadata"
       it "updates spec version"
       it "updates spec release"
     end

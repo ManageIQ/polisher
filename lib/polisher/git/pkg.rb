@@ -53,6 +53,7 @@ module Polisher
 
         # Return handle to instance of Polisher::RPM::Spec corresponding to spec
         def spec
+          @spec, @dirty_spec = nil, false if @dirty_spec
           @spec ||= in_repo { Polisher::RPM::Spec.parse File.read(spec_file) }
         end
 
@@ -111,11 +112,16 @@ module Polisher
           self
         end
 
+        def update_metadata(gem)
+          @version = gem.version
+        end
+
         # Update the local spec to the specified gem version
         def update_spec_to(gem)
           in_repo do
             spec.update_to(gem)
             File.write(spec_file, spec.to_string)
+            @dirty_spec = true
           end
         end
 
@@ -140,6 +146,7 @@ module Polisher
         #
         # @param [Polisher::Gem] gem instance of gem containing metadata to update to
         def update_to(gem)
+          update_metadata gem
           update_spec_to gem
           gen_sources_for gem
           ignore gem
