@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency('colored')
   s.add_dependency('activesupport')
-  s.add_development_dependency('rspec', '>= 2.0.0')
+  s.add_development_dependency('rspec', '~> 2.0')
   s.add_development_dependency('coveralls')
   s.add_development_dependency('json')
   s.add_development_dependency('curb')
