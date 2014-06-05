@@ -54,7 +54,7 @@ module Polisher
           definition.dependencies.select { |d|
             groups.nil? || groups.empty? ||                  # groups not specified
             groups.any? { |g| d.groups.include?(g.intern) }  # dep in any group
-          }.collect { |d| d.name }
+          }
 
         metadata[:dev_deps] = [] # TODO
         metadata[:definition] = definition
@@ -71,19 +71,16 @@ module Polisher
       # rubygems.org/other upstream sources
       def patched
         vendored.collect do |dep|
-          bundler_dep = @definition ?
-                        @definition.dependencies.detect { |d| d.name == dep } : nil
-
           # TODO: right now just handling git based alternate sources,
           # should be able to handle other types bundler supports
           # (path and alternate rubygems src)
-          next unless bundler_dep && bundler_dep.source.is_a?(Bundler::Source::Git)
-          src = bundler_dep.source
+          next unless dep.source.is_a?(Bundler::Source::Git)
+          src = dep.source
 
           # retrieve gem
           gem = src.version ?
-                Polisher::Gem.new(:name => dep, :version => src.version) :
-                Polisher::Gem.retrieve(dep)
+                Polisher::Gem.new(:name => dep.name, :version => src.version) :
+                Polisher::Gem.retrieve(dep.name)
 
           # retrieve dep
           git = Polisher::Git::Repo.new :url => src.uri

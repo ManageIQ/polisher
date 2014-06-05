@@ -157,8 +157,8 @@ module Polisher
     def dependency_versions(args = {}, &bl)
       args = {:recursive => true, :dev_deps  => true}.merge(args)
       versions = {}
-      self.deps.each do |dep|
-        gem = Polisher::Gem.retrieve(dep)
+      deps.each do |dep|
+        gem = Polisher::Gem.retrieve(dep.name)
         versions.merge!(gem.versions(args, &bl))
       end
       versions
