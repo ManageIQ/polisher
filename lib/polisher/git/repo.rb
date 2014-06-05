@@ -50,6 +50,10 @@ module Polisher
           in_repo { Dir['**/*'] }
         end
 
+        def include?(file)
+          file_paths.include?(file)
+        end
+
         # Note be careful when invoking:
         def reset!
           in_repo { AwesomeSpawn.run! "#{git_cmd} reset HEAD~ --hard" }
