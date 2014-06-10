@@ -10,7 +10,7 @@ module Polisher
   class TagMapper
     extend ConfHelpers
 
-    def self.method_missing(id, *args, &bl)
+    def self.method_missing(id, *args)
       set(id.to_s, args.first)
     end
 
@@ -20,6 +20,7 @@ module Polisher
     end
 
     def self.map(tag)
+      @tags ||= {}
       @tags[tag]
     end
   end # class TagMapper

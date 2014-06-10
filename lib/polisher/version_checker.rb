@@ -163,5 +163,15 @@ module Polisher
       end
       versions
     end
+
+    # Return list of states which gem dependencies are in
+    def dependency_states
+      states = {}
+      deps.each do |dep|
+        gem = Polisher::Gem.new :name => dep.name
+        states.merge dep.name => gem.state(:check => dep)
+      end
+      states
+    end
   end
 end

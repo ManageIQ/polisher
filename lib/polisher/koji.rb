@@ -76,17 +76,36 @@ module Polisher
       # @return [Array<String>] versions retrieved, empty array if none found
       def self.versions_for(name, &bl)
         # koji xmlrpc call
-        builds =
-          koji_tags.collect do |tag|
-            package_prefixes.collect do |prefix|
-              #                         tag  event inherit prefix latest
-              client.call('listTagged', tag, nil,  true,   nil,   false,
-                          "#{prefix}#{name}")
-            end
-          end.flatten
-        versions = builds.collect { |b| b['version'] }.uniq
+        versions = tagged_versions_for(name).values.flatten.uniq
         bl.call(:koji, name, versions) unless bl.nil?
         versions
+      end
+
+      def self.tagged_versions_for(name)
+        versions = {}
+        koji_tags.each do |tag|
+          versions[tag] = versions_for_tag(name, tag).flatten.uniq
+        end
+        versions
+      end
+
+      def self.tagged_version_for(name)
+        versions = {}
+        tagged_versions_for(name).each do |tag, tagged_versions|
+          versions[tag] = tagged_versions.first
+        end
+        versions
+      end
+
+      def self.versions_for_tag(name, tag)
+        metadata =
+          package_prefixes.collect do |prefix|
+            #                         tag  event inherit prefix latest
+            client.call('listTagged', tag, nil,  true,   nil,   false,
+                        "#{prefix}#{name}")
+          end
+
+        metadata.flatten.collect { |b| b['version'] }.uniq
       end
 
       # Run a build against the specified target using the specified rpm
