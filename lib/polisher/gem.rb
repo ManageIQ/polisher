@@ -7,12 +7,14 @@ require 'polisher/vendor'
 require 'polisher/component'
 require 'polisher/gem_cache'
 require 'polisher/version_checker'
+require 'polisher/gem_state'
 
 module Polisher
   deps = ['curb', 'json', 'yaml', 'tempfile', 'pathname', 'fileutils',
           'awesome_spawn', 'rubygems/installer', 'active_support', 'active_support/core_ext']
   Component.verify("Gem", *deps) do
     class Gem
+      include HasState
       include HasVendoredDeps
 
       GEM_CMD      = '/usr/bin/gem'

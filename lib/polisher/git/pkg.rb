@@ -53,6 +53,11 @@ module Polisher
           @spec_path ||= "#{rpm_name}.spec"
         end
 
+        # Return boolean indicating if spec file exists
+        def spec?
+          include? spec_file
+        end
+
         # Return handle to instance of Polisher::RPM::Spec corresponding to spec
         def spec
           @spec, @dirty_spec = nil, false if @dirty_spec
@@ -102,7 +107,7 @@ module Polisher
           in_repo { File.exist?('dead.package') }
         end
 
-        # Clone / init GitPkg
+        # Fetch specified target or configured fetch_tgt if not specified
         def fetch(target = nil)
           target = self.class.fetch_tgts.first if target.nil?
           clone unless cloned?
@@ -113,6 +118,22 @@ module Polisher
 
           self
         end
+
+        # Return the valid targets, eg those which we can fetch
+        def valid_targets
+          valid = []
+          self.class.fetch_tgts.collect do |target|
+            begin
+              fetch target
+              valid << target
+            rescue
+              # noop
+            end
+          end
+          valid
+        end
+
+        alias :valid_branches :valid_targets
 
         def update_metadata(gem)
           @version = gem.version

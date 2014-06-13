@@ -70,7 +70,8 @@ module Polisher
     GEMFILE = {
       :path     => "#{SPEC_DIR}/data/Gemfile",
       :contents => File.read("#{SPEC_DIR}/data/Gemfile"),
-      :deps     => ['rubygems', 'cinch']
+      :deps     => [::Gem::Dependency.new("rubygems", ::Gem::Requirement.new([">= 0"]), :runtime),
+                    ::Gem::Dependency.new("cinch", ::Gem::Requirement.new([">= 0"]), :runtime)]
     }
 
     RPM_SPEC = {
