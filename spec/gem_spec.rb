@@ -249,12 +249,91 @@ module Polisher
     end
 
     describe "#versions" do
-      it "looks up and returns versions for gemname in polisher version checker"
+      it "looks up and returns versions of gem" do
+        gem = described_class.new :name => 'rails'
+        Polisher::VersionChecker.should_receive(:versions_for)
+                                .with('rails')
+                                .and_return(:koji => ['1.1.1'])
+        gem.versions.should == {'rails' => {:koji => ['1.1.1']}}
+      end
 
       context "recursive is true" do
-        it "appends versions of gem dependencies to versions list"
+        it "retrieves dependency versions" do
+          # stub out version checker
+          retrieved = {:koji => ['1.0']}
+          Polisher::VersionChecker.should_receive(:versions_for)
+                                  .and_return(retrieved)
+
+          versions = {}
+          gem = described_class.new :name => 'rails'
+          gem.should_receive(:dependency_versions)
+             .with(:recursive => true, :versions => {'rails' => retrieved})
+             .and_call_original
+          gem.versions(:recursive => true, :versions => versions)
+             .should == {'rails' => {:koji => ['1.0']}}
+        end
+
         context "dev_deps is true" do
-          it "appends versions of gem dev dependencies to versions list"
+          it "retrieves dev dependency versions" do
+            # stub out version checker
+            retrieved = {:koji => ['1.0']}
+            Polisher::VersionChecker.should_receive(:versions_for)
+                                    .and_return(retrieved)
+
+            versions = {}
+            gem = described_class.new :name => 'rails'
+            gem.should_receive(:dependency_versions)
+               .with(:recursive => true, :dev_deps => true,
+                      :versions => {'rails' => retrieved})
+               .and_call_original
+            gem.should_receive(:dependency_versions)
+               .with(:recursive => true, :dev => true, :dev_deps => true,
+                      :versions => {'rails' => retrieved})
+               .and_call_original
+            gem.versions(:recursive => true, :dev_deps => true,
+                         :versions => versions)
+               .should == {'rails' => {:koji => ['1.0']}}
+          end
+        end
+      end
+    end
+
+    describe "#dependency_versions" do
+      it "retrieves dependency versions" do
+        gem = described_class.new
+        gem.should_receive(:deps).and_return([::Gem::Dependency.new('rake')])
+        described_class.should_receive(:retrieve)
+                       .with('rake').and_return(gem)
+
+        versions = {'rake' => {:koji => ['2.1']}}
+        gem.should_receive(:versions).and_return(versions)
+        gem.dependency_versions.should == versions
+      end
+
+      it "retrieves dev dependency versions" do
+        gem = described_class.new
+        gem.should_receive(:dev_deps).and_return([::Gem::Dependency.new('rake')])
+        described_class.should_receive(:retrieve)
+                       .with('rake').and_return(gem)
+
+        versions = {'rake' => {:koji => ['2.1']}}
+        gem.should_receive(:versions).and_return(versions)
+        gem.dependency_versions(:dev => true).should == versions
+      end
+
+      context "error during gem or version retrieval" do
+        it "sets version to 'unknown'" do
+          gem = described_class.new
+          gem.should_receive(:deps).and_return([::Gem::Dependency.new('rake')])
+          described_class.should_receive(:retrieve)
+                         .with('rake').and_raise(RuntimeError)
+
+          versions = {:all => [:unknown]}
+          gem.should_not_receive(:versions)
+          Polisher::VersionChecker.should_receive(:unknown_version)
+                                  .with(:all, 'rake')
+                                  .and_return(versions)
+          gem.dependency_versions.should == {'rake' => versions}
         end
       end
     end
@@ -271,7 +350,7 @@ module Polisher
         @gem1.should_receive(:unpack).and_return('dir1')
         @gem2.should_receive(:unpack).and_return('dir2')
         AwesomeSpawn.should_receive(:run)
-          .with("#{described_class::DIFF_CMD} -r dir1 dir2")
+          .with("#{Polisher::Gem.diff_cmd} -r dir1 dir2")
           .and_return(@result)
         @gem1.diff(@gem2).should == @result.output
       end

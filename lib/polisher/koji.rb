@@ -16,7 +16,7 @@ module Polisher
     end
 
     class Koji
-      extend ConfHelpers
+      include ConfHelpers
 
       conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
       conf_attr :koji_tag, 'f21'
@@ -110,6 +110,8 @@ module Polisher
 
       # Run a build against the specified target using the specified rpm
       def self.build(args = {})
+        require_cmd! build_cmd
+
         target  = args[:target] || build_tgt
         srpm    = args[:srpm]
         scratch = args[:scratch] ? '--scratch' : ''

@@ -185,6 +185,7 @@ module Polisher
 
         pkg = described_class.new :name => 'rails'
         pkg.should_receive(:in_repo).and_yield
+        pkg.should_receive(:require_cmd!).with('/usr/bin/fedpkg').and_return(true)
 
         expected = '/usr/bin/fedpkg clone rubygem-rails'
         result   = AwesomeSpawn::CommandResult.new '', '', '', 0
@@ -347,6 +348,7 @@ module Polisher
         spec = RPM::Spec.new
         pkg  = described_class.new
         pkg.should_receive(:in_repo).and_yield
+        pkg.should_receive(:require_cmd!).with('/usr/bin/fedpkg').and_return(true)
         pkg.should_receive(:spec).and_return(spec)
         spec.should_receive(:upstream_gem).and_return(gem)
         FileUtils.stub(:ln_s) # stub out ln
@@ -363,6 +365,7 @@ module Polisher
           spec = RPM::Spec.new
           pkg  = described_class.new
           pkg.should_receive(:in_repo).and_yield
+          pkg.should_receive(:require_cmd!).with('/usr/bin/fedpkg').and_return(true)
           pkg.should_receive(:spec).and_return(spec)
           spec.should_receive(:upstream_gem).and_return(gem)
           FileUtils.stub(:ln_s) # stub out ln

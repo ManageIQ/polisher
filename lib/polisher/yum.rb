@@ -3,12 +3,15 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'polisher/core'
 require 'polisher/component'
 
 module Polisher
   Component.verify("Yum", 'awesome_spawn') do
     class Yum
-      YUM_CMD = '/usr/bin/yum'
+      include ConfHelpers
+
+      conf_attr :yum_cmd, '/usr/bin/yum'
 
       # Retrieve version of gem available in yum
       #
@@ -16,8 +19,10 @@ module Polisher
       # @param [Callable] bl optional callback to invoke with version retrieved
       # @returns [String] version of gem in yum or nil if not found
       def self.version_for(name, &bl)
+        require_cmd! yum_cmd
+
         version = nil
-        result  = AwesomeSpawn.run "#{YUM_CMD} info rubygem-#{name}"
+        result  = AwesomeSpawn.run "#{yum_cmd} info rubygem-#{name}"
         out = result.output
 
         if out.include?("Version")
