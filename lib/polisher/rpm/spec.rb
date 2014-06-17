@@ -40,13 +40,13 @@ module Polisher
         SPEC_CHANGELOG_MATCHER      = /^%changelog$/
         SPEC_FILES_MATCHER          = /^%files$/
         SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
-        SPEC_DOC_FILES_MATCHER      = /^%files doc$/
+        SPEC_EXCLUDED_FILE_MATCHER  = /^%exclude\s+(.*)$/
         SPEC_CHECK_MATCHER          = /^%check$/
 
         FILE_MACRO_MATCHERS         =
           [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
-           /^%verify\s/,  /^%docdir.*/,  /^%dir\s/,
-           /^%defattr.*/, /^%exclude\s/, /^%{gem_instdir}\/+/]
+           /^%verify\s/,  /^%docdir.*/,  /^%dir\s/, /^%defattr.*/,
+           /^%{gem_instdir}\/+/, /^%{gem_cache}/, /^%{gem_spec}/, /^%{gem_docdir}/]
 
         FILE_MACRO_REPLACEMENTS =
           {"%{_bindir}"    => 'bin',
@@ -252,11 +252,19 @@ module Polisher
 
             elsif in_files
               tgt = subpkg_name.nil? ? meta[:gem_name] : subpkg_name
-              meta[:files] ||= {}
-              meta[:files][tgt] ||= []
 
-              sl = l.strip.unrpmize
-              meta[:files][tgt] << sl unless sl.blank?
+              if l =~ SPEC_EXCLUDED_FILE_MATCHER
+                sl = Regexp.last_match(1)
+                meta[:pkg_excludes] ||= {}
+                meta[:pkg_excludes][tgt] ||= []
+                meta[:pkg_excludes][tgt] << sl unless sl.blank?
+
+              else
+                sl = l.strip
+                meta[:pkg_files] ||= {}
+                meta[:pkg_files][tgt] ||= []
+                meta[:pkg_files][tgt] << sl unless sl.blank?
+              end
             end
           }
 
