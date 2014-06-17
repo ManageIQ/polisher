@@ -12,7 +12,7 @@ module Polisher
   Component.verify("RPM::Requirement", *deps) do
     module RPM
       class Requirement
-        extend ConfHelpers
+        include ConfHelpers
 
         conf_attr :rubygem_prefix, 'rubygem'
         conf_attr :scl_prefix, '' # set to %{?scl_prefix} to enable scl's

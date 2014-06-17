@@ -47,7 +47,14 @@ optparse.parse!
 
 Polisher::Config.set
 
-conf[:gems] += Polisher::Fedora.gems_owned_by(conf[:user]) unless conf[:user].nil?
+unless conf[:user].nil?
+  begin
+    conf[:gems] += Polisher::Fedora.gems_owned_by(conf[:user])
+  rescue
+    puts "Could not retrieve gems owned by #{conf[:user]}".red
+    exit 1
+  end
+end
 
 if conf[:gems].empty?
   puts "must specify a gem name or user name!".red

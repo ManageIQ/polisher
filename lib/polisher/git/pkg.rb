@@ -81,6 +81,7 @@ module Polisher
         # Override clone to use PKG_PCMD
         # @override
         def clone
+          require_cmd! pkg_cmd
           clobber!
           Dir.mkdir path unless File.directory? path
           in_repo do
@@ -150,6 +151,7 @@ module Polisher
 
         # Generate new sources file
         def gen_sources_for(gem)
+          require_cmd! md5sum_cmd
           in_repo do
             AwesomeSpawn.run "#{md5sum_cmd} #{gem.gem_path} > sources"
             File.write('sources', File.read('sources').gsub("#{GemCache::DIR}/", ''))
@@ -179,6 +181,7 @@ module Polisher
         # Override commit, generate a default msg, always add pkg files
         # @override
         def commit(msg = nil)
+          require_cmd! git_cmd
           in_repo { AwesomeSpawn.run "#{git_cmd} add #{pkg_files.join(' ')}" }
           super(msg.nil? ? "updated to #{version}" : msg)
           self
@@ -186,6 +189,7 @@ module Polisher
 
         # Build the srpm
         def build_srpm
+          require_cmd! pkg_cmd
           in_repo do
             begin
               gem = spec.upstream_gem

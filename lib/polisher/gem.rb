@@ -3,6 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'polisher/core'
 require 'polisher/vendor'
 require 'polisher/component'
 require 'polisher/gem_cache'
@@ -14,11 +15,11 @@ module Polisher
           'awesome_spawn', 'rubygems/installer', 'active_support', 'active_support/core_ext']
   Component.verify("Gem", *deps) do
     class Gem
+      include ConfHelpers
       include HasState
       include HasVendoredDeps
 
-      GEM_CMD      = '/usr/bin/gem'
-      DIFF_CMD     = '/usr/bin/diff'
+      conf_attr :diff_cmd, '/usr/bin/diff'
 
       # Common files shipped in gems that we should ignore
       IGNORE_FILES = ['.gemtest', '.gitignore', '.travis.yml',
@@ -279,46 +280,58 @@ module Polisher
       # should also be retrieved
       # @option args [Boolean] :dev_deps indicates if versions of development
       # dependencies should also be retrieved
-      # @return [Hash<name,versions>] hash of name to list of versions for gem
-      # (and dependencies if specified)
-      def versions(args = {}, &bl)
-        recursive = args[:recursive]
-        dev_deps  = args[:dev_deps]
-        versions  = args[:versions] || {}
+      # @retrieve versions of all gem dependencies available in configured targets
+      def dependency_versions(args = {}, &bl)
+        versions   = args[:versions] || {}
+        check_deps = args[:dev] ? dev_deps : deps
 
-        gem_versions = Polisher::VersionChecker.versions_for(name, &bl)
-        versions.merge! name => gem_versions
-        args[:versions] = versions
-
-        if recursive
-          deps.each do |dep|
-            unless versions.key?(dep.name)
+        check_deps.each do |dep|
+          unless versions.key?(dep.name)
+            begin
               gem = Polisher::Gem.retrieve(dep.name)
               versions.merge! gem.versions(args, &bl)
+            rescue
+              unknown = Polisher::VersionChecker.unknown_version(:all, dep.name, &bl)
+              versions.merge! dep.name => unknown
             end
           end
 
-          if dev_deps
-            dev_deps.each do |dep|
-              unless versions.key?(dep.name)
-                gem = Polisher::Gem.retrieve(dep.name)
-                versions.merge! gem.versions(args, &bl)
-              end
-            end
-          end
+          args[:versions] = versions
         end
+
         versions
       end
 
+      # (and dependencies if specified)
+      def versions(args = {}, &bl)
+        local_args = Hash[args]
+        recursive  = local_args[:recursive]
+        dev_deps   = local_args[:dev_deps]
+        versions   = local_args[:versions] || {}
+
+        gem_versions = Polisher::VersionChecker.versions_for(name, &bl)
+        versions.merge! name => gem_versions
+        local_args[:versions] = versions
+
+        if recursive
+          dependency_versions local_args
+          dependency_versions local_args.merge(:dev => true) if dev_deps
+        end
+
+        versions
+      end
+
+
       # Return diff of content in this gem against other
       def diff(other)
+        require_cmd! diff_cmd
         out = nil
 
         begin
           this_dir  = unpack
           other_dir = other.is_a?(Polisher::Gem) ? other.unpack :
                      (other.is_a?(Polisher::Git::Repo) ? other.path : other)
-          result = AwesomeSpawn.run("#{DIFF_CMD} -r #{this_dir} #{other_dir}")
+          result = AwesomeSpawn.run("#{diff_cmd} -r #{this_dir} #{other_dir}")
           out = result.output.gsub("#{this_dir}", 'a').gsub("#{other_dir}", 'b')
         rescue
         ensure

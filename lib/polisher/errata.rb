@@ -9,7 +9,7 @@ require 'polisher/component'
 module Polisher
   Component.verify("Errata", 'json', 'curb') do
     class Errata
-      extend ConfHelpers
+      include ConfHelpers
 
       conf_attr :advisory_url, ''
       conf_attr :package_prefix, 'rubygem-'

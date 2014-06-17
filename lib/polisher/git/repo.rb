@@ -12,19 +12,21 @@ module Polisher
     Component.verify("Git::Repo", 'awesome_spawn') do
       # Git Repository
       class Repo
-        extend ConfHelpers
+        include ConfHelpers
 
         # TODO use ruby git api
         conf_attr :git_cmd, '/usr/bin/git'
 
         attr_accessor :url
+        attr_accessor :path
 
         def initialize(args={})
-          @url  = args[:url]
+          @url   = args[:url]
+          @path  = args[:path]
         end
 
         def path
-          GitCache.path_for(@url)
+          @path || GitCache.path_for(@url)
         end
 
         # Clobber the git repo
@@ -33,6 +35,7 @@ module Polisher
         end
 
         def clone
+          require_cmd! git_cmd
           AwesomeSpawn.run! "#{git_cmd} clone #{url} #{path}"
         end
 
@@ -56,21 +59,25 @@ module Polisher
 
         # Note be careful when invoking:
         def reset!
+          require_cmd! git_cmd
           in_repo { AwesomeSpawn.run! "#{git_cmd} reset HEAD~ --hard" }
           self
         end
 
         def pull
+          require_cmd! git_cmd
           in_repo { AwesomeSpawn.run! "#{git_cmd} pull" }
           self
         end
 
         def checkout(tgt)
+          require_cmd! git_cmd
           in_repo { AwesomeSpawn.run! "#{git_cmd} checkout #{tgt}" }
           self
         end
 
         def commit(msg)
+          require_cmd! git_cmd
           in_repo { AwesomeSpawn.run! "#{git_cmd} commit -m '#{msg}'" }
           self
         end
