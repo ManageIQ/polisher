@@ -89,6 +89,7 @@ module Polisher
 
         # Return gem corresponding to spec name/version
         def upstream_gem
+          @gem, @update_gem = nil, false if @update_gem
           @gem ||= Polisher::Gem.from_rubygems gem_name, version
         end
 
@@ -405,6 +406,9 @@ module Polisher
           # update to new version
           @metadata[:version] = new_source.version
           @metadata[:release] = "1%{?dist}"
+
+          # invalidate the local gem
+          @update_gem = true
 
           # add changelog entry
           changelog_entry = <<EOS
