@@ -363,23 +363,41 @@ module Polisher
 
         # Internal helper to update spec files from new source
         def update_files_from(new_source)
-          to_add = new_source.file_paths
-          @metadata[:files] ||= {}
-          @metadata[:files].each { |pkg,spec_files|
-            (new_source.file_paths & to_add).each { |gem_file|
-              # skip files already included in spec or in dir in spec
-              has_file = spec_files.any? { |sf|
-                           gem_file.gsub(sf,'') != gem_file
-                         }
+          # populate file list from rpmized versions of new source files
+          # minus excluded files minus duplicates (files taken care by other
+          # dirs on list)
+          #
+          # TODO: also detect / add files from SOURCES & PATCHES
+          gem_files = new_source.file_paths - excluded_files
+          gem_files.reject! do |file|
+            gem_files.any? do |other|
+              other != file && self.class.file_satisfies?(other, file)
+            end
+          end
 
-              to_add.delete(gem_file)
-              to_add << gem_file.rpmize if !has_file &&
-                                           !Gem.ignorable_file?(gem_file)
-            }
-          }
+          @metadata[:new_files] = {}
+          @metadata[:pkg_excludes] ||= {}
+          gem_files.each do |gem_file|
+            pkg = subpkg_containing(gem_file)
+            pkg = gem_name if pkg.nil?
+            if Gem.ignorable_file?(gem_file)
+              @metadata[:pkg_excludes] ||= []
+              @metadata[:pkg_excludes][pkg] << gem_file.rpmize
 
-          @metadata[:new_files] = to_add.select { |f| !Gem.doc_file?(f) }
-          @metadata[:new_docs]  = to_add - @metadata[:new_files]
+            elsif Gem.doc_file?(gem_file)
+              @metadata[:new_files]['doc'] ||= []
+              @metadata[:new_files]['doc'] << gem_file.rpmize
+
+            else
+              @metadata[:new_files][pkg] ||= []
+              @metadata[:new_files][pkg] << gem_file.rpmize
+            end
+          end
+
+          extra_gem_files.each do |pkg, files|
+            @metadata[:new_files][pkg] ||= []
+            @metadata[:new_files][pkg]  += files.collect { |file| file.rpmize }
+          end
         end
 
         # Internal helper to update spec metadata from new source
