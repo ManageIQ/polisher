@@ -60,6 +60,36 @@ module Polisher
       end
     end
 
+    describe "#has_file_satisfied_by?" do
+      context "specified spec file satisfies at least one gem file" do
+        it "returns true" do
+          spec_file = 'spec_file'
+          gem_file  = 'gem_file'
+          RPM::Spec.should_receive(:file_satisfies?)
+                   .with(spec_file, gem_file)
+                   .and_return(true)
+
+          gem = Polisher::Gem.new
+          gem.should_receive(:file_paths).and_return([gem_file])
+          gem.has_file_satisfied_by?(spec_file).should be_true
+        end
+      end
+
+      context "specified spec file does not satisfy any gem files" do
+        it "returns false" do
+          spec_file = 'spec_file'
+          gem_file  = 'gem_file'
+          RPM::Spec.should_receive(:file_satisfies?)
+                   .with(spec_file, gem_file)
+                   .and_return(false)
+
+          gem = Polisher::Gem.new
+          gem.should_receive(:file_paths).and_return([gem_file])
+          gem.has_file_satisfied_by?(spec_file).should be_false
+        end
+      end
+    end
+
     describe "#local_versions_for" do
       before(:each) do
         # XXX clear the cached version of the gem specification db
