@@ -428,12 +428,20 @@ EOS
                                      "Release: #{@metadata[:release]}")
         end
 
+        def changelog_index
+          @metadata[:contents].index SPEC_CHANGELOG_MATCHER
+        end
+
+        def changelog_end_index
+          ci = changelog_index
+          ci.nil? ? (@metadata[:contents].length - 1) :
+                    (@metadata[:contents].index "\n", ci) + 1
+        end
+
         def update_changelog
           # add changelog entry
-          cp  = @metadata[:contents].index SPEC_CHANGELOG_MATCHER
-          cpn = cp.nil? ? (@metadata[:contents].length - 1) :
-                          (@metadata[:contents].index "\n", cp) + 1
-          @metadata[:contents] = @metadata[:contents][0...cpn] +
+          cei = changelog_end_index
+          @metadata[:contents] = @metadata[:contents][0...cei] +
                                  @metadata[:changelog_entries].join("\n\n")
         end
 
@@ -446,24 +454,47 @@ EOS
                                     .join("\n")
         end
 
+        def first_requires_index
+          @metadata[:contents].index SPEC_REQUIRES_MATCHER
+        end
+
+        def first_build_requires_index
+          @metadata[:contents].index SPEC_BUILD_REQUIRES_MATCHER
+        end
+
+        def requirement_section_index
+          ri   = first_requires_index
+          bri  = first_build_requires_index
+          ri < bri ? ri : bri
+        end
+
+        def subpkg_index
+          @metadata[:contents].index SPEC_SUBPACKAGE_MATCHER || -1
+        end
+
+        def last_requires_index
+          @metadata[:contents].rindex SPEC_REQUIRES_MATCHER, subpkg_index
+        end
+
+        def last_build_requires_index
+          @metadata[:contents].rindex SPEC_BUILD_REQUIRES_MATCHER, subpkg_index
+        end
+
+        def last_requirement_index
+          lri  = last_requires_index
+          lbri = last_build_requires_index
+          lri > lbri ? lri : lbri
+        end
+
+        def requirement_section_end_index
+          @metadata[:contents].index "\n", last_requirement_index
+        end
+
         def update_requires
-          # update requires/build requires
-          rp   = @metadata[:contents].index SPEC_REQUIRES_MATCHER
-          brp  = @metadata[:contents].index SPEC_BUILD_REQUIRES_MATCHER
-          tp   = rp < brp ? rp : brp
-
-          pp   = @metadata[:contents].index SPEC_SUBPACKAGE_MATCHER
-          pp   = -1 if pp.nil?
-
-          lrp  = @metadata[:contents].rindex SPEC_REQUIRES_MATCHER, pp
-          lbrp = @metadata[:contents].rindex SPEC_BUILD_REQUIRES_MATCHER, pp
-          ltp  = lrp > lbrp ? lrp : lbrp
-
-          ltpn = @metadata[:contents].index "\n", ltp
-
-          @metadata[:contents].slice!(tp...ltpn)
-          @metadata[:contents].insert tp, requires_contents + "\n" +
-                                          build_requires_contents
+          new_contents = requires_contents + "\n" + build_requires_contents
+          rsi  = requirement_section_index
+          @metadata[:contents].slice!(rsi...requirement_section_end_index)
+          @metadata[:contents].insert rsi, new_contents
         end
 
         def new_files_contents_for(pkg)
@@ -484,17 +515,24 @@ EOS
             .join("\n") + "\n\n"
         end
 
+        def files_index
+          @metadata[:contents].index SPEC_FILES_MATCHER
+        end
+
+        def files_end_index
+          @metadata[:contents].index SPEC_CHANGELOG_MATCHER
+        end
+
         def update_files
           # update files
-          fp = @metadata[:contents].index SPEC_FILES_MATCHER
-          lfp = @metadata[:contents].index SPEC_CHANGELOG_MATCHER
-          @metadata[:contents].slice!(fp...lfp)
+          fi = files_index
+          @metadata[:contents].slice!(fi...files_end_index)
 
           contents = new_files_contents_for(gem_name) +
                      excludes_contents +
                      new_subpkg_files_contents
 
-          @metadata[:contents].insert fp, contents
+          @metadata[:contents].insert fi, contents
         end
 
         def update_contents
