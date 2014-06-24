@@ -5,18 +5,19 @@
 
 # XXX issue w/ retreiving packages from pkgwat causing sporadic issues:
 # https://github.com/fedora-infra/fedora-packages/issues/55
-
-# fedora pkgwat provides a frontend to bodhi
-require 'pkgwat'
+require 'polisher/component'
 
 module Polisher
-  class Bodhi
-    def self.versions_for(name, &bl)
-      versions = Pkgwat.get_updates("rubygem-#{name}", 'all', 'all').
-                   select  { |update| update['stable_version']  != 'None' }.
-                   collect { |update| update['stable_version'] }
-      bl.call(:bodhi, name, versions) unless(bl.nil?) 
-      versions
+  # fedora pkgwat provides a frontend to bodhi
+  Component.verify("Bodhi", "pkgwat") do
+    class Bodhi
+      def self.versions_for(name, &bl)
+        versions = Pkgwat.get_updates("rubygem-#{name}", 'all', 'all').
+                     select  { |update| update['stable_version']  != 'None' }.
+                     collect { |update| update['stable_version'] }
+        bl.call(:bodhi, name, versions) unless(bl.nil?)
+        versions
+      end
     end
   end
 end
