@@ -18,11 +18,19 @@ module Polisher
     end # class MissingComponent
 
     def self.verify(polisher_klass, *dependencies)
-      dependencies.each { |dep| require dep }
+      dependencies.each do |dep|
+        @current_dependency = dep
+        require dep
+      end
     rescue LoadError
-      klass = polisher_klass.demodulize
-      polisher_module = "Polisher::#{polisher_klass.deconstantize}"
-      polisher_module.constantize.const_set(klass, Missing)
+      klasses = polisher_klass.split("::")
+      desired_namespace = Polisher
+
+      klasses.each do |k|
+        desired_namespace.const_set(k, Missing) unless desired_namespace.const_defined?(k)
+        desired_namespace = "#{desired_namespace.name}::#{k}".constantize
+      end
+      warn "Failed to require #{@current_dependency}.  Added runtime exception in Polisher::#{polisher_klass}"
     else
       yield
     end
