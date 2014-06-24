@@ -3,6 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2014 Red Hat, Inc.
 
+require 'active_support'
 require 'active_support/core_ext'
 
 module Polisher
@@ -18,13 +19,25 @@ module Polisher
     end # class MissingComponent
 
     def self.verify(polisher_klass, *dependencies)
-      dependencies.each { |dep| require dep }
+      all_required = dependencies.all? do |dep|
+        require_dependency(polisher_klass, dep)
+      end
+
+      yield if all_required
+    end
+
+    def self.require_dependency(polisher_klass, dependency)
+      require dependency
+      true
     rescue LoadError
-      klass = polisher_klass.demodulize
-      polisher_module = "Polisher::#{polisher_klass.deconstantize}"
-      polisher_module.constantize.const_set(klass, Missing)
-    else
-      yield
+      klasses = polisher_klass.split("::")
+      desired_namespace = Polisher
+
+      klasses.each do |k|
+        desired_namespace.const_set(k, Missing) unless desired_namespace.const_defined?(k)
+        desired_namespace = "#{desired_namespace.name}::#{k}".constantize
+      end
+      warn "Failed to require #{dependency}.  Added runtime exception in Polisher::#{polisher_klass}"
     end
   end # module Component
 end # module Polisher
