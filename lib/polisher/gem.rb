@@ -64,6 +64,11 @@ module Polisher
         end
       end
 
+      # Return bool indicating if spec file satisfies any file in gem
+      def has_file_satisfied_by?(spec_file)
+        file_paths.any? { |gem_file| RPM::Spec.file_satisfies?(spec_file, gem_file) }
+      end
+
       # Retrieve list of the versions of the specified gem installed locally
       #
       # @param [String] name name of the gem to lookup
