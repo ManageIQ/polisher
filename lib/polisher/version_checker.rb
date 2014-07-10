@@ -154,14 +154,19 @@ module Polisher
 
   # Helper module to be included in components
   # that contain lists of dependencies which include version information
+  #
+  # Requires module define 'deps' method which returns list
+  # of gem names representing component dependencies. List
+  # will be iterated over, versions will be looked up
+  # recursively and returned
   module VersionedDependencies
 
+    # Return specified dependency
+    def dependency_for(name)
+      deps.detect { |dep| dep.name == name }
+    end
+
     # Return list of versions of dependencies of component.
-    #
-    # Requires module define 'deps' method which returns list
-    # of gem names representing component dependencies. List
-    # will be iterated over, versions will be looked up
-    # recursively and returned
     def dependency_versions(args = {}, &bl)
       args = {:recursive => true, :dev_deps  => true}.merge(args)
       versions = {}
@@ -170,6 +175,25 @@ module Polisher
         versions.merge!(gem.versions(args, &bl))
       end
       versions
+    end
+
+    # Return missing dependencies
+    def missing_dependencies
+      missing  = []
+      dependency_versions(:recursive => false).each do |pkg, target_versions|
+        found = false
+        target_versions.each do |_target, versions|
+          dependency = dependency_for(pkg)
+          found = versions.any? { |version| dependency.match?(pkg, version) }
+        end
+        missing << pkg unless found
+      end
+      missing
+    end
+
+    # Return bool indicating if all dependencies are satisfied
+    def dependencies_satisfied?
+      missing_dependencies.empty?
     end
 
     # Return list of states which gem dependencies are in
