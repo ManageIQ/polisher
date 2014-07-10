@@ -246,7 +246,7 @@ module Polisher
       # Iterate over each file in gem invoking block with path
       def each_file(&bl)
         unpack do |dir|
-          Pathname(dir).detect do |path|
+          Pathname(dir).find do |path|
             next if path.to_s == dir.to_s
             pathstr = path.to_s.gsub("#{dir}/", '')
             bl.call pathstr unless pathstr.blank?
