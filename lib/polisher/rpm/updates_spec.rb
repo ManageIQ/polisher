@@ -95,14 +95,14 @@ EOS
 
       def update_metadata_contents
         # replace version / release
-        @metadata[:contents].gsub!(SPEC_VERSION_MATCHER,
+        @metadata[:contents].gsub!(RPM::Spec::SPEC_VERSION_MATCHER,
                                    "Version: #{@metadata[:version]}")
-        @metadata[:contents].gsub!(SPEC_RELEASE_MATCHER,
+        @metadata[:contents].gsub!(RPM::Spec::SPEC_RELEASE_MATCHER,
                                    "Release: #{@metadata[:release]}")
       end
 
       def changelog_index
-        @metadata[:contents].index SPEC_CHANGELOG_MATCHER
+        @metadata[:contents].index RPM::Spec::SPEC_CHANGELOG_MATCHER
       end
 
       def changelog_end_index
@@ -128,11 +128,11 @@ EOS
       end
 
       def first_requires_index
-        @metadata[:contents].index SPEC_REQUIRES_MATCHER
+        @metadata[:contents].index RPM::Spec::SPEC_REQUIRES_MATCHER
       end
 
       def first_build_requires_index
-        @metadata[:contents].index SPEC_BUILD_REQUIRES_MATCHER
+        @metadata[:contents].index RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER
       end
 
       def requirement_section_index
@@ -142,15 +142,15 @@ EOS
       end
 
       def subpkg_index
-        @metadata[:contents].index SPEC_SUBPACKAGE_MATCHER || -1
+        @metadata[:contents].index RPM::Spec::SPEC_SUBPACKAGE_MATCHER || -1
       end
 
       def last_requires_index
-        @metadata[:contents].rindex SPEC_REQUIRES_MATCHER, subpkg_index
+        @metadata[:contents].rindex RPM::Spec::SPEC_REQUIRES_MATCHER, subpkg_index
       end
 
       def last_build_requires_index
-        @metadata[:contents].rindex SPEC_BUILD_REQUIRES_MATCHER, subpkg_index
+        @metadata[:contents].rindex RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER, subpkg_index
       end
 
       def last_requirement_index
@@ -189,11 +189,11 @@ EOS
       end
 
       def files_index
-        @metadata[:contents].index SPEC_FILES_MATCHER
+        @metadata[:contents].index RPM::Spec::SPEC_FILES_MATCHER
       end
 
       def files_end_index
-        @metadata[:contents].index SPEC_CHANGELOG_MATCHER
+        @metadata[:contents].index RPM::Spec::SPEC_CHANGELOG_MATCHER
       end
 
       def update_files
