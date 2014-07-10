@@ -34,7 +34,7 @@ module Polisher
       desired_namespace = Polisher
 
       klasses.each do |k|
-        desired_namespace.const_set(k, Missing) unless desired_namespace.const_defined?(k)
+        desired_namespace.const_set(k, Missing) unless desired_namespace.const_defined?(k, false)
         desired_namespace = "#{desired_namespace.name}::#{k}".constantize
       end
       warn "Failed to require #{dependency}.  Added runtime exception in Polisher::#{polisher_klass}"
