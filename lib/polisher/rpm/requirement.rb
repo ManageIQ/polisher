@@ -8,9 +8,9 @@ require 'polisher/core'
 require 'polisher/component'
 
 module Polisher
-  deps = ['gem2rpm', 'versionomy', 'active_support/core_ext']
-  Component.verify("RPM::Requirement", *deps) do
-    module RPM
+  module RPM
+    deps = ['gem2rpm', 'versionomy', 'active_support/core_ext']
+    Component.verify("RPM::Requirement", *deps) do
       class Requirement
         include ConfHelpers
 
@@ -192,6 +192,6 @@ module Polisher
           !!(self.str =~ RPM::Spec::SPEC_GEM_REQ_MATCHER) ? $1 : nil
         end
       end # class Requirement
-    end # module RPM
-  end # Component.verify("RPM::Requirement")
+    end # Component.verify("RPM::Requirement")
+  end # module RPM
 end # module Polisher

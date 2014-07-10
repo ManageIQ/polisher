@@ -15,9 +15,9 @@ require 'polisher/rpm/compares_spec'
 require 'polisher/component'
 
 module Polisher
-  deps = ['gem2rpm', 'versionomy', 'active_support', 'active_support/core_ext']
-  Component.verify("RPM::Spec", *deps) do
-    module RPM
+  module RPM
+    deps = ['gem2rpm', 'versionomy', 'active_support', 'active_support/core_ext']
+    Component.verify("RPM::Spec", *deps) do
       class Spec
         include HasGem
         include HasRequirements
@@ -105,6 +105,6 @@ module Polisher
           @metadata[:contents]
         end
       end # class Spec
-    end # module RPM
-  end # Component.verify("RPM::Spec")
+    end # Component.verify("RPM::Spec")
+  end # module RPM
 end # module Polisher
