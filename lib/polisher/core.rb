@@ -87,8 +87,9 @@ class String
   end
 
   # Replace all occurrances of non-rpm macro strings in self
-  # with their macro correspondences
+  # with their macro correspondences and add %doc if necessary
   def rpmize
+    require 'polisher/gem'
     require 'polisher/rpm/spec'
     matchers = Polisher::RPM::Spec::FILE_MACRO_MATCHERS
     replacements = Polisher::RPM::Spec::FILE_MACRO_REPLACEMENTS.invert
@@ -96,6 +97,8 @@ class String
 
     special = (matchers + replacements.values).any? { |matcher| f =~ /^#{matcher}.*/ }
     f = special ? f : "%{gem_instdir}/#{f}"
+    mark_as_doc = Polisher::Gem.doc_file?(self) || Polisher::Gem.license_file?(self)
+    f = mark_as_doc ? "%doc #{f}" : f
     f
   end
 end
