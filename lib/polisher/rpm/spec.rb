@@ -16,7 +16,7 @@ require 'polisher/component'
 
 module Polisher
   module RPM
-    deps = ['gem2rpm', 'versionomy', 'active_support', 'active_support/core_ext']
+    deps = ['gem2rpm', 'versionomy', 'active_support', 'active_support/core_ext', 'awesome_spawn']
     Component.verify("RPM::Spec", *deps) do
       class Spec
         include HasGem
@@ -53,9 +53,15 @@ module Polisher
 
         attr_accessor :metadata
 
+        # Use rpmdev-packager if it's available
+        def self.packager
+          @packager ||= AwesomeSpawn.run('/usr/bin/rpmdev-packager').output.chop
+        rescue AwesomeSpawn::NoSuchFileError
+        end
+
         # Return the currently configured author
         def self.current_author
-          ENV['POLISHER_AUTHOR'] || AUTHOR
+          ENV['POLISHER_AUTHOR'] || packager || AUTHOR
         end
 
         def initialize(metadata={})
