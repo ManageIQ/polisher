@@ -39,4 +39,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('awesome_spawn')
   s.add_development_dependency('gem2rpm')
   s.add_development_dependency('versionomy')
+
+  # Comes from rpmdevtools
+  s.requirements << 'rpmdev-packager'
 end

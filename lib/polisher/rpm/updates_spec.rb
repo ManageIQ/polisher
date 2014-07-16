@@ -87,7 +87,7 @@ module Polisher
         # add changelog entry
         changelog_entry = <<EOS
 * #{Time.now.strftime("%a %b %d %Y")} #{RPM::Spec.current_author} - #{@metadata[:version]}-1
-- Upda to version #{new_source.version}
+- Update #{@metadata[:gem_name]} to version #{new_source.version}
 EOS
         @metadata[:changelog_entries] ||= []
         @metadata[:changelog_entries].unshift changelog_entry.rstrip

@@ -26,8 +26,12 @@ module Polisher
                       /.*.gemspec/, /Gemfile.*/, 'Rakefile',
                       /rspec.*/, '.yardopts', '.rvmrc']
 
-      # Common files shipped in gems that we should mark as doc
-      DOC_FILES = [/\/?CHANGELOG.*/, /\/?CONTRIBUTING.*/, /\/?README.*/, /\/?.*LICENSE/]
+      # License files
+      LICENSE_FILES = [/\/?MIT/, /\/?GPLv[0-9]+/, /\/?.*LICEN(C|S)E/, /\/?COPYING/]
+
+      # Common files shipped in gems considered doc
+      DOC_FILES = [/\/?CHANGELOG.*/, /\/?CONTRIBUTING.*/, /\/?CONTRIBUTORS.*/,
+                   /\/?README.*/]
 
       attr_accessor :spec
       attr_accessor :name
@@ -54,6 +58,13 @@ module Polisher
       def self.ignorable_file?(file)
         IGNORE_FILES.any? do |ignore|
           ignore.is_a?(Regexp) ? ignore.match(file) : ignore == file
+        end
+      end
+
+      # Return bool indicating if the specified file is on the LICENSE_FILES list
+      def self.license_file?(file)
+        LICENSE_FILES.any? do |license|
+          license.is_a?(Regexp) ? license.match(file) : license == file
         end
       end
 
