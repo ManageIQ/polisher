@@ -86,8 +86,9 @@ class String
     f
   end
 
-  # Replace all occurrances of non-rpm macro strings in self
-  # with their macro correspondences and add %doc if necessary
+  # Replace all occurrances of non-rpm macro strings in self with
+  # their macro correspondences and add %doc macro or lib's bin path
+  # if necessary
   def rpmize
     require 'polisher/gem'
     require 'polisher/rpm/spec'
@@ -97,6 +98,10 @@ class String
 
     special = (matchers + replacements.values).any? { |matcher| f =~ /^#{matcher}.*/ }
     f = special ? f : "%{gem_instdir}/#{f}"
+
+    include_lib_bin = (f =~ /\A%{_bindir}.*/)
+    f = include_lib_bin ? "#{f}\n%{gem_instdir}/#{self}" : f
+
     mark_as_doc = Polisher::Gem.doc_file?(self) || Polisher::Gem.license_file?(self)
     f = mark_as_doc ? "%doc #{f}" : f
     f
