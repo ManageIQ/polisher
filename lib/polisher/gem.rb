@@ -33,8 +33,8 @@ module Polisher
       LICENSE_FILES = [/\/?MIT/, /\/?GPLv[0-9]+/, /\/?.*LICEN(C|S)E/, /\/?COPYING/]
 
       # Common files shipped in gems considered doc
-      DOC_FILES = [/\/?CHANGELOG.*/, /\/?CONTRIBUTING.*/, /\/?CONTRIBUTORS.*/,
-                   /\/?README.*/]
+      DOC_FILES = [/\/?CHANGELOG.*/i, /\/?CONTRIBUTING.*/i, /\/?CONTRIBUTORS.*/i,
+                   /\/?README.*/i, /\/?History.*/i, /\/?Release.*/i, /\/?doc(\/.*)?/]
 
       attr_accessor :spec
       attr_accessor :name
