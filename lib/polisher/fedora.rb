@@ -5,28 +5,32 @@
 
 require 'polisher/bodhi'
 require 'polisher/component'
+require 'open-uri'
 
 module Polisher
   Component.verify("Fedora", "curb", "pkgwat", "nokogiri") do
     class Fedora
-      PACKAGE_LIST = 'https://admin.fedoraproject.org/pkgdb/users/packages/'
+      PACKAGE_LIST_API = 'https://admin.fedoraproject.org/pkgdb/api'
 
-      def self.client
-        @client ||= Curl::Easy.new
-      end
-
-      # Retrieve list of gems owned by the specified user
+      # Retrieve list of gems owned/co-maintained by the specified user
       #
       # @param [String] user Fedora username to lookup
       # @return [Array<String>] list of gems which the user owns/has access to
       def self.gems_owned_by(user)
-        client.url = "#{PACKAGE_LIST}#{user}"
-        client.http_get
-        packages = client.body_str
+        user_packages_url = "#{PACKAGE_LIST_API}/packager/package/#{user}"
+        pkg_list = JSON.load(open(user_packages_url))
+
+        pkg_owns = pkg_list['point of contact']
+                   .select { |pkg| pkg['name'] =~ /^rubygem-/ }
+                   .collect { |pkg| pkg['name'].gsub(/rubygem-/, '') }
+
+        pkg_has_access = pkg_list['co-maintained']
+                         .select { |pkg| pkg['name'] =~ /^rubygem-/ }
+                         .collect { |pkg| pkg['name'].gsub(/rubygem-/, '') }
+
+        pkg_owns + pkg_has_access
+
         # TODO: instantiate Polisher::Gem instances & return
-        Nokogiri::HTML(packages).xpath("//a[@class='PackageName']")
-                                .select { |i| i.text =~ /rubygem-.*/ }
-                                .collect { |i| i.text.gsub(/rubygem-/, '') }
       end
 
       # Retrieve list of the versions of the specified package in the various
