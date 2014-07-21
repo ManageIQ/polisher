@@ -126,7 +126,7 @@ module Polisher
 
       # Retieve latest version of gem available on rubygems
       def self.latest_version_of(name)
-        remote_versions_for(name).first
+        remote_versions_for(name).max
       end
 
       # Return new instance of Gem from Gemspec
