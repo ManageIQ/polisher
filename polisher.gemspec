@@ -39,6 +39,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency('awesome_spawn')
   s.add_development_dependency('gem2rpm')
   s.add_development_dependency('versionomy')
+  s.add_development_dependency('vcr')
+  s.add_development_dependency('webmock')
 
   # Comes from rpmdevtools
   s.requirements << 'rpmdev-packager'
