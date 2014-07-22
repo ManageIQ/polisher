@@ -78,6 +78,9 @@ module Polisher
           # unchanged
           results["rubygem-RedCloth"]["f19-ruby"].should == "4.2.9"
           results["rubygem-RedCloth"]["f21-ruby"].should == "4.2.9"
+
+          # f19 has 1.3.4 and 1.3.5
+          results["rubygem-sinatra"]["f19-ruby"].should == "1.3.5"
         end
       end
     end
