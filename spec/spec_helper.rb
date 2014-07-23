@@ -30,9 +30,7 @@ require 'vcr'
 VCR.configure do |c|
   c.cassette_library_dir = 'spec/vcr_cassettes'
   c.hook_into :webmock
-
-  # TODO: all http connections should be recorded and this set to false
-  c.allow_http_connections_when_no_cassette = true
+  c.allow_http_connections_when_no_cassette = false
 end
 
 module Polisher
