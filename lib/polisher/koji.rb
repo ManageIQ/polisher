@@ -139,18 +139,14 @@ module Polisher
         builds  = {}
         builds1.each do |build|
           name         = build['package_name']
-          build2       = builds2.detect { |b| b['name'] == name }
-          version1     = build['version']
-          version2     = build2 && build2['version']
-          builds[name] = {tag1 => version1, tag2 => version2}
+          version      = build['version']
+          builds[name] = {tag1 => version}
         end
 
         builds2.each do |build|
           name = build['package_name']
-          next if builds.key?(name)
-
-          version = build['version']
-          builds[name] = {tag1 => nil, tag2 => version}
+          builds[name] ||= {}
+          builds[name][tag2] = build['version']
         end
 
         builds
