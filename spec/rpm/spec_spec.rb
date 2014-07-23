@@ -3,8 +3,6 @@
 # Licensed under the MIT license
 # Copyright (C) 2014 Red Hat, Inc.
 
-require 'spec_helper'
-
 require 'polisher/rpm/spec'
 require 'polisher/gem'
 
