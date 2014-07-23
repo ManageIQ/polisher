@@ -344,7 +344,7 @@ module Polisher
 
     describe "#build_srpm" do
       it "uses package command to build srpm" do
-        gem  = Polisher::Gem.new
+        gem  = Polisher::Gem.new(:path => "")
         spec = RPM::Spec.new
         pkg  = described_class.new
         pkg.should_receive(:in_repo).and_yield
@@ -361,7 +361,7 @@ module Polisher
 
       context "package command fails" do
         it "raises RuntimeError with the command stderr" do
-          gem  = Polisher::Gem.new
+          gem  = Polisher::Gem.new(:path => "")
           spec = RPM::Spec.new
           pkg  = described_class.new
           pkg.should_receive(:in_repo).and_yield
