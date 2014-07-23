@@ -59,13 +59,15 @@ module Polisher
             @metadata[:pkg_excludes] ||= []
             @metadata[:pkg_excludes][pkg] << gem_file.rpmize
 
-          elsif Gem.doc_file?(gem_file)
-            @metadata[:new_files]['doc'] ||= []
-            @metadata[:new_files]['doc'] << gem_file.rpmize
-
-          else
+          elsif Gem.runtime_file?(gem_file) || Gem.license_file?(gem_file)
             @metadata[:new_files][pkg] ||= []
             @metadata[:new_files][pkg] << gem_file.rpmize
+
+          # All files not required for runtime should go
+          # into -doc subpackage
+          else
+            @metadata[:new_files]['doc'] ||= []
+            @metadata[:new_files]['doc'] << gem_file.rpmize
           end
         end
 

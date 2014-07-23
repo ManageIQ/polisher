@@ -58,7 +58,7 @@ describe String do
 
   describe "#rpmize" do
     it "returns string with rpm macros swapped in" do
-      "bin".rpmize.should == "%{_bindir}"
+      "bin".rpmize.should == "%{_bindir}\n%{gem_instdir}/bin"
     end
 
     it "prefixes %{gem_instdir} to non-special files" do

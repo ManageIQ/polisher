@@ -26,12 +26,15 @@ module Polisher
                       /.*.gemspec/, /Gemfile.*/, 'Rakefile',
                       /rspec.*/, '.yardopts', '.rvmrc']
 
+      # Critical runtime files that are necessary for the gem to run
+      RUNTIME_FILES = [/\Alib.*/, /\Abin.*/, /\Aapp.*/, /\Avendor.*/]
+
       # License files
       LICENSE_FILES = [/\/?MIT/, /\/?GPLv[0-9]+/, /\/?.*LICEN(C|S)E/, /\/?COPYING/]
 
       # Common files shipped in gems considered doc
-      DOC_FILES = [/\/?CHANGELOG.*/, /\/?CONTRIBUTING.*/, /\/?CONTRIBUTORS.*/,
-                   /\/?README.*/]
+      DOC_FILES = [/\/?CHANGELOG.*/i, /\/?CONTRIBUTING.*/i, /\/?CONTRIBUTORS.*/i,
+                   /\/?README.*/i, /\/?History.*/i, /\/?Release.*/i, /\/?doc(\/.*)?/]
 
       attr_accessor :spec
       attr_accessor :name
@@ -58,6 +61,13 @@ module Polisher
       def self.ignorable_file?(file)
         IGNORE_FILES.any? do |ignore|
           ignore.is_a?(Regexp) ? ignore.match(file) : ignore == file
+        end
+      end
+
+      # Return bool indicating if the specified file in on the RUNTIME_FILES list
+      def self.runtime_file?(file)
+        RUNTIME_FILES.any? do |runtime|
+          runtime.is_a?(Regexp) ? runtime.match(file) : runtime == file
         end
       end
 

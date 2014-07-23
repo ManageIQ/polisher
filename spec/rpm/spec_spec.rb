@@ -276,7 +276,7 @@ module Polisher::RPM
       end
   
       it "adds new files from gem not excluded from old gem" do
-        spec = described_class.new :pkg_files => {'pkg' => ['/foo']},
+        spec = described_class.new :pkg_files => {'doc' => ['/foo']},
                                    :gem_name  => 'gem', :version => 1,
                                    :contents  => ""
         gem  = Polisher::Gem.new
@@ -285,7 +285,7 @@ module Polisher::RPM
         gem.should_receive(:file_paths).at_least(:once).
             and_return(['/foo', '/foo/bar', '/baz'])
         spec.update_to(gem)
-        spec.new_files.should == {"pkg" => ['%{gem_instdir}//foo']}
+        spec.new_files.should == {"doc" => ['%{gem_instdir}//foo']}
       end
   
       it "updates metadata from gem" do
