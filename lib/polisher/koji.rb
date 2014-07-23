@@ -132,10 +132,10 @@ module Polisher
       # def self.build_logs(url) # TODO
 
       # Return diff between list of packages in two tags in koji
-      def self.diff(tag1, tag2)
+      def self.diff(tag1, tag2, options = {})
         #                                   tag event inherit prefix latest
-        builds1 = client.call('listTagged', tag1, nil, false, nil, true)
-        builds2 = client.call('listTagged', tag2, nil, false, nil, true)
+        builds1 = client.call('listTagged', tag1, nil, options[:tag1_inherit] == true, nil, true)
+        builds2 = client.call('listTagged', tag2, nil, options[:tag2_inherit] == true, nil, true)
         builds  = {}
         builds1.each do |build|
           name         = build['package_name']
