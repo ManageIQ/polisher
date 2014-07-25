@@ -151,6 +151,34 @@ module Polisher
 
         builds
       end
+
+      # builds of packages in tag2 and NOT tag1
+      def self.tagged_build_additions(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          !hash[tag1] && hash[tag2]
+        end
+      end
+
+      # builds of packages in tag1 and NOT tag2
+      def self.tagged_build_removals(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          hash[tag1] && !hash[tag2]
+        end
+      end
+
+      # builds of packages in both tags with different versions
+      def self.tagged_build_changed_overlaps(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          hash[tag1] && hash[tag2] && (hash[tag1] != hash[tag2])
+        end
+      end
+
+      # builds of packages in both tags with the same version
+      def self.tagged_build_unchanged_overlaps(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          hash[tag1] && hash[tag2] && (hash[tag1] == hash[tag2])
+        end
+      end
     end # class Koji
   end # Component.verify("Koji")
 end # module Polisher
