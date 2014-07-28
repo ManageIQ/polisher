@@ -36,10 +36,12 @@ module Polisher
         SPEC_BUILD_REQUIRES_MATCHER = /^BuildRequires:\s*(.*)$/
         SPEC_GEM_REQ_MATCHER        = /^.*\s*#{requirement_prefix}\((.*)\)(\s*(.*))?$/
         SPEC_SUBPACKAGE_MATCHER     = /^%package\s(.*)$/
+        SPEC_DOC_SUBPACKAGE_MATCHER = /^%package\sdoc$/
         SPEC_CHANGELOG_MATCHER      = /^%changelog$/
         SPEC_FILES_MATCHER          = /^%files$/
         SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
         SPEC_EXCLUDED_FILE_MATCHER  = /^%exclude\s+(.*)$/
+        SPEC_PREP_MATCHER           = /^%prep$/
         SPEC_CHECK_MATCHER          = /^%check$/
 
         FILE_MACRO_MATCHERS         =
@@ -85,6 +87,11 @@ module Polisher
             return pkg if spec_files.include?(file)
           end
           nil
+        end
+
+        # Return boolean indicating if spec has a -doc subpkg
+        def has_doc_subpkg?
+          @has_doc_subpkg ||= @metadata[:contents].index RPM::Spec::SPEC_DOC_SUBPACKAGE_MATCHER
         end
 
         # Return boolean indicating if spec has a %check section

@@ -89,9 +89,13 @@ module Polisher
                 meta[:pkg_files] ||= {}
                 meta[:pkg_files][tgt] ||= []
                 meta[:pkg_files][tgt] << sl unless sl.blank?
+
               end
             end
           }
+
+          # Ensure pkg_files hash exists
+          meta[:pkg_files] ||= {}
 
           meta[:changelog_entries] = meta[:changelog] ?
                                      meta[:changelog].split("\n\n") : []
