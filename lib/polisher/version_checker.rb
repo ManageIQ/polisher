@@ -27,7 +27,7 @@ module Polisher
     end
 
     def self.should_check?(target)
-      @check_list ||= ALL_TARGETS
+      @check_list ||= Array.new(ALL_TARGETS)
       @check_list.include?(target)
     end
 
@@ -92,7 +92,7 @@ module Polisher
         begin
           require 'polisher/yum'
           logger.debug "versions_for<yum>(#{name})..."
-          yum_versions = [Yum.version_for(name, &bl)]
+          yum_versions = [Yum.version_for(name, &bl)].compact
           versions.merge! :yum => yum_versions
           logger.debug yum_versions
         rescue
@@ -130,30 +130,43 @@ module Polisher
       versions
     end
 
-    # Return version of package most frequent in all configured targets.
-    # Invokes query as normal then counts versions over all targets and
-    # returns the max.
+    # Return version of package most frequent references in each
+    # configured target.
     def self.version_for(name)
-      versions = self.versions_for(name).values
-      versions.inject(Hash.new(0)) { |total, i| total[i] += 1; total }.first
+      Hash[versions_for(name).collect do |k, versions|
+        most = versions.group_by { |v| v }.values.max_by(&:size).first
+        [k, most]
+      end]
+    end
+
+    # Return version of package most frequent reference in all
+    # configured targets.
+    def self.version_of(name)
+      version_for(name).values.group_by { |v| v }.values.max_by(&:size).first
     end
 
     # Invoke block for specified target w/ an 'unknown' version
     def self.unknown_version(tgt, name)
-      yield tgt, name, [:unknown]
+      yield tgt, name, [:unknown] if block_given?
+      [:unknown]
     end
   end
 
   # Helper module to be included in components
   # that contain lists of dependencies which include version information
+  #
+  # Requires module define 'deps' method which returns list
+  # of gem names representing component dependencies. List
+  # will be iterated over, versions will be looked up
+  # recursively and returned
   module VersionedDependencies
 
+    # Return specified dependency
+    def dependency_for(name)
+      deps.detect { |dep| dep.name == name }
+    end
+
     # Return list of versions of dependencies of component.
-    #
-    # Requires module define 'deps' method which returns list
-    # of gem names representing component dependencies. List
-    # will be iterated over, versions will be looked up
-    # recursively and returned
     def dependency_versions(args = {}, &bl)
       args = {:recursive => true, :dev_deps  => true}.merge(args)
       versions = {}
@@ -164,12 +177,31 @@ module Polisher
       versions
     end
 
+    # Return missing dependencies
+    def missing_dependencies
+      missing  = []
+      dependency_versions(:recursive => false).each do |pkg, target_versions|
+        found = false
+        target_versions.each do |_target, versions|
+          dependency = dependency_for(pkg)
+          found = versions.any? { |version| dependency.match?(pkg, version) }
+        end
+        missing << pkg unless found
+      end
+      missing
+    end
+
+    # Return bool indicating if all dependencies are satisfied
+    def dependencies_satisfied?
+      missing_dependencies.empty?
+    end
+
     # Return list of states which gem dependencies are in
     def dependency_states
       states = {}
       deps.each do |dep|
         gem = Polisher::Gem.new :name => dep.name
-        states.merge dep.name => gem.state(:check => dep)
+        states.merge! dep.name => gem.state(:check => dep)
       end
       states
     end
