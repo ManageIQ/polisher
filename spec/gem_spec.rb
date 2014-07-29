@@ -159,8 +159,8 @@ module Polisher
       it "retrieves latests version of gem available on rubygems.org" do
         described_class.should_receive(:remote_versions_for)
                        .with('polisher')
-                       .and_return([2.2, 1.1])
-        described_class.latest_version_of('polisher').should == 2.2
+                       .and_return(['2.2', '1.1'])
+        described_class.latest_version_of('polisher').should == '2.2'
       end
     end
 

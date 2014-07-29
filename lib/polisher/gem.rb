@@ -12,7 +12,8 @@ require 'polisher/gem_state'
 
 module Polisher
   deps = ['curb', 'json', 'yaml', 'tempfile', 'pathname', 'fileutils',
-          'awesome_spawn', 'rubygems/installer', 'active_support', 'active_support/core_ext']
+          'awesome_spawn', 'rubygems/installer', 'rubygems/version',
+          'active_support', 'active_support/core_ext']
   Component.verify("Gem", *deps) do
     class Gem
       include ConfHelpers
@@ -136,7 +137,7 @@ module Polisher
 
       # Retieve latest version of gem available on rubygems
       def self.latest_version_of(name)
-        remote_versions_for(name).max
+        remote_versions_for(name).map{ |v| ::Gem::Version.new v }.max.to_s
       end
 
       # Return new instance of Gem from Gemspec
