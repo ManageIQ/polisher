@@ -102,7 +102,8 @@ class String
     include_lib_bin = (f =~ /\A%{_bindir}.*/)
     f = include_lib_bin ? "#{f}\n%{gem_instdir}/#{self}" : f
 
-    mark_as_doc = Polisher::Gem.doc_file?(self) || Polisher::Gem.license_file?(self)
+    doc_file = Polisher::Gem.doc_file?(self) || Polisher::Gem.license_file?(self)
+    mark_as_doc = doc_file && !(self =~ /%doc .*/)
     f = mark_as_doc ? "%doc #{f}" : f
     f
   end

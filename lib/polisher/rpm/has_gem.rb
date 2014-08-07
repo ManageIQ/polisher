@@ -9,6 +9,9 @@ require 'polisher/logger'
 module Polisher
   module RPM
     module HasGem
+      # .gem file associated with the RPM specfile
+      attr_accessor :gem
+
       # Return gem corresponding to spec name/version
       def upstream_gem
         @gem, @update_gem = nil, false if @update_gem

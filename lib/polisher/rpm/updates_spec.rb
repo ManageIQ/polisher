@@ -64,10 +64,12 @@ module Polisher
             @metadata[:new_files][pkg] << gem_file.rpmize
 
           # All files not required for runtime should go
-          # into -doc subpackage
+          # into -doc subpackage if -doc subpackage exists
           else
-            @metadata[:new_files]['doc'] ||= []
-            @metadata[:new_files]['doc'] << gem_file.rpmize
+            package = has_doc_subpkg? ? 'doc' : pkg
+
+            @metadata[:new_files][package] ||= []
+            @metadata[:new_files][package] << gem_file.rpmize
           end
         end
 
@@ -140,19 +142,32 @@ EOS
       def requirement_section_index
         ri   = first_requires_index
         bri  = first_build_requires_index
+
+        # Requires missing (e.g. section is auto-generated)
+        return bri unless ri
         ri < bri ? ri : bri
       end
 
+      # Main package ends either with subpkg specification
+      # or with a %prep section
+      def last_main_package_index
+        subpkg_index || prep_index || -1
+      end
+
+      def prep_index
+        @metadata[:contents].index RPM::Spec::SPEC_PREP_MATCHER
+      end
+
       def subpkg_index
-        @metadata[:contents].index RPM::Spec::SPEC_SUBPACKAGE_MATCHER || -1
+        @metadata[:contents].index RPM::Spec::SPEC_SUBPACKAGE_MATCHER
       end
 
       def last_requires_index
-        @metadata[:contents].rindex RPM::Spec::SPEC_REQUIRES_MATCHER, subpkg_index
+        @metadata[:contents].rindex(RPM::Spec::SPEC_REQUIRES_MATCHER, last_main_package_index) || -1
       end
 
       def last_build_requires_index
-        @metadata[:contents].rindex RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER, subpkg_index
+        @metadata[:contents].rindex(RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER, last_main_package_index) || -1
       end
 
       def last_requirement_index
@@ -166,7 +181,7 @@ EOS
       end
 
       def update_requires
-        new_contents = requires_contents + "\n" + build_requires_contents
+        new_contents = (requires_contents + "\n" + build_requires_contents).strip
         rsi  = requirement_section_index
         @metadata[:contents].slice!(rsi...requirement_section_end_index)
         @metadata[:contents].insert rsi, new_contents
@@ -185,9 +200,13 @@ EOS
       end
 
       def excludes_contents
-        @metadata[:pkg_excludes][gem_name]
-          .collect { |exclude| "%exclude #{exclude}" }
-          .join("\n") + "\n\n"
+        if @metadata[:pkg_excludes][gem_name]
+          @metadata[:pkg_excludes][gem_name]
+            .collect { |exclude| "%exclude #{exclude}" }
+            .join("\n") + "\n\n"
+        else
+          ''
+        end
       end
 
       def files_index
