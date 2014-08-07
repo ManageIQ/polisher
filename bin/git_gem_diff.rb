@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 # Diff a Git Gem Against its Rubygems equivalent
-# 
+#
 # ./git_gem_diff.rb
 #
 # Licensed under the MIT license

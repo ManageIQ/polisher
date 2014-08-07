@@ -20,7 +20,7 @@ module Polisher::RPM
         rpmspec = Polisher::RPM::Spec.parse rpmspec
         rpmspec.gem = @source
         rpmspec.update_to @source
- 
+
         rpmspec.metadata[:new_files].should == {"activesupport"=>
                                                  ["%doc %{gem_instdir}/CHANGELOG.md",
                                                   "%doc %{gem_instdir}/MIT-LICENSE",

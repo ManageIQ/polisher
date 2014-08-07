@@ -9,7 +9,7 @@
 # the version of the gem to update to or the location of
 # the gem/gemspec/gemfile source which parse and use.
 #
-# Usage: 
+# Usage:
 #   ruby_rpm_spec_updater.rb <path-to-spec> <optional-source-or-version>
 #
 # Licensed under the MIT License

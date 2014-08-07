@@ -5,7 +5,7 @@
 # Run with the path to the spec to validate along
 # with optional upstream source
 #
-# Usage: 
+# Usage:
 #   check_ruby_spec.rb <path-to-spec> <optional-source-or-version>
 #
 # Licensed under the MIT License

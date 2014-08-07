@@ -77,7 +77,7 @@ module Polisher
 
       state = distgit_state(args)
       return :needs_repo   if state == :missing_repo
-      return :needs_branch if state == :missing_branch 
+      return :needs_branch if state == :missing_branch
       return :needs_spec   if state == :missing_spec
       return :needs_build  if state == :available
       return :needs_update

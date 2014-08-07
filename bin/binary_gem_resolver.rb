@@ -4,7 +4,7 @@
 # Looks up missing binary dependencies required by ruby packages via
 # various backends (currently yum, more to be added)
 #
-# gem install packages as normal. If any fail due to missing requirements, 
+# gem install packages as normal. If any fail due to missing requirements,
 # run this script w/ the location of the failed install like so:
 #
 # ./binary_gem_resolver.rb <path-to-gem-install>
@@ -46,7 +46,7 @@ end
 
 #############################################################
 
-# require/override mkmf methods 
+# require/override mkmf methods
 require 'mkmf'
 
 alias :_cpp_command :cpp_command

@@ -14,7 +14,7 @@ module Polisher::RPM
         spec.metadata.should == {:version => '1.0.0'}
       end
     end
-  
+
     describe "#method_missing" do
       it "proxies lookup to metadata" do
         spec = described_class.new :version => '1.0.0'

@@ -4,7 +4,7 @@
 # Will checkout an existing gem rpm from distgit,
 # and update to the latest version found on http://rubygems.org
 #
-# Usage: 
+# Usage:
 #   git_gem_updater.rb -n <gem_name>
 #
 # Licensed under the MIT License
@@ -23,7 +23,7 @@ ORIG_DIR = Dir.pwd
 conf = { :dir            => ORIG_DIR,
          :user           => nil,
          :gems           =>  []}
- 
+
 optparse = OptionParser.new do|opts|
   opts.on('-n', '--name GEM', 'gem name' ) do |n|
     conf[:gems] << n
@@ -42,7 +42,7 @@ optparse = OptionParser.new do|opts|
     exit
   end
 end
- 
+
 optparse.parse!
 
 Polisher::Config.set
