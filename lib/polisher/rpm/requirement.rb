@@ -35,7 +35,7 @@ module Polisher
 
         # Requirement string
         def str
-          sp = self.specifier
+          sp = specifier
           sp.nil? ? "#{@name}" : "#{@name} #{sp}"
         end
 
@@ -45,7 +45,7 @@ module Polisher
         end
 
         # Instantiate / return new rpm spec requirements from string
-        def self.parse(str, opts={})
+        def self.parse(str, opts = {})
           stra   = str.split
           br = str.include?('BuildRequires')
           name = condition = version = nil
@@ -62,10 +62,10 @@ module Polisher
 
           end
 
-          req = self.new({:name      => name,
-                          :condition => condition,
-                          :version   => version,
-                          :br        => br}.merge(opts))
+          req = new({:name      => name,
+                     :condition => condition,
+                     :version   => version,
+                     :br        => br}.merge(opts))
           req
         end
 
@@ -73,7 +73,7 @@ module Polisher
         #
         # Because a gem dependency may result in multiple spec requirements
         # this will always return an array of Requirement instances
-        def self.from_gem_dep(gem_dep, br=false)
+        def self.from_gem_dep(gem_dep, br = false)
           gem_dep.requirement.to_s.split(',').collect { |req|
             expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
             expanded.collect { |e|
@@ -85,7 +85,7 @@ module Polisher
           }.flatten
         end
 
-        def initialize(args={})
+        def initialize(args = {})
           @br        = args[:br] || false
           @name      = args[:name]
           @condition = args[:condition]
@@ -106,58 +106,58 @@ module Polisher
         # Greatest Common Denominator,
         # Max version in list that is less than the local version
         def gcd(versions)
-          lversion = Versionomy.parse(self.version)
-          versions.collect { |v| Versionomy.parse(v) }.
-                   sort { |a,b| a <=> b }.reverse.
-                   find { |v| v < lversion }.to_s
+          lversion = Versionomy.parse(version)
+          versions.collect { |v| Versionomy.parse(v) }
+                  .sort { |a, b| a <=> b }.reverse
+                  .find { |v| v < lversion }.to_s
         end
 
         # Minimum gem version which satisfies this dependency
         def min_satisfying_version
-          return "0.0"        if self.version.nil?      ||
-                                 self.condition == '<'  ||
-                                 self.condition == '<='
-          return self.version if self.condition == '='  ||
-                                 self.condition == '>='
-          Versionomy.parse(self.version).bump(:tiny).to_s # self.condition == '>'
+          return "0.0"   if version.nil?      ||
+                            condition == '<'  ||
+                            condition == '<='
+          return version if condition == '='  ||
+                            condition == '>='
+          Versionomy.parse(version).bump(:tiny).to_s # condition == '>'
         end
 
         # Max gem version which satisfies this dependency
         #
         # Can't automatically deduce in '<' case, so if that is the conditional
         # we require a version list, and will return the gcd from it
-        def max_satisfying_version(versions=nil)
-          return Float::INFINITY if self.version.nil?      ||
-                                    self.condition == '>'  ||
-                                    self.condition == '>='
-          return self.version    if self.condition == '='  ||
-                                    self.condition == '<='
+        def max_satisfying_version(versions = nil)
+          return Float::INFINITY if version.nil?      ||
+                                    condition == '>'  ||
+                                    condition == '>='
+          return version         if condition == '='  ||
+                                    condition == '<='
 
           raise ArgumentError    if versions.nil?
-          self.gcd(versions)
+          gcd(versions)
         end
 
         # Minimum gem version for which this dependency fails
         def min_failing_version
-          raise ArgumentError if self.version.nil?
-          return "0.0"        if self.condition == '>'  ||
-                                 self.condition == '>='
-          return self.version if self.condition == '<'
-          Versionomy.parse(self.version).bump(:tiny).to_s # self.condition == '<=' and '='
+          raise ArgumentError if version.nil?
+          return "0.0"        if condition == '>'  ||
+                                 condition == '>='
+          return version      if condition == '<'
+          Versionomy.parse(version).bump(:tiny).to_s # condition == '<=' and '='
         end
 
         # Max gem version for which this dependency fails
         #
         # Can't automatically deduce in '>=', and '=' cases, so if that is the
         # conditional we require a version list, and will return the gcd from it
-        def max_failing_version(versions=nil)
-          raise ArgumentError if self.version.nil?      ||
-                                 self.condition == '<=' ||
-                                 self.condition == '<'
-          return self.version if self.condition == '>'
+        def max_failing_version(versions = nil)
+          raise ArgumentError if version.nil?      ||
+                                 condition == '<=' ||
+                                 condition == '<'
+          return version      if condition == '>'
 
           raise ArgumentError if versions.nil?
-          self.gcd(versions)
+          gcd(versions)
         end
 
         # Return bool indicating if requirement matches specified
@@ -171,25 +171,23 @@ module Polisher
           return self == dep      if dep.is_a?(self.class)
           raise ArgumentError unless dep.is_a?(::Gem::Dependency)
 
-          return false if !self.gem? || self.gem_name != dep.name
-          return true  if  self.version.nil?
+          return false if !gem? || gem_name != dep.name
+          return true  if  version.nil?
 
-          Gem2Rpm::Helpers.expand_requirement([dep.requirement.to_s.split]).
-            any?{ |req|
-              req.first == self.condition && req.last.to_s == self.version
-            }
+          Gem2Rpm::Helpers.expand_requirement([dep.requirement.to_s.split])
+                          .any? { |req| req.first == condition && req.last.to_s == version }
         end
 
         # Whether or not this requirement specified a ruby gem dependency
         def gem?
-          !!(self.str =~ RPM::Spec::SPEC_GEM_REQ_MATCHER)
+          !!(str =~ RPM::Spec::SPEC_GEM_REQ_MATCHER)
         end
 
         # Return the name of the gem which this requirement is for.
         # Returns nil if this is not a gem requirement
         def gem_name
           # XXX need to explicitly run regex here to get $1
-          !!(self.str =~ RPM::Spec::SPEC_GEM_REQ_MATCHER) ? $1 : nil
+          !!(str =~ RPM::Spec::SPEC_GEM_REQ_MATCHER) ? $1 : nil
         end
       end # class Requirement
     end # Component.verify("RPM::Requirement")

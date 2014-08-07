@@ -101,7 +101,7 @@ module Polisher
           @local_db ||= ::Gem::Specification.all
         end
         versions = @local_db.select { |s| s.name == name }.collect { |s| s.version }
-        bl.call(:local_gem, name, versions) unless(bl.nil?)
+        bl.call(:local_gem, name, versions) unless bl.nil?
         versions
       end
 
@@ -137,7 +137,7 @@ module Polisher
 
       # Retieve latest version of gem available on rubygems
       def self.latest_version_of(name)
-        remote_versions_for(name).map{ |v| ::Gem::Version.new v }.max.to_s
+        remote_versions_for(name).collect { |v| ::Gem::Version.new v }.max.to_s
       end
 
       # Return new instance of Gem from Gemspec
@@ -177,7 +177,7 @@ module Polisher
       # specifying location of gemspec to parse
       # @option args [String] :gemspec path to gemspec to load / parse
       # @return [Polisher::Gem] gem instantiated from gemspec metadata
-      def self.parse(args={})
+      def self.parse(args = {})
         if args.is_a?(String)
           return from_json args
 
@@ -347,7 +347,6 @@ module Polisher
 
         versions
       end
-
 
       # Return diff of content in this gem against other
       def diff(other)

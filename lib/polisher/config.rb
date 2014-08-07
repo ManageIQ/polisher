@@ -21,11 +21,10 @@ module Polisher
 
     def self.set
       TARGETS.each do |target, req, polisher_class|
-        if opts[target]
-          require req
-          target_class = "Polisher::#{polisher_class}".constantize
-          opts[target].each { |k, v| target_class.send(k.intern, v) }
-        end
+        next unless opts[target]
+        require req
+        target_class = "Polisher::#{polisher_class}".constantize
+        opts[target].each { |k, v| target_class.send(k.intern, v) }
       end
     end
   end # class Config

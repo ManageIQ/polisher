@@ -24,11 +24,11 @@ module Polisher
           in_files      = false
           subpkg_name   = nil
           meta = {:contents => spec}
-          spec.each_line { |l|
+          spec.each_line do |l|
             if l =~ RPM::Spec::COMMENT_MATCHER
               ;
 
-            # TODO support optional gem prefix
+            # TODO: support optional gem prefix
             elsif l =~ RPM::Spec::GEM_NAME_MATCHER
               meta[:gem_name] = $1.strip
               meta[:gem_name] = $1.strip
@@ -92,7 +92,7 @@ module Polisher
 
               end
             end
-          }
+          end
 
           # Ensure pkg_files hash exists
           meta[:pkg_files] ||= {}
@@ -101,9 +101,8 @@ module Polisher
                                      meta[:changelog].split("\n\n") : []
           meta[:changelog_entries].collect! { |c| c.strip }.compact!
 
-          self.new meta
+          new meta
         end
-
       end # module ClassMethods
     end # module ParsesSpec
   end # module RPM

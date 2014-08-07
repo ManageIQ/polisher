@@ -6,7 +6,7 @@
 require 'polisher/git'
 require 'polisher/gem'
 require 'polisher/component'
-require 'polisher/version_checker'
+require 'polisher/versioned_dependencies'
 
 module Polisher
   Component.verify("Gemfile", 'bundler') do
@@ -41,20 +41,19 @@ module Polisher
 
         definition = nil
         path, gemfile = File.split(path)
-        Dir.chdir(path){
+        Dir.chdir(path) do
           begin
             definition = Bundler::Definition.build(gemfile, nil, false)
           rescue Bundler::GemfileNotFound
             raise ArgumentError, "invalid gemfile: #{path}"
           end
-        }
+        end
 
         metadata = {}
-        metadata[:deps] =
-          definition.dependencies.select { |d|
-            groups.nil? || groups.empty? ||                  # groups not specified
-            groups.any? { |g| d.groups.include?(g.intern) }  # dep in any group
-          }
+        metadata[:deps] = definition.dependencies.select do |d|
+          groups.nil? || groups.empty? ||                  # groups not specified
+          groups.any? { |g| d.groups.include?(g.intern) }  # dep in any group
+        end
 
         metadata[:dev_deps] = [] # TODO
         metadata[:definition] = definition

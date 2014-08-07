@@ -55,7 +55,6 @@ module Polisher
       def excludes_dev_dep?(gem_name)
         excluded_dev_deps.any? { |d| d.name == gem_name }
       end
-
     end # module HasGem
   end # module RPM
 end # module Polisher

@@ -22,7 +22,7 @@ module Polisher
         same = {}
         diff = {}
         upstream_source.deps.each do |d|
-          spec_reqs = self.requirements_for_gem(d.name)
+          spec_reqs = requirements_for_gem(d.name)
           spec_reqs_specifier = spec_reqs.empty? ? nil :
                spec_reqs.collect { |req| req.specifier }
 
@@ -37,7 +37,7 @@ module Polisher
 
           elsif !diff.has_key?(d.name)
             same[d.name] = {:spec     => spec_reqs_specifier,
-                            :upstream => d.requirement.to_s }
+                            :upstream => d.requirement.to_s}
           end
         end
 
@@ -52,11 +52,11 @@ module Polisher
 
           elsif !req.matches?(upstream_dep)
             diff[req.gem_name] = {:spec     => req.specifier,
-                                  :upstream => upstream_dep.requirement.to_s }
+                                  :upstream => upstream_dep.requirement.to_s}
 
           elsif !diff.has_key?(req.gem_name)
             same[req.gem_name] = {:spec     => req.specifier,
-                                  :upstream => upstream_dep.requirement.to_s }
+                                  :upstream => upstream_dep.requirement.to_s}
           end
         end unless @metadata[:requires].nil?
 

@@ -226,7 +226,6 @@ module Polisher
         # @param [Callable] bl optional block to invoke with version retrieved
         # @return [Array<String>] versions retrieved, or empty array if none found
         def self.versions_for(name, &bl)
-          version = nil
           gitpkg = new :name => name
           gitpkg.url = "#{dist_git_url}#{gitpkg.rpm_name}.git"
           versions = []

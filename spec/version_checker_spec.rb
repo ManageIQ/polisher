@@ -89,9 +89,4 @@ module Polisher
       it "retrieves most relevant version of package in configured targets"
     end
   end # describe VersionChecker
-
-  describe VersionedDependencies do
-    it "retrieves versions of each dependency in configured targets"
-    it "invokes block with targets / versions"
-  end # described VersionedDependencies
 end # module Polisher

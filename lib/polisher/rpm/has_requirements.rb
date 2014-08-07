@@ -27,17 +27,17 @@ module Polisher
       # @param [Gem::Dependency] gem_dep dependency which to retreive / compare
       # requirements
       def has_all_requirements_for?(gem_dep)
-        reqs = self.requirements_for_gem gem_dep.name
+        reqs = requirements_for_gem gem_dep.name
         # create a spec requirement dependency for each expanded subrequirement,
         # verify we can find a match for that
-        gem_dep.requirement.to_s.split(',').all? { |greq|
-          Gem2Rpm::Helpers.expand_requirement([greq.split]).all? { |ereq|
+        gem_dep.requirement.to_s.split(',').all? do |greq|
+          Gem2Rpm::Helpers.expand_requirement([greq.split]).all? do |ereq|
             tereq = Requirement.new :name      => "#{requirement_prefix}(#{gem_dep.name})",
                                     :condition => ereq.first,
                                     :version   => ereq.last.to_s
-            reqs.any? { |req| req.matches?(tereq)}
-          }
-        }
+            reqs.any? { |req| req.matches?(tereq) }
+          end
+        end
       end
 
       # Return all gem Requires

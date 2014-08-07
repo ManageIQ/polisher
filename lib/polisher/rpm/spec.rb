@@ -66,7 +66,7 @@ module Polisher
           ENV['POLISHER_AUTHOR'] || packager || AUTHOR
         end
 
-        def initialize(metadata={})
+        def initialize(metadata = {})
           @metadata = metadata
         end
 

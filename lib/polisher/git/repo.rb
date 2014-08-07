@@ -14,13 +14,13 @@ module Polisher
       class Repo
         include ConfHelpers
 
-        # TODO use ruby git api
+        # TODO: use ruby git api
         conf_attr :git_cmd, '/usr/bin/git'
 
         attr_accessor :url
         attr_accessor :path
 
-        def initialize(args={})
+        def initialize(args = {})
           @url   = args[:url]
           @path  = args[:path]
         end
