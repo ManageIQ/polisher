@@ -42,6 +42,26 @@ Gem::Specification.new do |s|
   s.add_development_dependency('vcr')
   s.add_development_dependency('webmock')
 
-  # Comes from rpmdevtools
-  s.requirements << 'rpmdev-packager'
+  s.requirements << 'json (RubyGem)'
+  s.requirements << 'curb (RubyGem)'
+  s.requirements << 'i18n (RubyGem)'
+  s.requirements << 'pkgwat (RubyGem)'
+  s.requirements << 'awesome_spawn (RubyGem)'
+  s.requirements << 'gem2rpm (RubyGem)'
+  s.requirements << 'versionomy (RubyGem)'
+  s.requirements << 'vcr (RubyGem)'
+  s.requirements << 'webmock (RubyGem)'
+  s.requirements << 'git'
+  s.requirements << 'diff'
+  s.requirements << 'fedpkg'
+  s.requirements << 'md5sum'
+  s.requirements << 'koji'
+  s.requirements << 'yum'
+  s.requirements << 'rpmdev-packager (from rpmdevtools)'
+
+  s.post_install_message = "=====================================================\n" +
+                           "Some of the Polisher components require the following\n" +
+                           "RubyGems and programs to be installed:\n\n" +
+                           s.requirements.join("\n") + "\n" +
+                           "======================================================"
 end
