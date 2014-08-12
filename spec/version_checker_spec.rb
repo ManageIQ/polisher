@@ -85,8 +85,28 @@ module Polisher
       it "returns all versions retrieved"
     end
 
-    describe "version for" do
-      it "retrieves most relevant version of package in configured targets"
+    describe "#version_for" do
+      it "retrieves most relevant version of package in configured targets" do
+        versions = {:koji => ['1.0', '1.0', '2.0'],
+                    :git  => ['1.0', '2.1', '2.1'],
+                    :yum  => ['0.9', '0.9', '0.9']}
+        described_class.should_receive(:versions_for).and_return(versions)
+
+        expected = {:koji => '1.0',
+                    :git  => '2.1',
+                    :yum  => '0.9'}
+        described_class.version_for('rails').should == expected
+      end
+    end
+
+    describe "#version_of" do
+      it "retrieves most relevant version of package in all targets" do
+        versions = {:koji   => '2.2',
+                    :bodhi  => '1.1',
+                    :errata => '1.1'}
+        described_class.should_receive(:version_for).and_return(versions)
+        described_class.version_of('rails').should == '1.1'
+      end
     end
   end # describe VersionChecker
 end # module Polisher
