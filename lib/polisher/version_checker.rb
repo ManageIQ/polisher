@@ -27,7 +27,7 @@ module Polisher
     end
 
     def self.should_check?(target)
-      @check_list ||= ALL_TARGETS
+      @check_list ||= Array.new(ALL_TARGETS)
       @check_list.include?(target)
     end
 
