@@ -19,8 +19,8 @@ module Polisher
 
     # Return list of versions of dependencies of component.
     def dependency_versions(args = {}, &bl)
-      args = {:recursive => true, :dev_deps  => true}.merge(args)
       versions = {}
+      args = {:recursive => true, :dev_deps  => true, :versions => versions}.merge(args)
       deps.each do |dep|
         gem = Polisher::Gem.retrieve(dep.name)
         versions.merge!(gem.versions(args, &bl))

@@ -341,8 +341,8 @@ module Polisher
         local_args[:versions] = versions
 
         if recursive
-          dependency_versions local_args, &bl
-          dependency_versions local_args.merge(:dev => true), &bl if dev_deps
+          versions.merge! dependency_versions local_args, &bl
+          versions.merge! dependency_versions local_args.merge(:dev => true), &bl if dev_deps
         end
 
         versions
