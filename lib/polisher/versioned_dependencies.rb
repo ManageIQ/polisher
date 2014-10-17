@@ -52,7 +52,7 @@ module Polisher
       states = {}
       deps.each do |dep|
         gem = Polisher::Gem.new :name => dep.name
-        states.merge dep.name => gem.state(:check => dep)
+        states.merge! dep.name => gem.state(:check => dep)
       end
       states
     end

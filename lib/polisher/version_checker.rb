@@ -27,7 +27,7 @@ module Polisher
     end
 
     def self.should_check?(target)
-      @check_list ||= ALL_TARGETS
+      @check_list ||= Array.new(ALL_TARGETS)
       @check_list.include?(target)
     end
 
@@ -92,7 +92,7 @@ module Polisher
         begin
           require 'polisher/yum'
           logger.debug "versions_for<yum>(#{name})..."
-          yum_versions = [Yum.version_for(name, &bl)]
+          yum_versions = [Yum.version_for(name, &bl)].compact
           versions.merge! :yum => yum_versions
           logger.debug yum_versions
         rescue
@@ -140,7 +140,8 @@ module Polisher
 
     # Invoke block for specified target w/ an 'unknown' version
     def self.unknown_version(tgt, name)
-      yield tgt, name, [:unknown]
+      yield tgt, name, [:unknown] if block_given?
+      [:unknown]
     end
   end
 end
