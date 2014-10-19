@@ -132,28 +132,52 @@ module Polisher
       # def self.build_logs(url) # TODO
 
       # Return diff between list of packages in two tags in koji
-      def self.diff(tag1, tag2)
+      def self.diff(tag1, tag2, options = {})
         #                                   tag event inherit prefix latest
-        builds1 = client.call('listTagged', tag1, nil, false, nil, true)
-        builds2 = client.call('listTagged', tag2, nil, false, nil, true)
+        builds1 = client.call('listTagged', tag1, nil, options[:tag1_inherit] == true, nil, true)
+        builds2 = client.call('listTagged', tag2, nil, options[:tag2_inherit] == true, nil, true)
         builds  = {}
         builds1.each do |build|
           name         = build['package_name']
-          build2       = builds2.detect { |b| b['name'] == name }
-          version1     = build['version']
-          version2     = build2 && build2['version']
-          builds[name] = {tag1 => version1, tag2 => version2}
+          version      = build['version']
+          builds[name] = {tag1 => version}
         end
 
         builds2.each do |build|
           name = build['package_name']
-          next if builds.key?(name)
-
-          version = build['version']
-          builds[name] = {tag1 => nil, tag2 => version}
+          builds[name] ||= {}
+          builds[name][tag2] = build['version']
         end
 
         builds
+      end
+
+      # builds of packages in tag2 and NOT tag1
+      def self.tagged_build_additions(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          !hash[tag1] && hash[tag2]
+        end
+      end
+
+      # builds of packages in tag1 and NOT tag2
+      def self.tagged_build_removals(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          hash[tag1] && !hash[tag2]
+        end
+      end
+
+      # builds of packages in both tags with different versions
+      def self.tagged_build_changed_overlaps(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          hash[tag1] && hash[tag2] && (hash[tag1] != hash[tag2])
+        end
+      end
+
+      # builds of packages in both tags with the same version
+      def self.tagged_build_unchanged_overlaps(tag1, tag2, options = {})
+        diff(tag1, tag2, options).select do |_, hash|
+          hash[tag1] && hash[tag2] && (hash[tag1] == hash[tag2])
+        end
       end
     end # class Koji
   end # Component.verify("Koji")

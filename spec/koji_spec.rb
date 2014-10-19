@@ -58,7 +58,7 @@ module Polisher
       end
     end
 
-    describe "#diff" do
+    describe ".diff" do
       it "includes updated, added, deleted, unchanged rpms" do
         VCR.use_cassette('koji_diff_f19ruby_f21ruby') do
           results = Polisher::Koji.diff("f19-ruby", "f21-ruby")
@@ -81,6 +81,46 @@ module Polisher
 
           # f19 has 1.3.4 and 1.3.5
           results["rubygem-sinatra"]["f19-ruby"].should == "1.3.5"
+        end
+      end
+
+      it ".tagged_build_additions" do
+        VCR.use_cassette("#{described_class.name.underscore}.tagged_build_additions") do
+          results = Polisher::Koji.tagged_build_additions("f19-ruby", "f21-ruby")
+
+          results.keys.length.should == 57
+          results["xchat-ruby"]["f21-ruby"].should == "1.2"
+          results["weechat"]["f21-ruby"].should    == "0.4.3"
+        end
+      end
+
+      it ".tagged_build_removals" do
+        VCR.use_cassette("#{described_class.name.underscore}.tagged_build_removals") do
+          results = Polisher::Koji.tagged_build_removals("f19-ruby", "f21-ruby")
+
+          results.keys.length.should == 182
+          results["rubygem-webrat"].should      == {"f19-ruby" => "0.7.3"}
+          results["rubygem-rspec-rails"].should == {"f19-ruby" => "2.12.0"}
+        end
+      end
+
+      it ".tagged_build_changed_overlaps" do
+        VCR.use_cassette("#{described_class.name.underscore}.tagged_build_changed_overlaps") do
+          results = Polisher::Koji.tagged_build_changed_overlaps("f19-ruby", "f21-ruby")
+
+          results.keys.length.should == 31
+          results["rubygem-rails"].should ==    {"f19-ruby" => "3.2.12", "f21-ruby" => "4.1.0"}
+          results["rubygem-nokogiri"].should == {"f19-ruby" => "1.5.6", "f21-ruby"  => "1.6.1"}
+        end
+      end
+
+      it ".tagged_build_unchanged_overlaps" do
+        VCR.use_cassette("#{described_class.name.underscore}.tagged_build_unchanged_overlaps") do
+          results = Polisher::Koji.tagged_build_unchanged_overlaps("f19-ruby", "f21-ruby")
+
+          results.keys.length.should == 9
+          results["rubygem-thin"].should ==    {"f19-ruby" => "1.5.0",  "f21-ruby" => "1.5.0"}
+          results["rubygem-gherkin"].should == {"f19-ruby" => "2.11.6", "f21-ruby" => "2.11.6"}
         end
       end
     end
