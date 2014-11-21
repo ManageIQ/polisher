@@ -143,7 +143,7 @@ Polisher::VersionChecker.check targets
 
 if conf[:check_koji]
   require 'polisher/koji'
-  Polisher::Koji.koji_url conf[:check_koji] if conf[:koji_url].is_a?(String)
+  Polisher::Koji.koji_url conf[:check_koji] if conf[:check_koji].is_a?(String)
   Polisher::Koji.koji_tag conf[:koji_tag] if conf[:koji_tag]
   Polisher::Koji.package_prefix conf[:prefix] if conf[:prefix]
 end
