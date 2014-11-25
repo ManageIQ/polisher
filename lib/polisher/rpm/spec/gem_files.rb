@@ -1,19 +1,11 @@
-# RPM Has Gem Module
+# RPM Spec Gem Files Mixin
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/gem'
-require 'polisher/logger'
-
 module Polisher
   module RPM
-    module HasFiles
-      # Return list of all files in the spec
-      def files
-        pkg_files.values.flatten
-      end
-
+    module SpecGemFiles
       def self.included(base)
         base.extend(ClassMethods)
       end
@@ -66,6 +58,6 @@ module Polisher
         end
         pkg_extra
       end
-    end # module HasFiles
+    end # module SpecGemFiles
   end # module RPM
 end # module Polisher

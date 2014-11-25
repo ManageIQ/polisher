@@ -3,11 +3,12 @@
 # Licensed under the MIT license
 # Copyright (C) 2014 Red Hat, Inc.
 
-require 'polisher/rpm/updates_spec'
+require 'polisher/rpm/spec/updater'
 require 'polisher/gem'
+require 'polisher/upstream'
 
 module Polisher::RPM
-  describe UpdatesSpec do
+  describe SpecUpdater do
     describe "#update_to" do
       before(:all) do
         gemfile = File.expand_path(File.join(File.dirname(__FILE__), '../data/activesupport-4.1.4.gem'))

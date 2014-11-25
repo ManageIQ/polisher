@@ -1,21 +1,29 @@
-# RPM Parses Spec Module
+# RPM Spec Parser Mixin
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/gem'
-require 'polisher/logger'
-
 module Polisher
   module RPM
-    module ParsesSpec
+    module SpecParser
       def self.included(base)
         base.extend(ClassMethods)
       end
 
       module ClassMethods
+        def default_metadata
+          { :contents          => "",
+            :requires          => [],
+            :build_requires    => [],
+            :pkg_excludes      => {},
+            :pkg_files         => {},
+            :changelog         => "",
+            :changelog_entries => []}
+        end
+
         # Parse the specified rpm spec and return new RPM::Spec instance from metadata
         #
+        # @see [Polisher::RPM::SpecConstants::METADATA_IDS]
         # @param [String] string contents of spec to parse
         # @return [Polisher::RPM::Spec] spec instantiated from rpmspec metadata
         def parse(spec)
@@ -23,7 +31,7 @@ module Polisher
           in_changelog  = false
           in_files      = false
           subpkg_name   = nil
-          meta = {:contents => spec}
+          meta          = default_metadata.merge(:contents => spec)
           spec.each_line do |l|
             if l =~ RPM::Spec::COMMENT_MATCHER
               ;
@@ -47,14 +55,10 @@ module Polisher
               subpkg_name = $1.strip
               in_subpackage = true
 
-            elsif l =~ RPM::Spec::SPEC_REQUIRES_MATCHER &&
-                  !in_subpackage
-              meta[:requires] ||= []
+            elsif l =~ RPM::Spec::SPEC_REQUIRES_MATCHER && !in_subpackage
               meta[:requires] << RPM::Requirement.parse($1.strip)
 
-            elsif l =~ RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER &&
-                  !in_subpackage
-              meta[:build_requires] ||= []
+            elsif l =~ RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER && !in_subpackage
               meta[:build_requires] << RPM::Requirement.parse($1.strip)
 
             elsif l =~ RPM::Spec::SPEC_CHANGELOG_MATCHER
@@ -72,7 +76,6 @@ module Polisher
               meta[:has_check] = true
 
             elsif in_changelog
-              meta[:changelog] ||= ""
               meta[:changelog] << l
 
             elsif in_files
@@ -80,13 +83,11 @@ module Polisher
 
               if l =~ RPM::Spec::SPEC_EXCLUDED_FILE_MATCHER
                 sl = Regexp.last_match(1)
-                meta[:pkg_excludes] ||= {}
                 meta[:pkg_excludes][tgt] ||= []
                 meta[:pkg_excludes][tgt] << sl unless sl.blank?
 
               else
                 sl = l.strip
-                meta[:pkg_files] ||= {}
                 meta[:pkg_files][tgt] ||= []
                 meta[:pkg_files][tgt] << sl unless sl.blank?
 
@@ -95,15 +96,12 @@ module Polisher
           end
 
           # Ensure pkg_files hash exists
-          meta[:pkg_files] ||= {}
-
-          meta[:changelog_entries] = meta[:changelog] ?
-                                     meta[:changelog].split("\n\n") : []
+          meta[:changelog_entries] = meta[:changelog].split("\n\n") if meta[:changelog]
           meta[:changelog_entries].collect! { |c| c.strip }.compact!
 
           new meta
         end
       end # module ClassMethods
-    end # module ParsesSpec
+    end # module SpecParser
   end # module RPM
 end # module Polisher

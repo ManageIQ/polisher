@@ -1,14 +1,14 @@
-# RPM Updates Spec Module
+# RPM Spec Updater Mixin
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/gem'
-require 'polisher/logger'
+require 'polisher/rpm'
 
 module Polisher
   module RPM
-    module UpdatesSpec
+    module SpecUpdater
       # Update RPM::Spec metadata to new gem
       #
       # @param [Polisher::Gem] new_source new gem to update rpmspec to
@@ -90,7 +90,7 @@ module Polisher
 
         # add changelog entry
         changelog_entry = <<EOS
-* #{Time.now.strftime("%a %b %d %Y")} #{RPM::Spec.current_author} - #{@metadata[:version]}-1
+* #{Time.now.strftime("%a %b %d %Y")} #{RPM.current_author} - #{@metadata[:version]}-1
 - Update #{@metadata[:gem_name]} to version #{new_source.version}
 EOS
         @metadata[:changelog_entries] ||= []
@@ -235,6 +235,6 @@ EOS
         update_requires
         update_files
       end
-    end # module UpdatesSpec
+    end # module SpecUpdater
   end # module RPM
 end # module Polisher

@@ -1,14 +1,13 @@
-# RPM Has Gem Module
+# RPM Spec Gem Reference Mixin
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/gem'
-require 'polisher/logger'
 
 module Polisher
   module RPM
-    module HasGem
+    module SpecGemReference
       # .gem file associated with the RPM specfile
       attr_accessor :gem
 
@@ -55,6 +54,6 @@ module Polisher
       def excludes_dev_dep?(gem_name)
         excluded_dev_deps.any? { |d| d.name == gem_name }
       end
-    end # module HasGem
+    end # module SpecGemReference
   end # module RPM
 end # module Polisher

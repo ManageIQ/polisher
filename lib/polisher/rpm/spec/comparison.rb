@@ -1,14 +1,11 @@
-# RPM Spec Comparison Module
+# RPM Spec Comparison Mixin
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/gem'
-require 'polisher/logger'
-
 module Polisher
   module RPM
-    module ComparesSpec
+    module SpecComparison
       # Compare this spec to a sepecified upstream gem source
       # and return result.
       #
@@ -62,6 +59,6 @@ module Polisher
 
         {:same => same, :diff => diff}
       end
-    end # module ComparesSpec
+    end # module SpecComparison
   end # module RPM
 end # module Polisher
