@@ -3,7 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/fedora'
+require 'polisher/targets/fedora'
 
 module Polisher
   describe Fedora do
@@ -18,8 +18,8 @@ module Polisher
       end
 
       it "should invoke callback" do
-        Polisher::Bodhi.should_receive(:versions_for).with('rails').
-                        and_yield(:bodhi, 'rails', ['1.0.0'])
+        Polisher::Bodhi.should_receive(:versions_for).with('rails')
+                       .and_yield(:bodhi, 'rails', ['1.0.0'])
         cb = proc {}
         cb.should_receive(:call).with(:fedora, 'rails', ['1.0.0'])
         described_class.versions_for('rails', &cb)

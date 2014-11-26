@@ -3,7 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/core'
+require 'polisher/util/core_ext'
 
 describe String do
   describe "#gem?" do

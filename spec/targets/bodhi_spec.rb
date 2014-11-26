@@ -3,7 +3,9 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/bodhi'
+require 'polisher/targets/bodhi'
+
+require 'pkgwat'
 
 module Polisher
   describe Bodhi do

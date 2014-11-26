@@ -3,7 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/version_checker'
+require 'polisher/mixins/versioned_dependencies'
 
 module Polisher
   describe VersionedDependencies do

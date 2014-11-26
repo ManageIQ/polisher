@@ -3,7 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2014 Red Hat, Inc.
 
-require 'polisher/vendor'
+require 'polisher/mixins/vendored_deps'
 
 module Polisher
   describe HasVendoredDeps do
@@ -14,7 +14,7 @@ module Polisher
 
     describe "#vendored_file_paths" do
       it "returns file marks in gem marked as vendored" do
-        expected = [ 'vendor/foo.rb', 'vendor/bar/foo.rb']
+        expected = ['vendor/foo.rb', 'vendor/bar/foo.rb']
         paths    = ['foo.rb'] + expected
         gem = Polisher::Gem.new
         gem.should_receive(:file_paths).and_return(paths)

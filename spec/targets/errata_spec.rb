@@ -3,7 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/errata'
+require 'polisher/targets/errata'
 
 module Polisher
   describe Errata do
@@ -48,5 +48,5 @@ module Polisher
         described_class.versions_for('rails', &cb)
       end
     end
-  end # describe Koji
+  end # describe Errata
 end # module Polisher

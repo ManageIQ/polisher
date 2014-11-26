@@ -1,4 +1,4 @@
-require 'polisher/component'
+require 'polisher/util/component'
 
 module Polisher
   describe Component do

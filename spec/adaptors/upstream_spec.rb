@@ -3,7 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/upstream'
+require 'polisher/adaptors/upstream'
 
 module Polisher
   describe Upstream do

@@ -3,7 +3,9 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/koji'
+require 'polisher/targets/koji'
+
+require 'awesome_spawn'
 
 module Polisher
   describe Koji do

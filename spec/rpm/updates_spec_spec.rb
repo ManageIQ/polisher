@@ -5,7 +5,7 @@
 
 require 'polisher/rpm/spec/updater'
 require 'polisher/gem'
-require 'polisher/upstream'
+require 'polisher/adaptors/upstream'
 
 module Polisher::RPM
   describe SpecUpdater do
