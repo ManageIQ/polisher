@@ -1,21 +1,13 @@
-# Ruby Polisher
+# Polisher
 #
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/core'
-require 'polisher/error'
-require 'polisher/rpm/requirement'
-require 'polisher/rpm/spec'
+require 'polisher/util'
+require 'polisher/rpm'
 require 'polisher/gem'
 require 'polisher/upstream'
 require 'polisher/gemfile'
 require 'polisher/git'
-require 'polisher/apt'
-require 'polisher/yum'
-require 'polisher/bodhi'
-require 'polisher/rhn'
-require 'polisher/bugzilla'
-require 'polisher/koji'
-require 'polisher/fedora'
+require 'polisher/targets'
 require 'polisher/version_checker'
