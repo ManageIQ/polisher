@@ -3,8 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/core'
-require 'polisher/gem'
+require 'polisher/util/conf_helpers'
 
 require 'polisher/rpm/requirement/attributes'
 require 'polisher/rpm/requirement/parser'
@@ -21,7 +20,7 @@ module Polisher
       include RequirementParser
       include RequirementComparison
 
-      # TODO make this mixin optional depending on if requirement corresponds to gem
+      # TODO: make this mixin optional depending on if requirement corresponds to gem
       include RequirementGemReference
 
       conf_attr :rubygem_prefix, 'rubygem'

@@ -12,13 +12,13 @@ module Polisher
 
       module ClassMethods
         def default_metadata
-          { :contents          => "",
-            :requires          => [],
-            :build_requires    => [],
-            :pkg_excludes      => {},
-            :pkg_files         => {},
-            :changelog         => "",
-            :changelog_entries => []}
+          {:contents          => "",
+           :requires          => [],
+           :build_requires    => [],
+           :pkg_excludes      => {},
+           :pkg_files         => {},
+           :changelog         => "",
+           :changelog_entries => []}
         end
 
         # Parse the specified rpm spec and return new RPM::Spec instance from metadata

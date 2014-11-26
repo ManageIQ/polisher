@@ -28,7 +28,7 @@ module Polisher
       include SpecParser
       include SpecComparison
 
-      # TODO make these mixins optional depending on if rpm corresponds to gem
+      # TODO: make these mixins optional depending on if rpm corresponds to gem
       include SpecGemFiles
       include SpecGemReference
       include SpecGemRequirements
