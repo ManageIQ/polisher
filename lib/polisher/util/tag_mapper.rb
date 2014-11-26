@@ -4,7 +4,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/core'
+require 'polisher/util/conf_helpers'
 
 module Polisher
   class TagMapper
