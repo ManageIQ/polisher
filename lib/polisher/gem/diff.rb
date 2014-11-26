@@ -27,6 +27,7 @@ module Polisher
 
         result = AwesomeSpawn.run("#{diff_cmd} -r #{this_dir} #{other_dir}")
         out = result.output.gsub("#{this_dir}", 'a').gsub("#{other_dir}", 'b')
+      rescue
       ensure
         FileUtils.rm_rf this_dir  unless this_dir.nil?
         FileUtils.rm_rf other_dir unless  other_dir.nil? ||
