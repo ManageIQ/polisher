@@ -4,9 +4,6 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 module Polisher
-  class Vendor
-  end
-
   module HasVendoredDeps
     # Return list of file paths marked as vendored
     #
