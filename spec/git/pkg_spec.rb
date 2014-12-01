@@ -131,9 +131,7 @@ module Polisher
         it "raises Exception" do
           @pkg.should_receive(:cloned?).and_return(true)
           @pkg.should_receive(:dead?).and_return(true)
-          lambda{
-            @pkg.fetch
-          }.should raise_error(Exception)
+          lambda{ @pkg.fetch }.should raise_error(Exception)
         end
       end
 

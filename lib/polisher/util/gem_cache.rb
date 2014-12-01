@@ -23,7 +23,7 @@ module Polisher
 
     def self.get(name, version)
       path = path_for(name, version)
-      File.exists?(path) ? File.read(path) : nil
+      File.exist?(path) ? File.read(path) : nil
     end
 
     def self.set(name, version, gem)

@@ -34,7 +34,6 @@ module Polisher
           meta          = default_metadata.merge(:contents => spec)
           spec.each_line do |l|
             if l =~ RPM::Spec::COMMENT_MATCHER
-              ;
 
             # TODO: support optional gem prefix
             elsif l =~ RPM::Spec::GEM_NAME_MATCHER

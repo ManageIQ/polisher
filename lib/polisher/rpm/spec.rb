@@ -75,7 +75,7 @@ module Polisher
       # Dispatch all missing methods to lookup calls in rpm spec metadata
       def method_missing(method, *args, &block)
         # proxy to metadata
-        return @metadata[method] if @metadata.has_key?(method)
+        return @metadata[method] if @metadata.key?(method)
 
         # return nil if metadata value not set
         return nil if METADATA_IDS.include?(method)

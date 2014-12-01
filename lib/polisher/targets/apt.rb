@@ -5,7 +5,7 @@
 
 module Polisher
   class Apt
-    def self.version_for(name)
+    def self.version_for(_name)
       # TODO
     end
   end

@@ -6,18 +6,18 @@
 module Polisher
   class ErrataBuild
     def self.builds_matching(builds, name)
-      builds.collect { |build|
-        build_matches?(build, name) ? build_version(build, name) : nil
-      }.compact
+      builds.collect do |build|
+        build_matches?(build, name) ? build_version(build) : nil
+      end.compact
     end
 
     def self.build_matches?(build, name)
-      pkg, meta = *build.flatten
+      pkg, _meta = *build.flatten
       pkg =~ /^#{Errata.package_prefix}#{name}-([^-]*)-.*$/
     end
 
-    def self.build_version(build, name)
-      pkg, meta = *build.flatten
+    def self.build_version(build)
+      pkg, _meta = *build.flatten
       pkg.gsub(Errata.package_prefix, '').split('-')[1]
     end
   end # class ErrataBuild

@@ -18,15 +18,15 @@ module Polisher
         def from_gem_dep(gem_dep, br = false)
           require 'gem2rpm'
 
-          gem_dep.requirement.to_s.split(',').collect { |req|
+          gem_dep.requirement.to_s.split(',').collect do |req|
             expanded = Gem2Rpm::Helpers.expand_requirement [req.split]
-            expanded.collect { |e|
+            expanded.collect do |e|
               new :name      => "#{prefix}(#{gem_dep.name})",
                   :condition => e.first.to_s,
                   :version   => e.last.to_s,
                   :br        => br
-            }
-          }.flatten
+            end
+          end.flatten
         end
       end # module ClassMethods
 

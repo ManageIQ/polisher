@@ -16,20 +16,16 @@ module Polisher
           ::Gem::Specification.load(gemspec) if !gemspec.is_a?(::Gem::Specification) &&
                                                  File.exist?(gemspec)
 
-        metadata           = {}
-        metadata[:spec]    = gemspec
-        metadata[:name]    = gemspec.name
-        metadata[:version] = gemspec.version.to_s
-
-        metadata[:deps] =
-          gemspec.dependencies.select { |dep|
-            dep.type == :runtime
-          }.collect { |dep| dep }
-
-        metadata[:dev_deps] =
-          gemspec.dependencies.select { |dep|
-            dep.type == :development
-          }.collect { |dep| dep }
+        metadata            = {}
+        metadata[:spec]     = gemspec
+        metadata[:name]     = gemspec.name
+        metadata[:version]  = gemspec.version.to_s
+        metadata[:deps]     = gemspec.dependencies
+                                     .select  { |dep| dep.type == :runtime }
+                                     .collect { |dep| dep }
+        metadata[:dev_deps] = gemspec.dependencies
+                                     .select  { |dep| dep.type == :development }
+                                     .collect { |dep| dep }
 
         new metadata
       end

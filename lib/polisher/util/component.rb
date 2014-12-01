@@ -9,11 +9,11 @@ require 'active_support/core_ext'
 module Polisher
   module Component
     class Missing
-      def initialize(*args)
+      def initialize(*)
         raise "polisher is missing a dependency - cannot instantiate"
       end
 
-      def method_missing(method_id, *args, &bl)
+      def method_missing(method_id, *_args, &_bl)
         raise "polisher is missing a dependency - cannot invoke #{method_id} on #{self}"
       end
     end # class MissingComponent

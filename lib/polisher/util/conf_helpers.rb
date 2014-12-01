@@ -24,11 +24,11 @@ module ConfHelpers
     def conf_attr(name, default = nil)
       send(:define_singleton_method, name) do |*args|
         nvar = "@#{name}".intern
-        current = self.instance_variable_get(nvar)
+        current = instance_variable_get(nvar)
         envk    = "POLISHER_#{name.to_s.upcase}"
         instance_variable_set(nvar, default)    unless current
         instance_variable_set(nvar, ENV[envk])  if ENV.key?(envk)
-        # TODO also allow vars to be able to be set from a conf file
+        # TODO: also allow vars to be able to be set from a conf file
         instance_variable_set(nvar, args.first) unless args.empty?
         instance_variable_get(nvar)
       end
