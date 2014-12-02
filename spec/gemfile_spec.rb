@@ -5,12 +5,6 @@
 
 require 'polisher/gemfile'
 
-module Bundler
-  describe "#gem" do
-    it "stores parsed gems"
-  end
-end
-
 module Polisher
   describe Gemfile do
     describe "#initialize" do
@@ -25,32 +19,6 @@ module Polisher
         gemfile.version.should be_nil
         gemfile.file_paths.should == []
       end
-    end
-
-    describe "#parse" do
-      it "returns new gemfile instance" do
-        gemfile = Polisher::Test::GEMFILE
-        pgemfile = Polisher::Gemfile.parse gemfile[:path]
-        pgemfile.should be_an_instance_of(Polisher::Gemfile)
-      end
-
-      it "parses deps,dev_deps from spec" do
-        gemfile = Polisher::Test::GEMFILE
-        pgemfile = Polisher::Gemfile.parse gemfile[:path]
-        pgemfile.deps.should == gemfile[:deps]
-        #pgemfile.dev_deps.should...
-      end
-    end
-
-    describe "#vendored" do
-      it "returns gemfile deps + dev_deps" do
-        gemfile = described_class.new :deps => ['rails'], :dev_deps => ['rake']
-        gemfile.vendored.should == ['rails', 'rake']
-      end
-    end
-
-    describe "#patched" do
-      it "..."
     end
   end # describe Gemfile
 end # module Polisher
