@@ -5,7 +5,9 @@
 
 module Polisher
   module KojiVersionChecker
-    KOJI_TARGET   = :koji
+    def self.default?
+      @default ||= true
+    end
 
     def self.included(base)
       base.extend(ClassMethods)

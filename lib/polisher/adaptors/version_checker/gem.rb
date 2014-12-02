@@ -7,7 +7,9 @@ require 'polisher/gem'
 
 module Polisher
   module GemVersionChecker
-    GEM_TARGET    = :gem
+    def self.default?
+      @default ||= true
+    end
 
     def self.included(base)
       base.extend(ClassMethods)

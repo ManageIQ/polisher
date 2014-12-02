@@ -5,7 +5,9 @@
 
 module Polisher
   module GitVersionChecker
-    GIT_TARGET    = :git
+    def self.default?
+      @default ||= true
+    end
 
     def self.included(base)
       base.extend(ClassMethods)
