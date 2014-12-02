@@ -13,7 +13,7 @@ module Polisher
 
     module ClassMethods
       def fedora_versions(name, &bl)
-        require 'polisher/fedora'
+        require 'polisher/targets/fedora'
         logger.debug "versions_for<fedora>(#{name})..."
         fedora_versions = Fedora.versions_for(name, &bl)
         logger.debug fedora_versions

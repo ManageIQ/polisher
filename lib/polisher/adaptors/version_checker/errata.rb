@@ -13,7 +13,7 @@ module Polisher
 
     module ClassMethods
       def errata_versions(name, &bl)
-        require 'polisher/errata'
+        require 'polisher/targets/errata'
         logger.debug "versions_for<errata>(#{name})..."
         errata_versions = Errata.versions_for(name, &bl)
         logger.debug errata_versions

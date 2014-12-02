@@ -13,7 +13,7 @@ module Polisher
 
     module ClassMethods
       def koji_versions(name, &bl)
-        require 'polisher/koji'
+        require 'polisher/targets/koji'
         logger.debug "versions_for<koji>(#{name})..."
         koji_versions = Koji.versions_for(name, &bl)
         logger.debug koji_versions

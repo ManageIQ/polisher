@@ -13,7 +13,7 @@ module Polisher
 
     module ClassMethods
       def bodhi_versions(name, &bl)
-        require 'polisher/bodhi'
+        require 'polisher/targets/bodhi'
         logger.debug "versions_for<bodhi>(#{name})..."
         bodhi_versions = Bodhi.versions_for(name, &bl)
         logger.debug bodhi_versions
