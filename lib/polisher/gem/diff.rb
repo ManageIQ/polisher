@@ -10,8 +10,7 @@ module Polisher
   module GemDiff
     # Return diff of content in this gem against other
     def diff(other)
-      require 'awesome_spawn'
-
+      require_dep! 'awesome_spawn'
       require_cmd! diff_cmd
       out = nil
 
