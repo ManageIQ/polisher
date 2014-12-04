@@ -27,40 +27,81 @@ module Polisher
       end
     end
 
+    describe "#spec?" do
+      context "repo includes spec file" do
+        it "returns true" do
+          pkg = described_class.new :name => 'rails'
+          pkg.should_receive(:include?).with(pkg.spec_file).and_return(true)
+          pkg.spec?.should be_true
+        end
+      end
+
+      context "repo does not include spec file" do
+        it "returns false" do
+          pkg = described_class.new :name => 'rails'
+          pkg.should_receive(:include?).with(pkg.spec_file).and_return(false)
+          pkg.spec?.should be_false
+        end
+      end
+    end
+
     describe "#spec" do
-      it "returns handle to parsed Polisher::RPM::Spec"
+      before do
+        @pkg = described_class.new :name => 'rails'
+        @pkg.should_receive(:in_repo)
+            .at_least(:once)
+            .and_yield
+        File.should_receive(:read)
+            .with(@pkg.spec_file)
+            .at_least(:once)
+            .and_return("spec")
+      end
+
+      it "returns handle to parsed Polisher::RPM::Spec" do
+        spec = Polisher::RPM::Spec.new
+        Polisher::RPM::Spec.should_receive(:parse)
+                           .with('spec')
+                           .once
+                           .and_return(spec)
+        @pkg.spec.should == spec
+        @pkg.spec.should == spec
+      end
+
+      context "dirty_spec bit is set true" do
+        it "reparses spec" do
+          spec = Polisher::RPM::Spec.new
+          Polisher::RPM::Spec.should_receive(:parse)
+                             .with('spec')
+                             .twice
+                             .and_return(spec)
+          @pkg.spec.should == spec
+          @pkg.dirty_spec = true
+          @pkg.spec.should == spec
+        end
+
+        it "resets dirty_spec bit" do
+          spec = Polisher::RPM::Spec.new
+          Polisher::RPM::Spec.should_receive(:parse).and_return(spec)
+          @pkg.dirty_spec = true
+          @pkg.spec
+          @pkg.dirty_spec.should be_false
+        end
+      end
     end
 
     describe "#pkg_files" do
-      it "returns spec, .gitignore, sources"
+      it "returns spec, .gitignore, sources" do
+        pkg = described_class.new :name => 'thor'
+        pkg.pkg_files.should == [pkg.spec_file, 'sources', '.gitignore']
+      end
     end
 
     describe "#path" do
-      it "returns Git Cache path for rpm name"
-    end
-
-    describe "#git_clone" do
-      it "is an alias for superclass#clone"
-    end
-
-    describe "#clone" do
-      it "clones package" do
-        # stub out glob / rm_rf
-        Dir.should_receive(:foreach).and_return([])
-        FileUtils.should_receive(:rm_rf).at_least(:once)
-
-        pkg = described_class.new :name => 'rails'
-        pkg.should_receive(:in_repo).and_yield
-        pkg.should_receive(:require_cmd!).with('/usr/bin/fedpkg').and_return(true)
-
-        expected = '/usr/bin/fedpkg clone rubygem-rails'
-        result   = AwesomeSpawn::CommandResult.new '', '', '', 0
-        AwesomeSpawn.should_receive(:run).with(expected).and_return(result)
-        pkg.clone
+      it "returns Git Cache path for rpm name" do
+        pkg = described_class.new :name => 'thor'
+        GitCache.should_receive(:path_for).with(pkg.rpm_name).and_return "path"
+        pkg.path.should == "path"
       end
-
-      it "moves files from pkg subdir to current dir"
-      it "rm's pkg subdir"
     end
 
     describe "#dead?" do

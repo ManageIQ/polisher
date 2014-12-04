@@ -12,6 +12,7 @@ module Polisher
         gemfile = Polisher::Test::GEMFILE
         pgemfile = Polisher::Gemfile.parse gemfile[:path]
         pgemfile.should be_an_instance_of(Polisher::Gemfile)
+        pgemfile.definition.should be_an_instance_of(Bundler::Definition)
       end
 
       it "parses deps,dev_deps from spec" do

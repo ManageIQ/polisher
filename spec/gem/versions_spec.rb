@@ -6,7 +6,7 @@ require 'polisher/gem'
 
 module Polisher
   describe Gem do
-    describe "#local_versions_for" do
+    describe "::local_versions_for" do
       before(:each) do
         # XXX clear the cached version of the gem specification db
         described_class.instance_variable_set(:@local_db, nil)
@@ -31,7 +31,7 @@ module Polisher
       end
     end
 
-    describe "#remote_versions_for" do
+    describe "::remote_versions_for" do
       it "retrieves versions from rubygems.org" do
         curl = Curl::Easy.new
         described_class.should_receive(:client)
@@ -46,7 +46,7 @@ module Polisher
       end
     end
 
-    describe "#lastest_version_of" do
+    describe "::lastest_version_of" do
       it "retrieves latests version of gem available on rubygems.org" do
         described_class.should_receive(:remote_versions_for)
                        .with('polisher')

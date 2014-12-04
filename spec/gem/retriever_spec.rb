@@ -6,7 +6,7 @@ require 'polisher/gem'
 
 module Polisher
   describe Gem do
-    describe "#download_gem" do
+    describe "::download_gem" do
       context "gem in GemCache" do
         it "returns GemCache gem" do
           gem = described_class.new
@@ -51,7 +51,27 @@ module Polisher
       end
     end
 
-    describe "#download_gem_path" do
+    describe "::from_rubygems" do
+      it "downloads gem" do
+        described_class.should_receive(:download_gem)
+                       .with('polisher', '0.9')
+                       .at_least(:once)
+        described_class.should_receive(:from_gem)
+        described_class.from_rubygems('polisher', '0.9')
+      end
+
+      it "returns instantiated gem" do
+        described_class.should_receive(:download_gem)
+                       .at_least(:once)
+        gem = described_class.new
+        described_class.should_receive(:from_gem)
+                       .with(described_class.downloaded_gem_path('polisher', '0.9'))
+                       .and_return(gem)
+        described_class.from_rubygems('polisher', '0.9').should == gem
+      end
+    end
+
+    describe "::download_gem_path" do
       it "downloads gem" do
         gem = described_class.new
         described_class.should_receive(:download_gem)
@@ -70,7 +90,7 @@ module Polisher
       end
     end
 
-    describe "#retrieve" do
+    describe "::retrieve" do
       it "returns gem retrieved from rubygems" do
         curl = Curl::Easy.new
         curl.should_receive(:body_str).and_return('spec')
@@ -82,6 +102,22 @@ module Polisher
         described_class.should_receive(:parse).with('spec').and_return(gem)
 
         described_class.retrieve('rails').should == gem
+      end
+    end
+
+    describe "#download_gem" do
+      it "downloads gem specified by attributes" do
+        described_class.should_receive(:download_gem)
+                       .with('polisher', '0.8')
+        described_class.new(:name => 'polisher', :version => '0.8').download_gem
+      end
+    end
+
+    describe "#download_gem_path" do
+      it "returns path of gem specified by attributes" do
+        described_class.should_receive(:downloaded_gem_path)
+                       .with('polisher', '0.8')
+        described_class.new(:name => 'polisher', :version => '0.8').downloaded_gem_path
       end
     end
   end # describe Gem
