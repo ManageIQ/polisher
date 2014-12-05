@@ -3,121 +3,98 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/core'
-require 'polisher/gem'
-require 'polisher/rpm/requirement'
-require 'polisher/rpm/has_requirements'
-require 'polisher/rpm/has_gem'
-require 'polisher/rpm/has_files'
-require 'polisher/rpm/updates_spec'
-require 'polisher/rpm/parses_spec'
-require 'polisher/rpm/compares_spec'
-require 'polisher/component'
+require 'polisher/rpm/spec/requirements'
+require 'polisher/rpm/spec/files'
+require 'polisher/rpm/spec/subpackages'
+require 'polisher/rpm/spec/check'
+
+require 'polisher/rpm/spec/updater'
+require 'polisher/rpm/spec/parser'
+require 'polisher/rpm/spec/comparison'
+
+require 'polisher/rpm/spec/gem_files'
+require 'polisher/rpm/spec/gem_reference'
+require 'polisher/rpm/spec/gem_requirements'
 
 module Polisher
   module RPM
-    deps = ['gem2rpm', 'versionomy', 'active_support', 'active_support/core_ext', 'awesome_spawn']
-    Component.verify("RPM::Spec", *deps) do
-      class Spec
-        include HasGem
-        include HasRequirements
-        include HasFiles
-        include UpdatesSpec
-        include ParsesSpec
-        include ComparesSpec
+    class Spec
+      include SpecRequirements
+      include SpecFiles
+      include SpecSubpackages
+      include SpecCheck
 
-        AUTHOR = "#{ENV['USER']} <#{ENV['USER']}@localhost.localdomain>"
-        COMMENT_MATCHER             = /^\s*#.*/
-        GEM_NAME_MATCHER            = /^%global\s*gem_name\s(.*)$/
-        SPEC_NAME_MATCHER           = /^Name:\s*#{package_prefix}-(.*)$/
-        SPEC_VERSION_MATCHER        = /^Version:\s*(.*)$/
-        SPEC_RELEASE_MATCHER        = /^Release:\s*(.*)$/
-        SPEC_REQUIRES_MATCHER       = /^Requires:\s*(.*)$/
-        SPEC_BUILD_REQUIRES_MATCHER = /^BuildRequires:\s*(.*)$/
-        SPEC_GEM_REQ_MATCHER        = /^.*\s*#{requirement_prefix}\((.*)\)(\s*(.*))?$/
-        SPEC_SUBPACKAGE_MATCHER     = /^%package\s(.*)$/
-        SPEC_DOC_SUBPACKAGE_MATCHER = /^%package\sdoc$/
-        SPEC_CHANGELOG_MATCHER      = /^%changelog$/
-        SPEC_FILES_MATCHER          = /^%files$/
-        SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
-        SPEC_EXCLUDED_FILE_MATCHER  = /^%exclude\s+(.*)$/
-        SPEC_PREP_MATCHER           = /^%prep$/
-        SPEC_CHECK_MATCHER          = /^%check$/
+      include SpecUpdater
+      include SpecParser
+      include SpecComparison
 
-        FILE_MACRO_MATCHERS         =
-          [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
-           /^%verify\s/,  /^%docdir.*/,  /^%dir\s/, /^%defattr.*/,
-           /^%{gem_instdir}\/+/, /^%{gem_cache}/, /^%{gem_spec}/, /^%{gem_docdir}/]
+      # TODO: make these mixins optional depending on if rpm corresponds to gem
+      include SpecGemFiles
+      include SpecGemReference
+      include SpecGemRequirements
 
-        FILE_MACRO_REPLACEMENTS =
-          {"%{_bindir}"    => 'bin',
-           "%{gem_libdir}" => 'lib'}
+      AUTHOR = "#{ENV['USER']} <#{ENV['USER']}@localhost.localdomain>"
 
-        attr_accessor :metadata
+      # metadata keys parsed
+      # @see [Polisher::RPM::SpecParser::ClassMethods#parse]
+      METADATA_IDS = [:contents, :gem_name, :version, :release,
+                      :requires, :build_requires, :has_check, :changelog,
+                      :pkg_excludes, :pkg_files, :changelog_entries]
 
-        # Use rpmdev-packager if it's available
-        def self.packager
-          @packager ||= AwesomeSpawn.run('/usr/bin/rpmdev-packager').output.chop
-        rescue AwesomeSpawn::NoSuchFileError
-        end
+      COMMENT_MATCHER             = /^\s*#.*/
+      GEM_NAME_MATCHER            = /^%global\s*gem_name\s(.*)$/
+      SPEC_NAME_MATCHER           = /^Name:\s*#{package_prefix}-(.*)$/
+      SPEC_VERSION_MATCHER        = /^Version:\s*(.*)$/
+      SPEC_RELEASE_MATCHER        = /^Release:\s*(.*)$/
+      SPEC_REQUIRES_MATCHER       = /^Requires:\s*(.*)$/
+      SPEC_BUILD_REQUIRES_MATCHER = /^BuildRequires:\s*(.*)$/
+      SPEC_GEM_REQ_MATCHER        = /^.*\s*#{requirement_prefix}\((.*)\)(\s*(.*))?$/
+      SPEC_SUBPACKAGE_MATCHER     = /^%package\s(.*)$/
+      SPEC_DOC_SUBPACKAGE_MATCHER = /^%package\sdoc$/
+      SPEC_CHANGELOG_MATCHER      = /^%changelog$/
+      SPEC_FILES_MATCHER          = /^%files$/
+      SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
+      SPEC_EXCLUDED_FILE_MATCHER  = /^%exclude\s+(.*)$/
+      SPEC_PREP_MATCHER           = /^%prep$/
+      SPEC_CHECK_MATCHER          = /^%check$/
 
-        # Return the currently configured author
-        def self.current_author
-          ENV['POLISHER_AUTHOR'] || packager || AUTHOR
-        end
+      FILE_MACRO_MATCHERS         =
+        [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
+         /^%verify\s/,  /^%docdir.*/,  /^%dir\s/, /^%defattr.*/,
+         /^%{gem_instdir}\/+/, /^%{gem_cache}/, /^%{gem_spec}/, /^%{gem_docdir}/]
 
-        def initialize(metadata = {})
-          @metadata = metadata
-        end
+      FILE_MACRO_REPLACEMENTS     =
+        {"%{_bindir}"    => 'bin', "%{gem_libdir}" => 'lib'}
 
-        # Dispatch all missing methods to lookup calls in rpm spec metadata
-        def method_missing(method, *args, &block)
-          # proxy to metadata
-          if @metadata.has_key?(method)
-            @metadata[method]
+      attr_accessor :metadata
 
-          else
-            super(method, *args, &block)
-          end
-        end
+      def initialize(metadata = nil)
+        @metadata = self.class.default_metadata.merge(metadata || {})
+      end
 
-        # Return subpkg containing the specified file
-        def subpkg_containing(file)
-          pkg_files.each do |pkg, spec_files|
-            return pkg if spec_files.include?(file)
-          end
-          nil
-        end
+      # Dispatch all missing methods to lookup calls in rpm spec metadata
+      def method_missing(method, *args, &block)
+        # proxy to metadata
+        return @metadata[method] if @metadata.key?(method)
 
-        # Return boolean indicating if spec has a -doc subpkg
-        def has_doc_subpkg?
-          @has_doc_subpkg ||= @metadata[:contents].index RPM::Spec::SPEC_DOC_SUBPACKAGE_MATCHER
-        end
+        # return nil if metadata value not set
+        return nil if METADATA_IDS.include?(method)
 
-        # Return boolean indicating if spec has a %check section
-        def has_check?
-          @metadata.has_key?(:has_check) && @metadata[:has_check]
-        end
+        # set value if invoking metadata setter
+        id = method[0...-1].symbol if method[-1] == '='
+        metadata_setter = METADATA_IDS.include?(id) && args.length == 1
+        return @metadata[id] = args.first if metadata_setter
 
-        # Return all gem requirements _not_ in the specified gem
-        def extra_gem_requirements(gem)
-          gem_reqs = gem.deps.collect { |d| requirements_for_gem(d.name) }.flatten
-          gem_requirements - gem_reqs
-        end
+        # dispatch to default behaviour
+        super(method, *args, &block)
+      end
 
-        # Return all gem build requirements _not_ in the specified gem
-        def extra_gem_build_requirements(gem)
-          gem_reqs = gem.deps.collect { |d| requirements_for_gem(d.name) }.flatten
-          gem_build_requirements - gem_reqs
-        end
-
-        # Return contents of spec as string
-        #
-        # @return [String] string representation of rpm spec
-        def to_string
-          @metadata[:contents]
-        end
-      end # class Spec
-    end # Component.verify("RPM::Spec")
+      # Return contents of spec as string
+      #
+      # @return [String] string representation of rpm spec
+      def to_string
+        contents
+      end
+    end # class Spec
   end # module RPM
 end # module Polisher

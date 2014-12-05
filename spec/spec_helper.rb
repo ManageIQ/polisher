@@ -12,7 +12,7 @@ rescue LoadError
 end
 
 require 'polisher/rpm/spec'
-require 'polisher/gem_cache'
+require 'polisher/util/gem_cache'
 
 RSpec.configure do |config|
   # Run specs in random order to surface order dependencies. If you find an

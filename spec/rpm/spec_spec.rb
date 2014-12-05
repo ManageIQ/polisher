@@ -11,7 +11,7 @@ module Polisher::RPM
     describe "#initialize" do
       it "sets gem metadata" do
         spec = described_class.new :version => '1.0.0'
-        spec.metadata.should == {:version => '1.0.0'}
+        spec.metadata.should == described_class.default_metadata.merge(:version => '1.0.0')
       end
     end
 
