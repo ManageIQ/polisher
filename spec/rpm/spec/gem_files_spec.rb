@@ -96,5 +96,17 @@ module Polisher::RPM
       end
     end
 
+    describe "#extra_gem_files" do
+      it "returns pkg files not in specified gem" do
+        gem = Polisher::Gem.new
+        gem.should_receive(:has_file_satisfied_by?).with('foo').and_return(true)
+        gem.should_receive(:has_file_satisfied_by?).with('var').and_return(false)
+        gem.should_receive(:has_file_satisfied_by?).with('bar').and_return(false)
+
+        spec = described_class.new :name => 'rubygem-rails'
+        spec.should_receive(:pkg_files).and_return({:rails => ['var'], :doc => ['foo', 'bar']})
+        spec.extra_gem_files(gem).should == {:rails => ['var'], :doc => ['bar']}
+      end
+    end
   end # describe Spec
 end # module Polisher::RPM
