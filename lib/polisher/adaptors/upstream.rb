@@ -5,6 +5,7 @@
 
 require 'polisher/gem'
 require 'polisher/gemfile'
+require 'polisher/util/core_ext'
 
 module Polisher
   class Upstream
