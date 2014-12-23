@@ -5,7 +5,9 @@
 
 module Polisher
   module FedoraVersionChecker
-    FEDORA_TARGET = :fedora
+    def self.default?
+      @default ||= true
+    end
 
     def self.included(base)
       base.extend(ClassMethods)

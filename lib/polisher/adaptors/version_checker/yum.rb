@@ -5,7 +5,9 @@
 
 module Polisher
   module YumVersionChecker
-    YUM_TARGET    = :yum
+    def self.default?
+      @default ||= true
+    end
 
     def self.included(base)
       base.extend(ClassMethods)

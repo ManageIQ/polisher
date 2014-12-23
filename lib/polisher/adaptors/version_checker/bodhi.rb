@@ -5,7 +5,9 @@
 
 module Polisher
   module BodhiVersionChecker
-    BODHI_TARGET  = :bodhi  # fedora dispatches to bodhi so not enabled by default
+    def self.default?
+      @default ||= false
+    end
 
     def self.included(base)
       base.extend(ClassMethods)

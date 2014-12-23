@@ -5,7 +5,9 @@
 
 module Polisher
   module ErrataVersionChecker
-    ERRATA_TARGET = :errata
+    def self.default?
+      @default ||= false
+    end
 
     def self.included(base)
       base.extend(ClassMethods)
