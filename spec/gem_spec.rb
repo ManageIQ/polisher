@@ -9,12 +9,16 @@ module Polisher
   describe Gem do
     describe "#initialize" do
       it "sets gem attributes" do
-        gem = described_class.new :name     => 'rails',
+        gem = described_class.new :spec     => 'spec',
+                                  :name     => 'rails',
                                   :version  => '4.0.0',
+                                  :path     => 'path',
                                   :deps     => %w(activesupport activerecord),
                                   :dev_deps => ['rake']
+        gem.spec.should == 'spec'
         gem.name.should == 'rails'
         gem.version.should == '4.0.0'
+        gem.path.should == 'path'
         gem.deps.should == ['activesupport', 'activerecord']
         gem.dev_deps.should == ['rake']
       end

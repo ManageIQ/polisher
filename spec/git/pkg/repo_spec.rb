@@ -3,9 +3,35 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/git/pkg'
+require 'awesome_spawn'
 
 module Polisher
   describe Git::Pkg do
+    describe "#git_clone" do
+      it "is an alias for superclass#clone"
+    end
+
+    describe "#clone" do
+      it "clones package" do
+        # stub out glob / rm_rf
+        Dir.should_receive(:foreach).and_return([])
+        FileUtils.should_receive(:rm_rf).at_least(:once)
+
+        pkg = described_class.new :name => 'rails'
+        pkg.should_receive(:in_repo).and_yield
+        pkg.should_receive(:require_cmd!).with('/usr/bin/fedpkg').and_return(true)
+
+        expected = '/usr/bin/fedpkg clone rubygem-rails'
+        result   = AwesomeSpawn::CommandResult.new '', '', '', 0
+        AwesomeSpawn.should_receive(:run).with(expected).and_return(result)
+        pkg.clone
+      end
+
+      it "moves files from pkg subdir to current dir"
+      it "rm's pkg subdir"
+    end
+
+
     describe "#fetch" do
       before(:each) do
         @pkg = described_class.new
@@ -73,6 +99,24 @@ module Polisher
 
         @pkg.should_receive(:pull)
         @pkg.fetch
+      end
+    end
+
+    describe "#valid_targets" do
+      before do
+        @fetch_tgts = described_class.fetch_tgts
+        described_class.fetch_tgt ['t1', 't2']
+      end
+
+      after do
+        described_class.fetch_tgt @fetch_tgts
+      end
+
+      it "returns fetchable targets" do
+        pkg = described_class.new
+        pkg.should_receive(:fetch).with('t1')
+        pkg.should_receive(:fetch).with('t2').and_raise(RuntimeError)
+        pkg.valid_targets.should == ['t1']
       end
     end
 

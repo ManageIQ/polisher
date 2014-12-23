@@ -21,6 +21,7 @@ module Polisher
 
       # Generate new sources file
       def gen_sources_for(gem)
+        require_dep! 'awesome_spawn'
         require_cmd! md5sum_cmd
         in_repo do
           AwesomeSpawn.run "#{md5sum_cmd} #{gem.gem_path} > sources"

@@ -44,8 +44,16 @@ module ConfHelpers
 
     def require_cmd!(cmd)
       raise "command #{cmd} not available" unless cmd_available?(cmd)
-    end # module ClassMethods
-  end
+    end
+
+    def require_dep!(dep, obj=nil)
+      require dep
+    rescue LoadError => e
+      m  = e.backtrace[obj.nil? ? 3 : 4].split.last
+      ms = obj.nil? ? m : "#{obj.class} #{m}"
+      raise "dependency #{dep} is not available - cannot invoke #{ms}"
+    end
+  end # module ClassMethods
 
   def self.included(base)
     base.extend(ClassMethods)
@@ -53,5 +61,9 @@ module ConfHelpers
 
   def require_cmd!(cmd)
     self.class.require_cmd!(cmd)
+  end
+
+  def require_dep!(dep)
+    self.class.require_dep!(dep, self)
   end
 end

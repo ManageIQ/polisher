@@ -3,6 +3,10 @@
 # Licensed under the MIT license
 # Copyright (C) 2014 Red Hat, Inc.
 
+require 'rubygems/installer'
+require 'active_support'
+require 'active_support/core_ext'
+
 module Polisher
   module GemFiles
     # Common files shipped in gems that we should ignore
@@ -83,7 +87,7 @@ module Polisher
     # Iterate over each file in gem invoking block with path
     def each_file(&bl)
       unpack do |dir|
-        Pathname(dir).find do |path|
+        Pathname.new(dir).find do |path|
           next if path.to_s == dir.to_s
           pathstr = path.to_s.gsub("#{dir}/", '')
           bl.call pathstr unless pathstr.blank?

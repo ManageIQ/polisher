@@ -12,6 +12,8 @@ module Polisher
       attr_accessor :name
       attr_accessor :version
 
+      attr_accessor :dirty_spec
+
       # Return full rpm name of package containing optional prefix
       def rpm_name
         @rpm_name ||= "#{rpm_prefix}#{name}"
