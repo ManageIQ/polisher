@@ -27,6 +27,7 @@ conf = {:format         => nil,
         :gemfile        => './Gemfile',
         :gemspec        => nil,
         :gemname        => nil,
+        :gemversion     => nil,
         :prefix         => nil,
         :groups         => [],
         :devel_deps     => false,
@@ -67,6 +68,10 @@ optparse = OptionParser.new do |opts|
 
   opts.on('--gem name', 'Name of the rubygem to check') do |g|
     conf[:gemname] = g
+  end
+
+  opts.on('-v', '--version [version]', 'Version of gem to check') do |v|
+    conf[:gemversion] = v
   end
 
   opts.on('-p', '--prefix prefix', 'Prefix to append to gem name') do |p|
@@ -112,8 +117,6 @@ optparse = OptionParser.new do |opts|
   opts.on('-e', '--errata [url]', 'Check packages filed in errata') do |e|
     conf[:check_errata] = e || nil
   end
-
-  # TODO version flag to specify version of gem to retrieve from rubygems
 end
 
 optparse.parse!
@@ -239,7 +242,8 @@ end
 print_header
 
 if conf[:gemname]
-  gem = Polisher::Gem.retrieve(conf[:gemname])
+  gem = conf[:gemversion] ? Polisher::Gem.from_rubygems(conf[:gemname], conf[:gemversion]) :
+                            Polisher::Gem.retrieve(conf[:gemname])
   gem.versions(:recursive => true,
                :dev_deps  => conf[:devel_deps]) do |tgt, dep, versions|
     print_dep(tgt, dep, versions)
