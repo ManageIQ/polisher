@@ -89,6 +89,6 @@ module Polisher
       end
 
       versions
-    end
+    end # module ClassMethods
   end # module GemVersions
 end # module Polisher
