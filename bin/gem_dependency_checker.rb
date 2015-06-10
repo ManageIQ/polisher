@@ -49,67 +49,37 @@ def gem_dependency_checker_option_parser
 end
 
 def print_header
-  if @format == 'xml'
-    puts '<dependencies>'
-  elsif @format == 'json'
-    puts '{'
-  end
+  puts header
 end
 
 def print_footer
-  if @format == 'xml'
-    puts "</dependencies>"
-  elsif @format == 'json'
-    puts "}"
-  end
+  puts footer
 end
 
-def print_dep(tgt, dep, versions)
-  puts pretty_dep(tgt, dep, versions)
+def print_dep(dep, tgt, versions)
+  puts pretty_tgt(dep, tgt, versions)
 end
 
-def print_gem_deps(conf)
-  gem = conf[:gemversion] ? Polisher::Gem.from_rubygems(conf[:gemname], conf[:gemversion]) :
-                            Polisher::Gem.retrieve(conf[:gemname])
+def print_gem_deps(gem)
   gem.versions(:recursive => true,
                :dev_deps  => conf[:devel_deps]) do |tgt, dep, versions|
-    print_dep(tgt, dep, versions)
+    print_dep(dep, tgt, versions)
   end
 end
 
-def print_gemspec_deps(conf)
-  gem = Polisher::Gem.from_gemspec(conf[:gemspec])
-  gem.versions(:recursive => true,
-               :dev_deps  => conf[:devel_deps]) do |tgt, dep, versions|
-    print_dep(tgt, dep, versions)
-  end
-end
-
-def print_gemfile_deps(conf)
-  gemfile = nil
-
-  begin
-    gemfile = Polisher::Gemfile.parse(conf[:gemfile], :groups => conf[:groups])
-  rescue => e
-    puts "Runtime err #{e}".red
-    exit 1
-  end
-
+def print_gemfile_deps(gemfile)
   gemfile.dependency_versions :recursive => true,
                               :dev_deps  => conf[:devel_deps] do |tgt, dep, versions|
-    print_dep(tgt, dep, versions)
+    print_dep(dep, tgt, versions)
   end
 end
 
 def print_deps(conf)
-  if conf[:gemname]
-    print_gem_deps(conf)
+  if conf_gem?
+    print_gem_deps(conf_source)
   
-  elsif conf[:gemspec]
-    print_gemspec_deps(conf)
-  
-  elsif conf[:gemfile]
-    print_gemfile_deps(conf)
+  elsif conf_gemfile?
+    print_gemfile_deps(conf_source)
   end
 
   puts last_dep # XXX

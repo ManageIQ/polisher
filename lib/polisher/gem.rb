@@ -7,6 +7,7 @@ require 'polisher/util/conf_helpers'
 require 'polisher/mixins/vendored_deps'
 
 require 'polisher/gem/attributes'
+require 'polisher/gem/dependencies'
 require 'polisher/gem/files'
 require 'polisher/gem/state'
 require 'polisher/gem/versions'
@@ -21,6 +22,7 @@ module Polisher
     include HasVendoredDeps
 
     include GemAttributes
+    include GemDependencies
     include GemFiles
     include GemState
     include GemVersions

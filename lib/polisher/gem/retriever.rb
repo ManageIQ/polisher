@@ -51,17 +51,63 @@ module Polisher
         GemCache.path_for(name, version)
       end
 
-      # Retrieve gem metadata and contents from rubygems.org
+      # Retrieve latest gem metadata and contents from rubygems.org
       #
       # @param [String] name string name of gem to retrieve
       # @return [Polisher::Gem] representation of gem
-      def retrieve(name)
-        require 'curb'
-
-        gem_json_path = "https://rubygems.org/api/v1/gems/#{name}.json"
-        spec = Curl::Easy.http_get(gem_json_path).body_str
+      def retrieve_latest(name)
+        client.url = "https://rubygems.org/api/v1/gems/#{name}.json"
+        client.http_get
+        spec = client.body_str
         gem  = parse spec
         gem
+      end
+
+      # Retrieve specified metadata and contents for gem version from rubygems.org
+      #
+      # @param [String] name string name of gem to retrieve
+      # @param [String] version string version of gem to retrieve
+      # @return [Polisher::Gem] representation of gem
+      def retrieve_version(name, version)
+        path = downloaded_gem_path name, version
+        parse :gem => path
+      end
+
+      # Retrieve gem metadata and contents from rubygems.org
+      #
+      # @param [String] name string name of gem to retrieve
+      # @param [String] version string version of gem to retrieve,
+      #   optional if not specified latest version will be retrieved
+      # @return [Polisher::Gem] representation of gem
+      def retrieve(name, version=nil)
+        version.nil? ? retrieve_latest(name) : retrieve_version(name, version)
+      end
+
+      # Retrieve latest version of gem matching dep
+      def latest_matching(dep)
+        retrieve dep.name, latest_version_matching(dep)
+      end
+
+      # Retrieve earliest version of gem matching dep
+      def earliest_matching(dep)
+        retrieve dep.name, earliest_version_matching(dep)
+      end
+
+      # Retrieve gem version matching target
+      def matching_target(dep, target)
+        retrieve dep.name, version_matching_target(dep, target)
+      end
+
+      # Retrieve version of gem matching dep and specifier
+      def matching(dep, specifier)
+        case specifier
+        when :latest
+          latest_matching(dep)
+        when :earliest
+          earliest_matching(dep)
+        else
+          matching_target(dep, specifier)
+        end
       end
     end # module ClassMethods
 

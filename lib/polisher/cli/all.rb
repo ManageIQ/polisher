@@ -8,6 +8,7 @@
 require 'polisher/cli/default'
 require 'polisher/cli/sources'
 require 'polisher/cli/targets'
+require 'polisher/cli/specifier'
 require 'polisher/cli/format'
 require 'polisher/cli/conf'
 

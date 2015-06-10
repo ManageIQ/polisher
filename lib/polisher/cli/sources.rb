@@ -55,5 +55,35 @@ module Polisher
          end
       end
     end
+
+    def conf_gem?
+      conf[:gemname] || conf[:gemspec]
+    end
+
+    def conf_gemfile?
+      !conf[:gemfile].nil?
+    end
+
+    def conf_source
+      if conf[:gemname]
+        conf[:gemversion] ? Polisher::Gem.from_rubygems(conf[:gemname], conf[:gemversion]) :
+                            Polisher::Gem.retrieve(conf[:gemname])
+      
+      elsif conf[:gemspec]
+        Polisher::Gem.from_gemspec(conf[:gemspec])
+      
+      elsif conf[:gemfile]
+        gemfile = nil
+
+        begin
+          gemfile = Polisher::Gemfile.parse(conf[:gemfile], :groups => conf[:groups])
+        rescue => e
+          puts "Runtime err #{e}".red
+          exit 1
+        end
+
+        gemfile
+      end
+    end
   end # module CLI
 end # module Polisher

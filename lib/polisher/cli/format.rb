@@ -10,6 +10,42 @@ module Polisher
     def set_format(conf)
       @format = conf[:format]
     end
+
+    def header
+      if @format == 'xml'
+        '<dependencies>'
+      elsif @format == 'json'
+        '{'
+      end
+    end
+
+    def footer
+      if @format == 'xml'
+        "</dependencies>"
+      elsif @format == 'json'
+        "}"
+      end
+    end
+
+    def format_gem(gem)
+      if @format.nil?
+        gem.name.to_s.blue.bold + ' '
+      elsif @format == 'xml'
+        "<#{gem.name}>"
+      elsif @format == 'json'
+        "'#{gem.name}':{"
+      end
+    end
+    
+    def format_end_gem(gem)
+      if @format.nil?
+        "\n"
+      elsif @format == 'xml'
+        "\n</#{gem.name}>"
+      elsif @format == 'json'
+        "\n}"
+      end
+    end
     
     def format_dep(dep)
       if @format.nil?
@@ -59,10 +95,29 @@ module Polisher
       end
     end
 
-    def pretty_dep(tgt, dep, versions)
+    def pretty_dep(gem, dep)
       pretty = ''
 
       # XXX little bit hacky but works for now
+      @last_gem ||= nil
+      if @last_gem != gem
+        pretty += format_end_gem(@last_dep) unless @last_gem.nil?
+        pretty += format_gem(gem)
+      end
+
+      @last_dep ||= nil
+      if @last_dep != dep
+        pretty += format_end_dep(@last_dep) unless @last_dep.nil?
+      end
+
+      pretty += format_dep(dep)
+      @last_dep = dep
+      pretty
+    end
+
+    def pretty_tgt(dep, tgt, versions)
+      pretty = ''
+
       @last_dep ||= nil
       if @last_dep != dep
         pretty += format_end_dep(@last_dep) unless @last_dep.nil?
@@ -85,6 +140,10 @@ module Polisher
 
     def last_dep # XXX
       format_end_dep(@last_dep) unless @last_dep.nil?
+    end
+
+    def lasts_gem # XXX
+      format_end_gem(@last_gem) unless @last_gem.nil?
     end
   end # module CLI
 end # module Polisher
