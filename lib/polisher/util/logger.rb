@@ -3,6 +3,8 @@
 # Licensed under the MIT license
 # Copyright (C) 2014 Red Hat, Inc.
 
+require 'logger'
+
 module Polisher
   module Logging
     # This is the magical bit that gets mixed into your classes

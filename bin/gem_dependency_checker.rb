@@ -18,7 +18,7 @@ require 'optparse'
 require 'colored'
 require 'polisher/gem'
 require 'polisher/gemfile'
-require 'polisher/core'
+require 'polisher/util/config'
 
 ##########################################################
 
@@ -112,6 +112,8 @@ optparse = OptionParser.new do |opts|
   opts.on('-e', '--errata [url]', 'Check packages filed in errata') do |e|
     conf[:check_errata] = e || nil
   end
+
+  # TODO version flag to specify version of gem to retrieve from rubygems
 end
 
 optparse.parse!
@@ -142,7 +144,7 @@ targets  = Polisher::VersionChecker::ALL_TARGETS   if targets.empty?
 Polisher::VersionChecker.check targets
 
 if conf[:check_koji]
-  require 'polisher/koji'
+  require 'polisher/targets/koji'
   Polisher::Koji.koji_url conf[:check_koji] if conf[:check_koji].is_a?(String)
   Polisher::Koji.koji_tag conf[:koji_tag] if conf[:koji_tag]
   Polisher::Koji.package_prefix conf[:prefix] if conf[:prefix]
