@@ -41,6 +41,34 @@ module Polisher
       def latest_version_of(name)
         remote_versions_for(name).collect { |v| ::Gem::Version.new v }.max.to_s
       end
+
+      # Retrieve versions matching dependency
+      def versions_matching(dep)
+        remote_versions_for(dep.name).select { |v|
+          dep.match? dep.name, v
+        }
+      end
+
+      # Retrieve latest version matching dep
+      def latest_version_matching(dep)
+        version = versions_matching(dep).collect { |v| ::Gem::Version.new v }.max
+        version.nil? ? nil : version.to_s
+      end
+
+      # Retrieve earliest version matching dep
+      def earliest_version_matching(dep)
+        version = versions_matching(dep).collect { |v| ::Gem::Version.new v }.min
+        version.nil? ? nil : version.to_s
+      end
+
+      # Retrieve version of gem matching target
+      def version_matching_target(dep, target)
+        require 'polisher/targets'
+        version = Polisher.target(target).versions_for(dep.name)
+                                         .select  { |v| dep.match? dep.name, v }
+                                         .collect { |v|   ::Gem::Version.new v }.max
+        version.nil? ? nil : version.to_s
+      end
     end # module ClassMethods
 
     # Retreive versions of gem available in all configured targets (optionally recursively)
@@ -89,6 +117,6 @@ module Polisher
       end
 
       versions
-    end
+    end # module ClassMethods
   end # module GemVersions
 end # module Polisher

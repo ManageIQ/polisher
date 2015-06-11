@@ -3,8 +3,6 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/util/config'
-
 class String
   # Return bool indicating if self is a path to a gem
   def gem?
@@ -53,5 +51,9 @@ class String
     mark_as_doc = doc_file && !(self =~ /%doc .*/)
     f = mark_as_doc ? "%doc #{f}" : f
     f
+  end
+
+  def to_polisher_class
+    "Polisher::#{self}".constantize
   end
 end

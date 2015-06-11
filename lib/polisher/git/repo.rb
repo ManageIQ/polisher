@@ -3,6 +3,7 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'awesome_spawn'
 require 'polisher/util/conf_helpers'
 require 'polisher/util/git_cache'
 

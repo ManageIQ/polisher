@@ -28,6 +28,32 @@ module Polisher
       versions
     end
 
+    # Return mapping of gems to dependency versions
+    def dependency_tree(args = {}, &bl)
+      dependencies = {}
+      args = {:recursive    => true,
+              :dev_deps     => true,
+              :matching     => :latest,
+              :dependencies => dependencies}.merge(args)
+
+      process = []
+      deps.each do |dep|
+        resolved = nil
+        begin
+          resolved = Polisher::Gem.matching(dep, args[:matching])
+        rescue
+        end
+        yield self, dep, resolved
+        process << resolved unless resolved.nil?
+      end
+
+      process.each { |dep|
+        dependencies.merge!(dep.dependency_tree(args, &bl))
+      }
+
+      dependencies
+    end
+
     # Return missing dependencies
     def missing_dependencies
       missing = []

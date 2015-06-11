@@ -5,6 +5,12 @@
 
 module ConfHelpers
   module ClassMethods
+    attr_reader :conf_attrs
+
+    def conf_attrs?
+      conf_attrs.is_a?(Array)
+    end
+
     # Defines a 'config attribute' or attribute on the class
     # which this is defined in. Accessors to the single shared
     # attribute will be added to the class as well as instances
@@ -22,13 +28,15 @@ module ConfHelpers
     #   Custom.data_dir == Custom.new.data_dir # => true
     #
     def conf_attr(name, default = nil)
+      @conf_attrs ||= []
+      @conf_attrs  << name
+
       send(:define_singleton_method, name) do |*args|
         nvar = "@#{name}".intern
         current = instance_variable_get(nvar)
         envk    = "POLISHER_#{name.to_s.upcase}"
         instance_variable_set(nvar, default)    unless current
         instance_variable_set(nvar, ENV[envk])  if ENV.key?(envk)
-        # TODO: also allow vars to be able to be set from a conf file
         instance_variable_set(nvar, args.first) unless args.empty?
         instance_variable_get(nvar)
       end
