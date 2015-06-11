@@ -5,19 +5,21 @@
 # Copyright (C) 2015 Red Hat, Inc.
 ###########################################################
 
+require 'polisher/specifier'
+
 module Polisher
   module CLI
     def specifier_conf
-      { :matching   => :latest }
+      { :matching   => LATEST_SPECIFIER }
     end
 
     def specifier_opts(option_parser)
       option_parser.on('--latest', 'Check latest matching version of gem') do
-        conf[:matching] = :latest
+        conf[:matching] = LATEST_SPECIFIER
       end
 
       option_parser.on('--earliest', 'Check earliest matching version of gem') do
-        conf[:matching] = :earliest
+        conf[:matching] = EARLIEST_SPECIFIER
       end
 
       option_parser.on('--target [tgt]', 'Check version of gem in target') do |t|
