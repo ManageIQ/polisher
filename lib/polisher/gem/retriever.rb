@@ -107,9 +107,9 @@ module Polisher
       # Retrieve version of gem matching dep and specifier
       def matching(dep, specifier)
         case specifier
-        when :latest
+        when LATEST_SPECIFIER
           latest_matching(dep)
-        when :earliest
+        when EARLIEST_SPECIFIER
           earliest_matching(dep)
         else
           matching_target(dep, specifier)
