@@ -63,11 +63,20 @@ module Polisher
 
       # Retrieve version of gem matching target
       def version_matching_target(dep, target)
-        require 'polisher/targets'
-        version = Polisher.target(target).versions_for(dep.name)
-                                         .select  { |v| dep.match? dep.name, v }
-                                         .collect { |v|   ::Gem::Version.new v }.max
+        version = versions_in_target(dep.name, target).select  { |v| dep.match? dep.name, v }
+                                                      .collect { |v|   ::Gem::Version.new v }.max
         version.nil? ? nil : version.to_s
+      end
+
+      # Return versions of gem in target
+      def versions_in_target(name, target)
+        require 'polisher/targets'
+        Polisher.target(target).versions_for(name)
+      end
+
+      # Return latest version of gem in target
+      def latest_version_in_target(name, target)
+        versions_in_target(name, target).collect { |v| ::Gem::Version.new v }.max
       end
     end # module ClassMethods
 

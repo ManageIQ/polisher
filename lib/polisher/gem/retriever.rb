@@ -115,6 +115,13 @@ module Polisher
           matching_target(dep, specifier)
         end
       end
+
+      # Retrieve latest version of gem in target
+      def latest_in_target(name, target)
+        version = latest_version_in_target(name, target)
+        raise RuntimeError, "no matching version" if version.nil?
+        retrieve name, version
+      end
     end # module ClassMethods
 
     # Download the local gem and return it as a string
