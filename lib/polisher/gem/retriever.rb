@@ -107,13 +107,20 @@ module Polisher
       # Retrieve version of gem matching dep and specifier
       def matching(dep, specifier)
         case specifier
-        when :latest
+        when LATEST_SPECIFIER
           latest_matching(dep)
-        when :earliest
+        when EARLIEST_SPECIFIER
           earliest_matching(dep)
         else
           matching_target(dep, specifier)
         end
+      end
+
+      # Retrieve latest version of gem in target
+      def latest_in_target(name, target)
+        version = latest_version_in_target(name, target)
+        raise RuntimeError, "no matching version" if version.nil?
+        retrieve name, version
       end
     end # module ClassMethods
 

@@ -4,6 +4,7 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/util'
+require 'polisher/specifier'
 require 'polisher/rpm'
 require 'polisher/gem'
 require 'polisher/upstream'
