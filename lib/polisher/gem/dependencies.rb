@@ -13,7 +13,7 @@ module Polisher
       retrieve_dev_deps = local_args[:dev_deps]
       matching          = local_args[:matching]
       dependencies      = local_args[:dependencies] || {}
-      dep_key           = [name, version]
+      dep_key           = "#{name}-#{version}"
       return dependencies if dependencies.key?(dep_key)
 
       dependencies.merge! dep_key => deps
@@ -26,7 +26,11 @@ module Polisher
         rescue
         end
         bl.call self, dep, resolved
-        process << resolved if recursive && !resolved.nil?
+
+        if recursive 
+          resolved = Polisher::Gem.latest_matching(dep) if resolved.nil?
+          process << resolved
+        end
       }
 
       dev_deps.each { |dep|
@@ -36,13 +40,17 @@ module Polisher
         rescue
         end
         bl.call self, dep, resolved
-        process << resolved if recursive && !resolved.nil?
+        if recursive
+          resolved = Polisher::Gem.latest_matching(dep) if resolved.nil?
+          process << resolved
+        end
       } if retrieve_dev_deps
 
       process.each { |dep|
         dependencies.merge! dep.dependency_tree args, &bl
       }
 
+      args[:dependencies] = dependencies
       return dependencies
     end
   end # module GemVersions
