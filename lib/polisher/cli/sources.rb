@@ -5,6 +5,8 @@
 # Copyright (C) 2015 Red Hat, Inc.
 ###########################################################
 
+require 'polisher/gem'
+
 module Polisher
   module CLI
     def sources_conf
@@ -66,9 +68,23 @@ module Polisher
 
     def conf_source
       if conf[:gemname]
-        conf[:gemversion] ? Polisher::Gem.from_rubygems(conf[:gemname], conf[:gemversion]) :
-                            Polisher::Gem.retrieve(conf[:gemname])
-      
+        name = conf[:gemname]
+        if conf[:gemversion]
+          version = conf[:gemversion]
+          Polisher::Gem.from_rubygems(name, version)
+
+        elsif !RELATIVE_SPECIFIERS.include?(conf[:matching])
+          target = conf[:matching]
+          begin
+          Polisher::Gem.latest_in_target(name, target)
+          rescue
+            Polisher::Gem.retrieve(name)
+          end
+
+        else
+          Polisher::Gem.retrieve(name)
+        end
+
       elsif conf[:gemspec]
         Polisher::Gem.from_gemspec(conf[:gemspec])
       
