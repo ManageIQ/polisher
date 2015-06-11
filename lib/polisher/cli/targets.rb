@@ -64,13 +64,13 @@ module Polisher
     def set_targets(conf)
       targets = []
       require 'polisher/adaptors/version_checker'
-      targets << Polisher::VersionChecker::GEM_TARGET    if conf[:check_gem]
-      targets << Polisher::VersionChecker::KOJI_TARGET   if conf[:check_koji]
-      targets << Polisher::VersionChecker::FEDORA_TARGET if conf[:check_fedora]
-      targets << Polisher::VersionChecker::GIT_TARGET    if conf[:check_git]
-      targets << Polisher::VersionChecker::YUM_TARGET    if conf[:check_yum]
-      targets << Polisher::VersionChecker::BODHI_TARGET  if conf[:check_bodhi]
-      targets  = Polisher::VersionChecker::ALL_TARGETS   if targets.empty?
+      targets << :gem    if conf[:check_gem]
+      targets << :koji   if conf[:check_koji]
+      targets << :fedora if conf[:check_fedora]
+      targets << :git    if conf[:check_git]
+      targets << :yum    if conf[:check_yum]
+      targets << :bodhi  if conf[:check_bodhi]
+      targets  = Polisher::VersionChecker.targets        if targets.empty?
       Polisher::VersionChecker.check targets
     end
 
