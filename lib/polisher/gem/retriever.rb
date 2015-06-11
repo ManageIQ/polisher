@@ -85,17 +85,23 @@ module Polisher
 
       # Retrieve latest version of gem matching dep
       def latest_matching(dep)
-        retrieve dep.name, latest_version_matching(dep)
+        version = latest_version_matching(dep)
+        raise RuntimeError, "no version found" if version.nil?
+        retrieve dep.name, version
       end
 
       # Retrieve earliest version of gem matching dep
       def earliest_matching(dep)
-        retrieve dep.name, earliest_version_matching(dep)
+        version = earliest_version_matching(dep)
+        raise RuntimeError, "no version found" if version.nil?
+        retrieve dep.name, version
       end
 
       # Retrieve gem version matching target
       def matching_target(dep, target)
-        retrieve dep.name, version_matching_target(dep, target)
+        version = version_matching_target(dep, target)
+        raise RuntimeError, "no matching version" if version.nil?
+        retrieve dep.name, version
       end
 
       # Retrieve version of gem matching dep and specifier

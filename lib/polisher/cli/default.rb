@@ -16,6 +16,10 @@ module Polisher
         puts option_parser
         exit
       end
+
+      option_parser.on('-l', '--log-level [level]', 'Set the log level') do |level|
+        conf[:log_level] = level.intern
+      end
     end
   end # module CLI
 end # module Polisher

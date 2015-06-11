@@ -18,17 +18,30 @@ module Polisher
 
       dependencies.merge! dep_key => deps
 
-      deps.each { |d|
-        bl.call self, d
-        gem_dep = Polisher::Gem.matching(d, matching)
-        dependencies.merge gem_dep.dependency_tree args, &bl if recursive
+      process = []
+      deps.each { |dep|
+        resolved = nil
+        begin
+          resolved = Polisher::Gem.matching(dep, matching)
+        rescue
+        end
+        bl.call self, dep, resolved
+        process << resolved if recursive && !resolved.nil?
       }
 
-      dev_deps.each { |d|
-        bl.call self, d
-        gem_dep = Polisher::Gem.matching(d, matching)
-        dependencies.merge gem_dep.dependency_tree args, &bl if recursive
+      dev_deps.each { |dep|
+        resolved = nil
+        begin
+          resolved = Polisher::Gem.matching(dep, matching)
+        rescue
+        end
+        bl.call self, dep, resolved
+        process << resolved if recursive && !resolved.nil?
       } if retrieve_dev_deps
+
+      process.each { |dep|
+        dependencies.merge! dep.dependency_tree args, &bl
+      }
 
       return dependencies
     end

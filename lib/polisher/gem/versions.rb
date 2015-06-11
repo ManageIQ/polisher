@@ -51,19 +51,23 @@ module Polisher
 
       # Retrieve latest version matching dep
       def latest_version_matching(dep)
-        versions_matching(dep).collect { |v| ::Gem::Version.new v }.max.to_s
+        version = versions_matching(dep).collect { |v| ::Gem::Version.new v }.max
+        version.nil? ? nil : version.to_s
       end
 
       # Retrieve earliest version matching dep
       def earliest_version_matching(dep)
-        versions_matching(dep).collect { |v| ::Gem::Version.new v }.min.to_s
+        version = versions_matching(dep).collect { |v| ::Gem::Version.new v }.min
+        version.nil? ? nil : version.to_s
       end
 
       # Retrieve version of gem matching target
       def version_matching_target(dep, target)
-        Polisher.target(target).versions_for(dep.name)
-                               .select  { |v| dep.match? dep.name, v }
-                               .collect { |v| ::Gem::Version.new v   }.max.to_s
+        require 'polisher/targets'
+        version = Polisher.target(target).versions_for(dep.name)
+                                         .select  { |v| dep.match? dep.name, v }
+                                         .collect { |v|   ::Gem::Version.new v }.max
+        version.nil? ? nil : version.to_s
       end
     end # module ClassMethods
 

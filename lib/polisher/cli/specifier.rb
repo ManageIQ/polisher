@@ -20,7 +20,7 @@ module Polisher
         conf[:matching] = :earliest
       end
 
-      option_parser.on('--target', 'Check version of gem in target') do |t|
+      option_parser.on('--target [tgt]', 'Check version of gem in target') do |t|
         conf[:matching] = t
       end
     end

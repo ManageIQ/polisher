@@ -1,9 +1,10 @@
-#!/usr/bin/ruby
 # Polisher CLI Target Options
 #
 # Licensed under the MIT license
 # Copyright (C) 2015 Red Hat, Inc.
 ###########################################################
+
+require 'colored'
 
 module Polisher
   module CLI
@@ -11,62 +12,62 @@ module Polisher
       @format = conf[:format]
     end
 
-    def header
-      if @format == 'xml'
-        '<dependencies>'
-      elsif @format == 'json'
-        '{'
-      end
-    end
-
-    def footer
-      if @format == 'xml'
-        "</dependencies>"
-      elsif @format == 'json'
-        "}"
-      end
-    end
-
-    def format_gem(gem)
+    def format_title(title)
       if @format.nil?
-        gem.name.to_s.blue.bold + ' '
+        title.to_s.blue.bold + ' '
       elsif @format == 'xml'
-        "<#{gem.name}>"
+        "<#{title}>"
       elsif @format == 'json'
-        "'#{gem.name}':{"
+        "'#{title}':{"
       end
     end
     
-    def format_end_gem(gem)
+    def format_end(closer)
       if @format.nil?
         "\n"
       elsif @format == 'xml'
-        "\n</#{gem.name}>"
+        "\n</#{closer}>"
       elsif @format == 'json'
         "\n}"
       end
     end
-    
-    def format_dep(dep)
+
+    def format_missing_dep(dep)
       if @format.nil?
-        dep.to_s.blue.bold
+        "\n #{dep.to_s.red.bold}"
       elsif @format == 'xml'
-        "<#{dep}>"
+        "<#{dep.name}>#{dep.requirement}</#{dep.name}>"
       elsif @format == 'json'
-        "'#{dep}':{"
+        "'#{dep.name}':'#{dep.requirement}'"
+      end
+    end
+
+    def format_dep(dep, resolved_dep)
+      if @format.nil?
+        "\n #{dep.to_s.green.bold} (#{resolved_dep.version})"
+      elsif @format == 'xml'
+        "<#{dep.name}>#{dep.requirement}/#{resolved_dep.version}</#{dep.name}>"
+      elsif @format == 'json'
+        "'#{dep.name}':'#{dep.requirement}/#{resolved_dep.version}'"
       end
     end
     
-    def format_end_dep(dep)
-      if @format.nil?
-        "\n"
-      elsif @format == 'xml'
-        "\n</#{dep}>"
-      elsif @format == 'json'
-        "\n}"
+    def pretty_dep(gem, dep, resolved_dep)
+      pretty = ''
+
+      # XXX little bit hacky but works for now
+      @last_gem ||= nil
+      if @last_gem != gem
+        pretty += format_end(@last_dep.name) unless @last_gem.nil?
+        pretty += format_title(gem.is_a?(Gemfile) ? "Gemfile" : "#{gem.name} #{gem.version}")
+        @last_gem = gem
       end
+
+      pretty += resolved_dep.nil? ? format_missing_dep(dep) : format_dep(dep, resolved_dep)
+      @last_dep = dep
+      pretty
     end
-    
+
     def format_tgt(tgt)
       if @format.nil?
         " #{tgt.to_s.red.bold}"
@@ -95,33 +96,13 @@ module Polisher
       end
     end
 
-    def pretty_dep(gem, dep)
-      pretty = ''
-
-      # XXX little bit hacky but works for now
-      @last_gem ||= nil
-      if @last_gem != gem
-        pretty += format_end_gem(@last_dep) unless @last_gem.nil?
-        pretty += format_gem(gem)
-      end
-
-      @last_dep ||= nil
-      if @last_dep != dep
-        pretty += format_end_dep(@last_dep) unless @last_dep.nil?
-      end
-
-      pretty += format_dep(dep)
-      @last_dep = dep
-      pretty
-    end
-
     def pretty_tgt(dep, tgt, versions)
       pretty = ''
 
       @last_dep ||= nil
       if @last_dep != dep
-        pretty += format_end_dep(@last_dep) unless @last_dep.nil?
-        pretty += format_dep(dep)
+        pretty += format_end(@last_dep) unless @last_dep.nil?
+        pretty += format_title(dep)
         @last_dep = dep
       end
 
@@ -139,11 +120,11 @@ module Polisher
     end
 
     def last_dep # XXX
-      format_end_dep(@last_dep) unless @last_dep.nil?
+      format_end(@last_dep) unless @last_dep.nil?
     end
 
-    def lasts_gem # XXX
-      format_end_gem(@last_gem) unless @last_gem.nil?
+    def last_gem # XXX
+      format_end(@last_gem) unless @last_gem.nil?
     end
   end # module CLI
 end # module Polisher

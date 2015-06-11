@@ -3,17 +3,16 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'polisher/apt'
-require 'polisher/bodhi'
-require 'polisher/bugzilla'
-require 'polisher/errata'
-require 'polisher/fedora'
-require 'polisher/koji'
-require 'polisher/rhn'
-require 'polisher/yum'
+require 'polisher/targets/apt'
+require 'polisher/targets/bodhi'
+require 'polisher/targets/bugzilla'
+require 'polisher/targets/errata'
+require 'polisher/targets/fedora'
+require 'polisher/targets/koji'
+require 'polisher/targets/rhn'
+require 'polisher/targets/yum'
 
 module Polisher
-module Target
   def self.target(name)
     case name
     when 'apt'
@@ -34,5 +33,4 @@ module Target
       Polisher::Yum
     end
   end
-end # module Target
 end # module Polisher
