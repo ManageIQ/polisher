@@ -20,16 +20,12 @@ def missing_deps_parser
   end
 end
 
-def check_alt_dep(gem, dep)
-  versions = Polisher::VersionChecker.versions_for(dep.name)
-  puts "#{gem.name} #{gem.version} missing dep #{dep.name} #{dep.requirement} - alt versions: #{versions}"
-end
-
 def check_missing_deps(source)
   source.dependency_tree(:recursive => true,
-                         :dev_deps  => conf[:devel_deps],
-                         :matching  => conf[:matching]) do |gem, dep, resolved_dep|
-    check_alt_dep(gem, dep) if resolved_dep.nil?
+                         :dev_deps  => conf[:devel_deps]) do |gem, dep, resolved_dep|
+    versions = Polisher::VersionChecker.matching_versions(dep)
+    alt      = Polisher::VersionChecker.versions_for(dep.name)
+    puts "#{gem.name} #{gem.version} missing dep #{dep.name} #{dep.requirement} - alt versions: #{alt}" if versions.empty?
   end
 end
 
