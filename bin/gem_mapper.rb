@@ -24,5 +24,4 @@ Polisher::Config.set
 begin
 print_tree conf
 rescue Exception => e
-puts "Err #{e} #{e.backtrace.join("\n")}"
 end
