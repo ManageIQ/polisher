@@ -45,7 +45,7 @@ module Polisher
 
     # Invoke block for specified target w/ an 'unknown' version
     def self.unknown_version(tgt, name)
-      yield tgt, name, [:unknown]
+      yield tgt, name, [:unknown] if block_given?
     end
 
     # Return versions matching dependency
