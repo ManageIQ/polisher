@@ -47,5 +47,11 @@ module Polisher
     def self.unknown_version(tgt, name)
       yield tgt, name, [:unknown]
     end
+
+    # Return versions matching dependency
+    def self.matching_versions(dep)
+      versions = versions_for(dep.name).values.flatten.uniq.compact
+      versions.select { |v| dep.match? dep.name, v }
+    end
   end
 end
