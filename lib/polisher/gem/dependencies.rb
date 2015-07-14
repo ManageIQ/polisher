@@ -13,45 +13,44 @@ module Polisher
       retrieve_dev_deps = local_args[:dev_deps]
       matching          = local_args[:matching]
       dependencies      = local_args[:dependencies] || {}
-      dep_key           = "#{name}-#{version}"
-      return dependencies if dependencies.key?(dep_key)
+      return dependencies if dependencies.key?(name) && dependencies[name].key?(version)
 
-      dependencies.merge! dep_key => deps
+      dependencies[name]          ||= {}
+      dependencies[name][version]   = deps + dev_deps
+      args[:dependencies]           = dependencies
 
-      process = []
-      deps.each { |dep|
-        resolved = nil
-        begin
-          resolved = Polisher::Gem.matching(dep, matching)
-        rescue
-        end
-        bl.call self, dep, resolved
+      resolved_deps = resolve_tree_deps(args.merge({:deps => deps}),     &bl)
+      resolved_dev  = resolve_tree_deps(args.merge({:deps => dev_deps}), &bl) if retrieve_dev_deps
 
-        if recursive 
-          resolved = Polisher::Gem.latest_matching(dep) if resolved.nil?
-          process << resolved
-        end
-      }
+      (resolved_deps + resolved_dev).each { |dep|
+        dependencies.merge! dep.dependency_tree(args, &bl)
+        args[:dependencies] = dependencies
+      } if recursive
 
-      dev_deps.each { |dep|
-        resolved = nil
-        begin
-          resolved = Polisher::Gem.matching(dep, matching)
-        rescue
-        end
-        bl.call self, dep, resolved
-        if recursive
-          resolved = Polisher::Gem.latest_matching(dep) if resolved.nil?
-          process << resolved
-        end
-      } if retrieve_dev_deps
-
-      process.each { |dep|
-        dependencies.merge! dep.dependency_tree args, &bl
-      }
-
-      args[:dependencies] = dependencies
       return dependencies
+    end
+
+    private
+
+    def resolve_tree_deps(args = {}, &bl)
+      deps = args[:deps]
+      deps.collect { |dep|
+        resolve_tree_dep args.merge({:dep => dep}), &bl
+      }
+    end
+
+    def resolve_tree_dep(args = {}, &bl)
+      dep          = args[:dep]
+      matching     = args[:matching]
+
+      resolved = nil
+      begin
+        resolved = Polisher::Gem.matching(dep, matching)
+      rescue
+      end
+      bl.call self, dep, resolved
+
+      resolved.nil? ? Polisher::Gem.latest_matching(dep) : resolved
     end
   end # module GemVersions
 end # module Polisher
