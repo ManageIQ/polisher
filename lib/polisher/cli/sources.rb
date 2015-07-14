@@ -6,6 +6,7 @@
 ###########################################################
 
 require 'polisher/gem'
+require 'polisher/gemfile'
 
 module Polisher
   module CLI
