@@ -23,19 +23,21 @@ module Polisher
 
         result = {}
 
+
         in_diff = nil
+        diff_lines = ''
         diff.each_line do |line|
           if line =~ /diff -r ([^\s]+)+ ([^\s]+)+$/
-            result[in_diff] = diff if in_diff
+            result[in_diff] = diff_lines if in_diff
             in_diff = $1.gsub(/a\//, '')
-            diff    = ''
+            diff_lines    = ''
           elsif line =~ /Only in.*$/
-            in_diff = nil
 
           else
-            diff += line
+            diff_lines += line
           end
         end
+        result[in_diff] = diff_lines if in_diff
 
         result.collect { |t, c| new :title => t, :content => c }
       end

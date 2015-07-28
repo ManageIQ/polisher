@@ -33,12 +33,11 @@ module Polisher
       end
 
       it "parses gem from metadata hash" do
-        gemj = Polisher::Test::GEM_JSON
-        gem = described_class.parse gemj[:json]
-        gem.name.should     == gemj[:name]
-        gem.version.should  == gemj[:version]
-        gem.deps.should     == gemj[:deps]
-        gem.dev_deps.should == gemj[:dev_deps]
+        gem = described_class.parse gem_json[:json]
+        gem.name.should     == gem_json[:name]
+        gem.version.should  == gem_json[:version]
+        gem.deps.should     == gem_json[:deps]
+        gem.dev_deps.should == gem_json[:dev_deps]
       end
     end
   end # describe Gem

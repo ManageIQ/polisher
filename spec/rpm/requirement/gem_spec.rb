@@ -2,10 +2,24 @@
 # Licensed under the MIT license
 # Copyright (C) 2014 Red Hat, Inc.
 
+require 'polisher/rpm/spec'
 require 'polisher/rpm/requirement'
 
 module Polisher::RPM
   describe Requirement do
+    describe "::from_gem_dep" do
+      it "returns new requirements corresponding to gem dependency" do
+        dep = ::Gem::Dependency.new 'rails', '~> 4.0.0'
+        expected = [described_class.new(:name      => 'rubygem(rails)',
+                                        :condition => '=>',
+                                        :version   => '4.0.0'),
+                    described_class.new(:name      => 'rubygem(rails)',
+                                        :condition => '<',
+                                        :version   => '4.1')]
+        described_class.from_gem_dep(dep).should == expected
+      end
+    end
+
     describe "#gem?" do
       context "requirement matches gem dep matcher" do
         it "returns true" do

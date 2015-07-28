@@ -8,7 +8,14 @@ require 'polisher/rpm/requirement'
 module Polisher::RPM
   describe Requirement do
     describe "#initialize" do
-      it "sets requirement attributes"
+      it "sets requirement attributes" do
+        req = described_class.new :name      => 'polisher ',
+                                  :condition => '>',
+                                  :version   => '5.0'
+        req.name.should      == 'polisher'
+        req.condition.should == '>'
+        req.version.should   == '5.0'
+      end
     end
   end # describe Requirement
 end # module Polisher::RPM

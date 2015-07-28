@@ -12,7 +12,7 @@ module Polisher
         described_class.should_receive(:new)
                        .with(:name => 'rails')
                        .and_return(pkg)
-        pkg.should_receive(:fetch).with(described_class.fetch_tgt)
+        described_class.fetch_tgt.each { |tgt| pkg.should_receive(:fetch).with(tgt) }
         described_class.versions_for 'rails'
       end
 

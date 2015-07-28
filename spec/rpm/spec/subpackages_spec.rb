@@ -19,5 +19,20 @@ module Polisher::RPM
         end
       end
     end
+
+    describe "#has_doc_subpkg?" do
+      context "spec has doc subpackage" do
+        it "returns true" do
+          spec = described_class.new :contents => "foo\n%package doc\nbar"
+          spec.has_doc_subpkg?.should be_true
+        end
+      end
+
+      context "spec does not have doc subpackage" do
+        it "returns false" do
+          described_class.new.has_doc_subpkg?.should be_false
+        end
+      end
+    end
   end # describe Spec
 end # module Polisher::RPM

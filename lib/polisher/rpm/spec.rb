@@ -57,6 +57,7 @@ module Polisher
       SPEC_EXCLUDED_FILE_MATCHER  = /^%exclude\s+(.*)$/
       SPEC_PREP_MATCHER           = /^%prep$/
       SPEC_CHECK_MATCHER          = /^%check$/
+      SPEC_DESCRIPTION_MATCHER    = /^%description$/
 
       FILE_MACRO_MATCHERS         =
         [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
@@ -81,7 +82,7 @@ module Polisher
         return nil if METADATA_IDS.include?(method)
 
         # set value if invoking metadata setter
-        id = method[0...-1].symbol if method[-1] == '='
+        id = method[0...-1].intern if method[-1] == '='
         metadata_setter = METADATA_IDS.include?(id) && args.length == 1
         return @metadata[id] = args.first if metadata_setter
 
@@ -94,6 +95,11 @@ module Polisher
       # @return [String] string representation of rpm spec
       def to_string
         contents
+      end
+
+      # Return length of contents
+      def length
+        contents.length
       end
     end # class Spec
   end # module RPM
