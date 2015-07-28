@@ -1,27 +1,27 @@
 #!/usr/bin/ruby
-# Gem Dependency Mapper
+# Display consolidated gems needing updating
 #
 # Licensed under the MIT license
 # Copyright (C) 2015 Red Hat, Inc.
-###########################################################
 
-require 'polisher/gemfile'
+require 'polisher/util/logger'
 require 'polisher/util/config'
 
 require 'polisher/cli/all'
-require 'polisher/cli/bin/gem_mapper'
+require 'polisher/cli/bin/gems2update'
 
 include Polisher::CLI
 
-    conf = gem_mapper_conf
-optparse = gem_mapper_parser
+    conf = gems2update_conf
+optparse = gems2update_parser
 optparse.parse!
-
-validate_sources
 
 Polisher::Logging.level = conf[:log_level]
 Polisher::Config.set
+set_targets       conf
+configure_targets conf
+
 begin
-print_tree conf
+check_gems conf
 rescue Exception => e
 end

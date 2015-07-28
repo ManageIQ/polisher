@@ -22,10 +22,11 @@ end
 
 def check_missing_deps(source)
   source.dependency_tree(:recursive => true,
-                         :dev_deps  => conf[:devel_deps]) do |gem, dep, resolved_dep|
-    versions = Polisher::VersionChecker.matching_versions(dep)
-    alt      = Polisher::VersionChecker.versions_for(dep.name)
-    puts "#{gem.name} #{gem.version} missing dep #{dep.name} #{dep.requirement} - alt versions: #{alt}" if versions.empty?
+                         :dev_deps  => conf[:devel_deps]) do |source, dep, resolved_dep|
+    versions   = Polisher::VersionChecker.matching_versions(dep)
+    alt        = Polisher::VersionChecker.versions_for(dep.name)
+    source_str = source.is_a?(Polisher::Gemfile) ? "Gemfile" : "#{source.name} #{source.version}"
+    puts "#{source_str} missing dep #{dep.name} #{dep.requirement} - alt versions: #{alt}" if versions.empty?
   end
 end
 
