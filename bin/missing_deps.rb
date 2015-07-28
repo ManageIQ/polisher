@@ -26,5 +26,4 @@ configure_targets conf
 begin
 check_deps conf
 rescue Exception => e
-puts "Err #{e} #{e.backtrace.join("\n")}"
 end
