@@ -20,7 +20,7 @@ module Polisher
       args[:dependencies]           = dependencies
 
       resolved_deps = resolve_tree_deps(args.merge({:deps => deps}),     &bl)
-      resolved_dev  = resolve_tree_deps(args.merge({:deps => dev_deps}), &bl) if retrieve_dev_deps
+      resolved_dev  = retrieve_dev_deps ? resolve_tree_deps(args.merge({:deps => dev_deps}), &bl) : []
 
       (resolved_deps + resolved_dev).each { |dep|
         dependencies.merge! dep.dependency_tree(args, &bl)
