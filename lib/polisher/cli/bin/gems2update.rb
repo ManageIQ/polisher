@@ -24,14 +24,14 @@ def check_missing(deps, alts)
   deps.each { |name, gdeps|
     versions = Polisher::Gem.remote_versions_for(name)
     matching = versions.select { |v| gdeps.all? { |dep| dep.match?(name, v)} }
+    latest    = alts[name].max
 
-    print "#{name} #{gdeps.collect { |dep| dep.requirement.to_s }}: ".blue.bold
+    print "#{name}(#{latest}) #{gdeps.collect { |dep| dep.requirement.to_s }}: ".blue.bold
 
     if matching.empty?
       puts "No matching upstream versions".red.bold
 
     else
-      latest    = alts[name].max
       updatable = latest.nil? ? matching : matching.select { |m| m > latest }
 
       if updatable.empty?
@@ -41,7 +41,6 @@ def check_missing(deps, alts)
         puts "Update to #{updatable.max}".green.bold
 
       end
-
     end
   }
 end
