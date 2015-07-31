@@ -49,7 +49,9 @@ def check_gems2update(source)
   deps = {}
   alts = {}
 
-  # TODO optimize speed
+  waiting :msg => 'processing dependencies',
+          :color => :red
+
   source.dependency_tree(:recursive => true,
                          :dev_deps  => conf[:devel_deps]) do |source, dep, resolved_dep|
     # XXX : need to nullify dep.type for this lookup
@@ -72,6 +74,7 @@ def check_gems2update(source)
 
   end
 
+  end_waiting
   check_missing(deps, alts)
 end
 
