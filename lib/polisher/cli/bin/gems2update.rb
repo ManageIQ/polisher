@@ -52,14 +52,19 @@ def check_gems2update(source)
   # TODO optimize speed
   source.dependency_tree(:recursive => true,
                          :dev_deps  => conf[:devel_deps]) do |source, dep, resolved_dep|
-    name     = dep.name
-    versions = Polisher::VersionChecker.matching_versions(dep)
-    missing_downstream    = versions.empty?
+    # XXX : need to nullify dep.type for this lookup
+    dep.instance_variable_set(:@type, :runtime)
+    name = dep.name
     other_version_missing = deps.key?(name)
+    has_dep = other_version_missing && deps[name].any? { |gdep| gdep == dep }
+
+    unless has_dep
+      versions = Polisher::VersionChecker.matching_versions(dep)
+      missing_downstream = versions.empty?
+    end
 
     if missing_downstream || other_version_missing
       deps[name] ||= []
-      has_dep = other_version_missing && deps[name].any? { |gdep| gdep == dep }
       deps[name] << dep unless has_dep
 
       alts[name] = Polisher::VersionChecker.versions_for(name).values.flatten unless alts.key?(name)
