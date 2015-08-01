@@ -49,11 +49,14 @@ def check_gems2update(source)
   deps = {}
   alts = {}
 
-  waiting :msg => 'processing dependencies',
+  msg = 'processing dependencies'
+  waiting :msg => msg,
           :color => :red
 
   source.dependency_tree(:recursive => true,
                          :dev_deps  => conf[:devel_deps]) do |source, dep, resolved_dep|
+    waiting_msg "#{msg} #{source.name}(#{dep.name})"
+
     # XXX : need to nullify dep.type for this lookup
     dep.instance_variable_set(:@type, :runtime)
     name = dep.name

@@ -19,15 +19,19 @@ module Polisher
       conf[:elipses_delay] ||= 1
     end
 
+    def waiting_msg(msg)
+      conf[:wait_msg] = msg
+    end
+
     def waiting(args={})
-      msg   = args[:msg]
+      waiting_msg(args[:msg]) if args.key?(:msg)
       color = args[:color] || :black
 
       @term_waiting = false
-      @waiting_thread = Thread.new(msg) { |msg|
+      @waiting_thread = Thread.new(conf) { |conf|
         until @term_waiting
           clear
-          print msg.send(color) unless msg.nil?
+          print conf[:wait_msg].send(color) if conf.key?(:wait_msg)
           0.upto(num_elipses) {
             print '.'.send(color)
             sleep elipses_delay
