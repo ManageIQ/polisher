@@ -47,13 +47,14 @@ Polisher is made available through [rubygems](http://rubygems.org/gems/polisher)
 Polisher dependends on the 'curb' rubygem which in return depends on the curl-devel
 headers. The user should install those and the development tools for their platform
 or install the curb gem packaged by their distribution like so:
-
+    
+    # For Fedora 21 and below also enterprise linux replace dnf with yum
     # install the ruby & curl headers & development tools...
-    yum install ruby-devel libcurl-devel
-    yum group install "Development Tools"
+    dnf install ruby-devel libcurl-devel
+    dnf group install "Development Tools"
 
     # ... or install the gem manually
-    yum install rubygem-curb
+    dnf install rubygem-curb
 
 Replace the 'yum install' commands with the corresponding ones on alternate platforms.
 
@@ -66,7 +67,7 @@ Various polisher subcomponents depend on various command line utilities, these i
 * /usr/bin/fedpkg - to query fedora
 
 Some of these are pre-installed on many platforms and some are available via a quick
-'yum install' / 'apt-get' or other. Not all are required for all utilities, see the
+'dnf install' / 'apt-get' or other. Not all are required for all utilities, see the
 specific executables and modules for details.
 
 ## Installation
