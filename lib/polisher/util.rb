@@ -3,7 +3,6 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2015 Red Hat, Inc.
 
-
 require 'polisher/util/component'
 require 'polisher/util/config'
 require 'polisher/util/core_ext'

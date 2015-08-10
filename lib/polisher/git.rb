@@ -5,4 +5,4 @@
 
 require 'polisher/git/pkg'
 require 'polisher/git/project'
-require 'polisher/git/repo
+require 'polisher/git/repo'
