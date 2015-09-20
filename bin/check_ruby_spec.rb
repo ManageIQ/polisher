@@ -16,6 +16,7 @@ require 'polisher/cli/bin/check_ruby_spec'
 
 include Polisher::CLI
 
+utility_deprecated_warning! "RPM spec gem dependencies are automatically generated"
 parse_args
 validate_args!
 run_check
