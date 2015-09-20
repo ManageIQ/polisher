@@ -17,33 +17,12 @@
 
 require 'polisher'
 
-conf = {}
+require 'polisher/cli/all'
+require 'polisher/cli/bin/ruby_rpm_spec_updater'
 
-optparse = OptionParser.new do |opts|
-  opts.on('-h', '--help', 'Display this help screen') do
-    puts opts
-    exit 0
-  end
+include Polisher::CLI
 
-  opts.on('-i', 'In-place update of the spec file') do
-    conf[:in_place] = true
-  end
-end
-
+optparse = ruby_rpm_spec_updater_option_parser
 optparse.parse!
-
-spec_file = ARGV.shift
-source    = ARGV.shift
-
-rpmspec   = Polisher::RPM::Spec.parse File.read(spec_file)
-source    = source.nil? ?
-  Polisher::Gem.retrieve(rpmspec.gem_name) :
-  Polisher::Upstream.parse(source)
-
-rpmspec.update_to(source)
-
-if conf[:in_place]
-  File.open(spec_file, "w") { |file| file.puts rpmspec.to_string }
-else
-  puts rpmspec.to_string
-end
+parse_args
+run_update!
