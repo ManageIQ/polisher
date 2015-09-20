@@ -14,7 +14,6 @@ Cross-Reference
 
 - git_gem_diff - perform a diff of a gem managed by distgit against it's upstream equivalent
 
-
 Conversion
 ---
 - bundler2yum - generate yum repo for rpms represented in Gemfile
