@@ -46,5 +46,13 @@ module Polisher
       @term_waiting = true
       @waiting_thread.join
     end
+
+    def deprecated_warning!(target, reason='')
+      puts "This #{target} has been deprecated! #{reason}\n".red.underline.bold
+    end
+
+    def utility_deprecated_warning!(reason='')
+      deprecated_warning! "utility", reason
+    end
   end # module CLI
 end # module Polisher

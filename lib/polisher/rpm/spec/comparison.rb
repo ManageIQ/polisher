@@ -18,6 +18,14 @@ module Polisher
       def compare(upstream_source)
         same = {}
         diff = {}
+        compare_upstream_deps upstream_source, same, diff
+        compare_local_deps    upstream_source, same, diff
+        {:same => same, :diff => diff}
+      end
+
+      private
+
+      def compare_upstream_deps(upstream_source, same, diff)
         upstream_source.deps.each do |d|
           spec_reqs = requirements_for_gem(d.name)
           spec_reqs_specifier = spec_reqs.empty? ? nil :
@@ -37,7 +45,9 @@ module Polisher
                             :upstream => d.requirement.to_s}
           end
         end
+      end
 
+      def compare_local_deps(upstream_source, same, diff)
         @metadata[:requires].each do |req|
           next unless req.gem?
 
@@ -56,8 +66,6 @@ module Polisher
                                   :upstream => upstream_dep.requirement.to_s}
           end
         end unless @metadata[:requires].nil?
-
-        {:same => same, :diff => diff}
       end
     end # module SpecComparison
   end # module RPM

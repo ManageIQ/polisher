@@ -11,22 +11,12 @@
 # Licensed under the MIT License
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
-require 'colored'
-require 'polisher'
+require 'polisher/cli/all'
+require 'polisher/cli/bin/check_ruby_spec'
 
-spec_file = ARGV.shift
-source    = ARGV.shift
-rpmspec   = Polisher::RPM::Spec.parse File.read(spec_file)
-source    = source.nil? ?
-  Polisher::Gem.retrieve(rpmspec.gem_name) :
-  Polisher::Upstream.parse(source)
+include Polisher::CLI
 
-result = rpmspec.compare(source)
-unless result[:diff].keys.empty?
-  puts "differences between rpmspec and upstream source detected".red.bold
-  result[:diff].each do |dep,versions|
-    puts "#{dep} / " \
-         "spec (#{versions[:spec]}) / " \
-         "upstream #{versions[:upstream]}".bold.red
-  end
-end
+utility_deprecated_warning! "RPM spec gem dependencies are automatically generated"
+parse_args
+validate_args!
+run_check
