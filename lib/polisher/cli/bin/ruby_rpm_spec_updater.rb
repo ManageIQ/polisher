@@ -20,6 +20,7 @@ module Polisher
     def ruby_rpm_spec_updater_option_parser
       OptionParser.new do |opts|
         default_options               opts
+        gem_deps_options              opts
         ruby_rpm_spec_updater_options opts
       end
     end
@@ -38,6 +39,10 @@ module Polisher
       conf[:in_place]
     end
 
+    def update_args
+      skip_gem_deps_args
+    end
+
     def update_in_place
       File.write(conf[:spec_file], rpmspec.to_string)
     end
@@ -47,7 +52,7 @@ module Polisher
     end
 
     def run_update!
-      rpmspec.update_to(source)
+      rpmspec.update_to(source, update_args)
       in_place? ? update_in_place : update_to_stdout
     end
   end # module CLI

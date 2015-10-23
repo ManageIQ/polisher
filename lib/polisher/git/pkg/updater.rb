@@ -11,9 +11,9 @@ module Polisher
       end
 
       # Update the local spec to the specified gem version
-      def update_spec_to(gem)
+      def update_spec_to(gem, update_args)
         in_repo do
-          spec.update_to(gem)
+          spec.update_to(gem, update_args)
           File.write(spec_file, spec.to_string)
           @dirty_spec = true
         end
@@ -41,9 +41,9 @@ module Polisher
       # Update the local pkg to specified gem
       #
       # @param [Polisher::Gem] gem instance of gem containing metadata to update to
-      def update_to(gem)
+      def update_to(gem, update_args={})
         update_metadata gem
-        update_spec_to gem
+        update_spec_to gem, update_args
         gen_sources_for gem
         ignore gem
         self
