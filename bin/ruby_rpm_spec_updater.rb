@@ -25,4 +25,5 @@ include Polisher::CLI
 optparse = ruby_rpm_spec_updater_option_parser
 optparse.parse!
 parse_args
+verify_args!
 run_update!
