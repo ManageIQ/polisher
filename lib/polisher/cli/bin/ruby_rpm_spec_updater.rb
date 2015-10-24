@@ -11,6 +11,13 @@ module Polisher
       conf[:source]    = ARGV.shift
     end
 
+    def verify_args!
+      if conf[:spec_file].nil? || conf[:spec_file].blank?
+        puts "Must specify specfile"
+        exit 1
+      end
+    end
+
     def ruby_rpm_spec_updater_options(option_parser)
       option_parser.on('-i', 'In-place update of the spec file') do
         conf[:in_place] = true
