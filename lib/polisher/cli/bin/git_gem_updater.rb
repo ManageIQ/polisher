@@ -16,14 +16,20 @@ module Polisher
     end
 
     def git_gem_updater_conf
-      conf.merge!({ :dir  => orig_dir,
-                    :user => nil,
-                    :gems =>  [] }).merge!(default_conf)
+      conf.merge!({ :dir      => orig_dir,
+                    :user     =>      nil,
+                    :gems     =>       [],
+                    :versions =>       [] }).merge!(default_conf)
     end
 
     def git_gem_updater_options(option_parser)
-      option_parser.on('-n', '--name GEM', 'gem name' ) do |n|
-        conf[:gems] << n
+      option_parser.on('-n', '--name GEM', 'gem name(s)' ) do |n|
+        conf[:gems]     << n
+        conf[:versions] << nil
+      end
+
+      option_parser.on('-v', '--version version', 'version of last gem specified') do |v|
+        conf[:versions][-1] = v
       end
 
       option_parser.on('-u', '--user USER', 'fedora user name' ) do |u|
@@ -70,11 +76,12 @@ module Polisher
       Dir.chdir conf[:dir]
     end
 
-    def current_gem(gem_name=nil)
+     def current_gem(gem_name=nil, gem_version=nil)
       unless gem_name.nil?
         @distgit_pkg  = nil
         @upstream_gem = nil
         @gem_name     = gem_name
+        @gem_version  = gem_version
       end
 
       @gem_name
@@ -82,7 +89,7 @@ module Polisher
 
     def distgit_pkg
       @distgit_pkg ||= begin
-        Polisher::Git::Pkg.new(:name => current_gem).fetch
+        Polisher::Git::Pkg.new(:name => @gem_name).fetch
       rescue => e
         puts "Problem Cloning Package, Skipping: #{e}"
         nil
@@ -90,12 +97,14 @@ module Polisher
     end
 
     def upstream_gem
-      @upstream_gem ||= Polisher::Gem.retrieve current_gem
+      @upstream_gem ||= Polisher::Gem.retrieve @gem_name, @gem_version
     end
 
     def process_gems
-      conf[:gems].each do |name|
-        current_gem name
+      conf[:gems].each_index do |g|
+        name    = conf[:gems][g]
+        version = conf[:versions][g]
+        current_gem name, version
         process_gem
       end
     end
@@ -129,7 +138,7 @@ module Polisher
     end
 
     def print_results
-      puts "#{current_gem} commit complete".green
+      puts "#{@gem_name} commit complete".green
       puts "Package located in #{distgit_pkg.path.bold}"
       puts "Push commit with: git push".blue
       puts "Build and tag official rpms with: #{Polisher::Git::Pkg.pkg_cmd} build".blue
