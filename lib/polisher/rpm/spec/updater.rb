@@ -12,25 +12,29 @@ module Polisher
       # Update RPM::Spec metadata to new gem
       #
       # @param [Polisher::Gem] new_source new gem to update rpmspec to
-      def update_to(new_source)
-        update_deps_from(new_source)
+      def update_to(new_source, update_args={})
+        update_deps_from(new_source, update_args)
         update_files_from(new_source)
         update_metadata_from(new_source)
         update_contents
       end
 
       # Return updated spec requirements
-      def updated_requires_for(new_source)
-        non_gem_requirements + extra_gem_requirements(new_source) +
-        new_source.deps.select { |r| !excludes_dep?(r.name) }
-                  .collect { |r| RPM::Requirement.from_gem_dep(r) }.flatten
+      def updated_requires_for(new_source, update_args)
+        new_gem_requirements = new_source.deps.select  { |r| !excludes_dep?(r.name) }
+                                              .collect { |r| RPM::Requirement.from_gem_dep(r) }
+                                              .flatten
+            gem_requirements = extra_gem_requirements(new_source) + new_gem_requirements
+        non_gem_requirements + (update_args[:skip_gem_deps] ? [] : gem_requirements)
       end
 
       # Return updated spec build requires
-      def updated_build_requires_for(new_source)
-        non_gem_build_requirements + extra_gem_build_requirements(new_source) +
-        new_source.dev_deps.select { |r| !excludes_dev_dep?(r.name) }
-                  .collect { |r| RPM::Requirement.from_gem_dep(r, true) }.flatten
+      def updated_build_requires_for(new_source, update_args)
+        new_gem_requirements = new_source.dev_deps.select  { |r| !excludes_dev_dep?(r.name) }
+                                                  .collect { |r| RPM::Requirement.from_gem_dep(r, true) }
+                                                  .flatten
+            gem_requirements = extra_gem_build_requirements(new_source) + new_gem_requirements
+        non_gem_build_requirements + gem_requirements
       end
 
       def changelog_index
@@ -166,19 +170,19 @@ module Polisher
       end
 
       # Update spec dependencies from new source
-      def update_deps_from(new_source)
-        update_requires_from       new_source
-        update_build_requires_from new_source
+      def update_deps_from(new_source, update_args={})
+        update_requires_from       new_source, update_args
+        update_build_requires_from new_source, update_args
       end
 
       # Update requires from new source
-      def update_requires_from(new_source)
-        @metadata[:requires] = updated_requires_for(new_source)
+      def update_requires_from(new_source, update_args)
+        @metadata[:requires] = updated_requires_for(new_source, update_args)
       end
 
       # Update build requires from new source
-      def update_build_requires_from(new_source)
-        @metadata[:build_requires] = updated_build_requires_for(new_source)
+      def update_build_requires_from(new_source, update_args)
+        @metadata[:build_requires] = updated_build_requires_for(new_source, update_args)
       end
 
       # Internal helper to update spec files from new source
@@ -201,7 +205,7 @@ module Polisher
           pkg = subpkg_containing(gem_file)
           pkg = gem_name if pkg.nil?
           if Gem.ignorable_file?(gem_file)
-            @metadata[:pkg_excludes] ||= []
+            @metadata[:pkg_excludes][pkg] ||= []
             @metadata[:pkg_excludes][pkg] << gem_file.rpmize
 
           elsif Gem.runtime_file?(gem_file) || Gem.license_file?(gem_file)

@@ -100,8 +100,12 @@ module Polisher
       end
     end
 
+    def update_args
+      skip_gem_deps_args
+    end
+
     def update_git
-      distgit_pkg.update_to(upstream_gem)
+      distgit_pkg.update_to(upstream_gem, update_args)
       # TODO append gem dependencies to conf[:gems] list
     end
 
