@@ -110,6 +110,10 @@ module Polisher
     end
 
     def process_gems
+      # TODO - Process deps & order gem list so dependencies are built before dependents.
+      #      - Use chained scratch builds to make them available.
+      #      - Add cli opt to exit entire sequence / executable if one in queue fails
+      #      - Process gems & run builds in parallel
       conf[:gems].each_index do |g|
         name    = conf[:gems][g]
         version = conf[:versions][g]
@@ -132,6 +136,7 @@ module Polisher
       # TODO append gem dependencies to conf[:gems] list
     end
 
+    # TODO print koji url (both on success & failure)
     def scratch_build
       begin
         distgit_pkg.build
