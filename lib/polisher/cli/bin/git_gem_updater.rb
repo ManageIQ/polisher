@@ -19,13 +19,13 @@ module Polisher
       conf.merge!({ :dir      => orig_dir,
                     :user     =>      nil,
                     :gems     =>       [],
-                    :versions =>       [] }).merge!(default_conf)
+                    :versions =>       [],
+                    :deps     =>       []}).merge!(default_conf)
     end
 
     def git_gem_updater_options(option_parser)
       option_parser.on('-n', '--name GEM', 'gem name(s)' ) do |n|
-        conf[:gems]     << n
-        conf[:versions] << nil
+        queue_gem n
       end
 
       option_parser.on('-v', '--version version', 'version of last gem specified') do |v|
@@ -44,6 +44,7 @@ module Polisher
     def git_gem_updater_option_parser
       OptionParser.new do |opts|
         default_options         opts
+        gem_deps_options        opts
         git_gem_updater_options opts
       end
     end
@@ -71,20 +72,23 @@ module Polisher
       validate_gems!
     end
 
+    def queue_gem(name)
+      conf[:gems]     << name
+      conf[:versions] << nil
+      conf[:deps]     << nil
+    end
+
     def chdir
       Dir.mkdir conf[:dir] unless File.directory?(conf[:dir])
       Dir.chdir conf[:dir]
     end
 
-     def current_gem(gem_name=nil, gem_version=nil)
-      unless gem_name.nil?
-        @distgit_pkg  = nil
-        @upstream_gem = nil
-        @gem_name     = gem_name
-        @gem_version  = gem_version
-      end
-
-      @gem_name
+     def current_gem(args={})
+      @distgit_pkg  = nil
+      @upstream_gem = nil
+      @gem_name     = args[:name]
+      @gem_version  = args[:version]
+      @gem_dep      = args[:dep]
     end
 
     def distgit_pkg
@@ -97,15 +101,25 @@ module Polisher
     end
 
     def upstream_gem
-      @upstream_gem ||= Polisher::Gem.retrieve @gem_name, @gem_version
+      @upstream_gem ||=
+        if @gem_dep
+          Polisher::Gem.latest_matching(@gem_dep)
+        else
+          Polisher::Gem.retrieve(@gem_name, @gem_version)
+        end
     end
 
     def process_gems
       conf[:gems].each_index do |g|
         name    = conf[:gems][g]
         version = conf[:versions][g]
-        current_gem name, version
+        dep     = conf[:deps][g]
+        current_gem :name    =>    name,
+                    :version => version,
+                    :dep     =>     dep
+
         process_gem
+        process_gem_deps if specified_gem_deps? && !skip_gem_deps?
       end
     end
 
@@ -153,6 +167,16 @@ module Polisher
       git_commit
 
       print_results
+    end
+
+    def process_gem_deps
+      (upstream_gem.deps + upstream_gem.dev_deps).each do |dep|
+        # XXX ignoring duplicate gems here, even if they specify alt deps
+        unless conf[:gems].include?(dep.name)
+          queue_gem dep.name
+          conf[:deps][-1] = dep
+        end
+      end
     end
   end # module CLI
 end # module Polisher
