@@ -25,7 +25,7 @@ module Polisher
       end
 
       it "updates rpm spec" do
-        @pkg.spec.should_receive(:update_to).with(@gem)
+        @pkg.spec.should_receive(:update_to).with(@gem, {})
         @pkg.update_spec_to(@gem)
       end
 
@@ -75,7 +75,7 @@ module Polisher
         gem = Polisher::Gem.new
         pkg = described_class.new
         pkg.should_receive(:update_metadata).with(gem)
-        pkg.should_receive(:update_spec_to).with(gem)
+        pkg.should_receive(:update_spec_to).with(gem, {})
         pkg.should_receive(:gen_sources_for).with(gem)
         pkg.should_receive(:ignore).with(gem)
         pkg.update_to(gem).should == pkg

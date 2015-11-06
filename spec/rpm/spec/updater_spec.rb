@@ -20,7 +20,7 @@ module Polisher::RPM
 
     describe "#update_to" do
       it "updates dependencies" do
-        spec.should_receive(:update_deps_from).with(gem)
+        spec.should_receive(:update_deps_from).with(gem, {})
         spec.update_to(gem)
       end
 
@@ -375,12 +375,12 @@ module Polisher::RPM
 
     describe "#update_deps_from" do
       it "updates requires from new source" do
-        spec.should_receive(:update_requires_from).with(gem)
+        spec.should_receive(:update_requires_from).with(gem, {})
         spec.send(:update_deps_from, gem)
       end
 
       it "updates build requires from new source" do
-        spec.should_receive(:update_build_requires_from).with(gem)
+        spec.should_receive(:update_build_requires_from).with(gem, {})
         spec.send(:update_deps_from, gem)
       end
     end
@@ -389,7 +389,7 @@ module Polisher::RPM
       it "sets Requires from updated requires" do
         expected = ['req', 'uires']
         spec.should_receive(:updated_requires_for)
-            .with(gem)
+            .with(gem, {})
             .and_return(expected)
         spec.send(:update_requires_from, gem)
         spec.requires.should == expected
@@ -400,7 +400,7 @@ module Polisher::RPM
       it "sets BuildRequires from updated build requires" do
         expected = ['req', 'uires']
         spec.should_receive(:updated_build_requires_for)
-            .with(gem)
+            .with(gem, {})
             .and_return(expected)
         spec.send(:update_build_requires_from, gem)
         spec.build_requires.should == expected

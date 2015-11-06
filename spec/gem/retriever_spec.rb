@@ -93,15 +93,17 @@ module Polisher
     describe "::retrieve" do
       it "returns gem retrieved from rubygems" do
         curl = Curl::Easy.new
+        curl.should_receive(:http_get)
         curl.should_receive(:body_str).and_return('spec')
-
-        url = "https://rubygems.org/api/v1/gems/rails.json"
-        Curl::Easy.should_receive(:http_get).with(url).and_return(curl)
+        described_class.instance_variable_set(:@client, curl)
 
         gem = described_class.new
         described_class.should_receive(:parse).with('spec').and_return(gem)
 
         described_class.retrieve('rails').should == gem
+
+        url = "https://rubygems.org/api/v1/gems/rails.json"
+        curl.url.should == url
       end
     end
 
