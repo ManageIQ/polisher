@@ -19,7 +19,17 @@ module Polisher::RPM
 
       it "parses name from spec" do
         pspec = described_class.parse rpm_spec[:contents]
-        pspec.gem_name.should == rpm_spec[:name]
+        pspec.name.should == rpm_spec[:name]
+      end
+
+      it "parses full name from spec" do
+        pspec = described_class.parse rpm_spec[:contents]
+        pspec.full_name.should == rpm_spec[:full_name]
+      end
+
+      it "parses gem_name from spec" do
+        pspec = described_class.parse rpm_spec[:contents]
+        pspec.gem_name.should == rpm_spec[:gem_name]
       end
 
       it "parses version from spec" do

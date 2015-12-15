@@ -11,7 +11,7 @@ module Polisher
       end
 
       # Update the local spec to the specified gem version
-      def update_spec_to(gem, update_args)
+      def update_spec_to(gem, update_args={})
         in_repo do
           spec.update_to(gem, update_args)
           File.write(spec_file, spec.to_string)

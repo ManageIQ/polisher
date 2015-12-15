@@ -3,6 +3,8 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require "active_support/core_ext/hash/except"
+
 require 'polisher/rpm/spec/requirements'
 require 'polisher/rpm/spec/files'
 require 'polisher/rpm/spec/subpackages'
@@ -37,13 +39,13 @@ module Polisher
 
       # metadata keys parsed
       # @see [Polisher::RPM::SpecParser::ClassMethods#parse]
-      METADATA_IDS = [:contents, :gem_name, :version, :release,
+      METADATA_IDS = [:contents, :name, :gem_name, :full_name, :version, :release,
                       :requires, :build_requires, :has_check, :changelog,
                       :pkg_excludes, :pkg_files, :changelog_entries]
 
       COMMENT_MATCHER             = /^\s*#.*/
-      GEM_NAME_MATCHER            = /^%global\s*gem_name\s(.*)$/
-      SPEC_NAME_MATCHER           = /^Name:\s*#{package_prefix}-(.*)$/
+      SPEC_NAME_MATCHER           = /^Name:\s*(.*)$/
+      SPEC_PREFIXED_NAME_MATCHER  = /^Name:\s*#{package_prefix}-(.*)$/
       SPEC_VERSION_MATCHER        = /^Version:\s*(.*)$/
       SPEC_RELEASE_MATCHER        = /^Release:\s*(.*)$/
       SPEC_REQUIRES_MATCHER       = /^Requires:\s*(.*)$/
@@ -68,9 +70,20 @@ module Polisher
         {"%{_bindir}"    => 'bin', "%{gem_libdir}" => 'lib'}
 
       attr_accessor :metadata
+      attr_accessor :macros
 
-      def initialize(metadata = nil)
-        @metadata = self.class.default_metadata.merge(metadata || {})
+      def initialize(args={})
+        @metadata = metadata_args args
+        @macros   = macro_args    args
+      end
+
+      def metadata_args(args)
+        specified = args[:metadata] || args.except(:macros) || {}
+        self.class.default_metadata.merge(specified)
+      end
+
+      def macro_args(args)
+        args[:macros] || {}
       end
 
       # Dispatch all missing methods to lookup calls in rpm spec metadata
@@ -88,6 +101,10 @@ module Polisher
 
         # dispatch to default behaviour
         super(method, *args, &block)
+      end
+
+      def macro_for(label)
+        @macros[label]
       end
 
       # Return contents of spec as string

@@ -20,7 +20,7 @@ module Polisher
       end
 
       # Return updated spec requirements
-      def updated_requires_for(new_source, update_args)
+      def updated_requires_for(new_source, update_args={})
         new_gem_requirements = new_source.deps.select  { |r| !excludes_dep?(r.name) }
                                               .collect { |r| RPM::Requirement.from_gem_dep(r) }
                                               .flatten
@@ -29,7 +29,7 @@ module Polisher
       end
 
       # Return updated spec build requires
-      def updated_build_requires_for(new_source, update_args)
+      def updated_build_requires_for(new_source, update_args={})
         new_gem_requirements = new_source.dev_deps.select  { |r| !excludes_dev_dep?(r.name) }
                                                   .collect { |r| RPM::Requirement.from_gem_dep(r, true) }
                                                   .flatten
@@ -113,7 +113,7 @@ module Polisher
         has_new_files = @metadata.key?(:new_files) && @metadata[:new_files].key?(pkg)
         return "" unless has_new_files
 
-        title = pkg == gem_name ? "%files\n" : "%files #{pkg}\n"
+        title = pkg == name ? "%files\n" : "%files #{pkg}\n"
         contents = @metadata[:new_files][pkg].join("\n") + "\n"
         title + contents
       end
@@ -123,13 +123,13 @@ module Polisher
         return "" unless has_new_files
 
         @metadata[:new_files].keys
-          .select { |pkg| pkg != gem_name }
+          .select { |pkg| pkg != name }
           .collect { |pkg| new_files_contents_for(pkg) }.join("\n\n") + "\n\n"
       end
 
       def excludes_contents
-        if @metadata[:pkg_excludes][gem_name]
-          @metadata[:pkg_excludes][gem_name]
+        if @metadata[:pkg_excludes][name]
+          @metadata[:pkg_excludes][name]
             .collect { |exclude| "%exclude #{exclude}" }
             .join("\n") + "\n\n"
         else
@@ -162,7 +162,7 @@ module Polisher
         fei = files_end_index
         @metadata[:contents].slice!(fi...files_end_index) unless fei.nil?
 
-        contents = new_files_contents_for(gem_name) +
+        contents = new_files_contents_for(name) +
                    excludes_contents +
                    new_subpkg_files_contents
 
@@ -176,12 +176,12 @@ module Polisher
       end
 
       # Update requires from new source
-      def update_requires_from(new_source, update_args)
+      def update_requires_from(new_source, update_args={})
         @metadata[:requires] = updated_requires_for(new_source, update_args)
       end
 
       # Update build requires from new source
-      def update_build_requires_from(new_source, update_args)
+      def update_build_requires_from(new_source, update_args={})
         @metadata[:build_requires] = updated_build_requires_for(new_source, update_args)
       end
 
@@ -203,7 +203,7 @@ module Polisher
         @metadata[:pkg_excludes] ||= {}
         gem_files.each do |gem_file|
           pkg = subpkg_containing(gem_file)
-          pkg = gem_name if pkg.nil?
+          pkg = name if pkg.nil?
           if Gem.ignorable_file?(gem_file)
             @metadata[:pkg_excludes][pkg] ||= []
             @metadata[:pkg_excludes][pkg] << gem_file.rpmize
@@ -240,7 +240,7 @@ module Polisher
         # add changelog entry
         changelog_entry = <<EOS
 * #{Time.now.strftime("%a %b %d %Y")} #{RPM.current_author} - #{@metadata[:version]}-1
-- Update #{@metadata[:gem_name]} to version #{new_source.version}
+- Update #{@metadata[:name]} to version #{new_source.version}
 EOS
         @metadata[:changelog_entries] ||= []
         @metadata[:changelog_entries].unshift changelog_entry.rstrip

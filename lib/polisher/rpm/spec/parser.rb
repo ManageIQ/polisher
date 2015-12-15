@@ -3,6 +3,8 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'polisher/rpm/macros'
+
 module Polisher
   module RPM
     module SpecParser
@@ -32,20 +34,26 @@ module Polisher
           in_files      = false
           subpkg_name   = nil
           meta          = default_metadata.merge(:contents => spec)
+          macros        = {}
           spec.each_line do |l|
             if l =~ RPM::Spec::COMMENT_MATCHER
 
-            # TODO: support optional gem prefix
-            elsif l =~ RPM::Spec::GEM_NAME_MATCHER
-              meta[:gem_name] = $1.strip
-              meta[:gem_name] = $1.strip
+            elsif Macro.specifier?(l)
+              macro = Macro.parse l
+              macros[macro.label] = macro
+              meta[:gem_name] = macro.value if macro.label == "gem_name"
 
-            elsif l =~ RPM::Spec::SPEC_NAME_MATCHER &&
-                  $1.strip != "%{gem_name}"
-              meta[:gem_name] = $1.strip
+            elsif l =~ RPM::Spec::SPEC_NAME_MATCHER
+              meta[:name]      = $1.strip
+              meta[:gem_name]  = $1.strip if l =~ RPM::Spec::SPEC_PREFIXED_NAME_MATCHER &&
+                                             $1.strip != "%{gem_name}"
+              meta[:full_name] = String.new(meta[:name])
+              meta[:full_name] = Macro.replace_all(meta[:full_name], macros) if Macro.included_in?(meta[:full_name])
 
             elsif l =~ RPM::Spec::SPEC_VERSION_MATCHER
-              meta[:version] = $1.strip
+              meta[:version]      = $1.strip
+              meta[:full_version] = String.new(meta[:version])
+              meta[:full_version] = Macro.replace_all(meta[:version], macros) if Macro.included_in?(meta[:version])
 
             elsif l =~ RPM::Spec::SPEC_RELEASE_MATCHER
               meta[:release] = $1.strip
@@ -78,7 +86,7 @@ module Polisher
               meta[:changelog] << l
 
             elsif in_files
-              tgt = subpkg_name.nil? ? meta[:gem_name] : subpkg_name
+              tgt = subpkg_name.nil? ? meta[:full_name] : subpkg_name
 
               if l =~ RPM::Spec::SPEC_EXCLUDED_FILE_MATCHER
                 sl = Regexp.last_match(1)
@@ -98,7 +106,8 @@ module Polisher
           meta[:changelog_entries] = meta[:changelog].split("\n\n") if meta[:changelog]
           meta[:changelog_entries].collect! { |c| c.strip }.compact!
 
-          new meta
+          new :metadata => meta,
+              :macros   => macros
         end
       end # module ClassMethods
     end # module SpecParser
