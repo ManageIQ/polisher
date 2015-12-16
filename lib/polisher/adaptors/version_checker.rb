@@ -32,20 +32,25 @@ module Polisher
       versions
     end
 
-    # Return version of package most frequent in all configured targets.
-    # Invokes query as normal then counts versions over all targets and
-    # returns the max.
+    # Return version of package most frequent references in each
+    # configured target.
     def self.version_for(name)
-      versions = versions_for(name).values
-      versions.inject(Hash.new(0)) do |total, i|
-        total[i] += 1
-        total
-      end.first
+      Hash[versions_for(name).collect do |k, versions|
+        most = versions.group_by { |v| v }.values.max_by(&:size).first
+        [k, most]
+      end]
+    end
+
+    # Return version of package most frequent reference in all
+    # configured targets.
+    def self.version_of(name)
+      version_for(name).values.group_by { |v| v }.values.max_by(&:size).first
     end
 
     # Invoke block for specified target w/ an 'unknown' version
     def self.unknown_version(tgt, name)
       yield tgt, name, [:unknown] if block_given?
+      [:unknown]
     end
 
     # Return versions matching dependency
