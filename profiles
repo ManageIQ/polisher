@@ -1,0 +1,20 @@
+# copy to ~/.polisher/profiles
+---
+redhat:
+  koji:
+    package_prefix:
+    - rubygem-
+  rpm:
+    rubygem_prefix:
+    - rubygem-
+
+fedora_23:
+  inherits:
+    - redhat
+  koji:
+    koji_tag:
+    - f23
+
+centos_6:
+  inherits:
+    - redhat
