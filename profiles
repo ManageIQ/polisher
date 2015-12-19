@@ -7,6 +7,7 @@ redhat:
   rpm:
     rubygem_prefix:
     - rubygem-
+    #scl_prefix: '%{?scl_prefix}' # if using scl's
 
 fedora_23:
   inherits:
@@ -15,6 +16,36 @@ fedora_23:
     koji_tag:
     - f23
 
+epel5:
+  inherits:
+    - redhat
+  koji:
+    koji_tag:
+    - dist-5E-epel
+
+epel6:
+  inherits:
+    - redhat
+  koji:
+    koji_tag:
+    - dist-6E-epel
+
+epel7:
+  inherits:
+    - redhat
+  koji:
+    koji_tag:
+    - epel7
+
+epel:
+  inherits:
+    - epel5
+    - epel6
+    - epel7
+
 centos_6:
   inherits:
     - redhat
+  koji:
+    koji_url:
+      # - ...
