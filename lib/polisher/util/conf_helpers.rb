@@ -20,24 +20,40 @@ module ConfHelpers
     # @example
     #   class Custom
     #     extend ConfHelpers
-    #     conf_attr :data_dir, '/etc/'
+    #     conf_attr :data_dir, :default => '/etc/'
     #   end
     #   Custom.data_dir # => '/etc/'
     #   ENV['POLISHER_DATA_DIR'] = '/usr/'
     #   Custom.data_dir # => '/usr/'
     #   Custom.data_dir == Custom.new.data_dir # => true
     #
-    def conf_attr(name, default = nil)
+    def conf_attr(name, opts = {})
       @conf_attrs ||= []
       @conf_attrs  << name
+      default    = opts[:default]
+      accumulate = opts[:accumulate]
 
       send(:define_singleton_method, name) do |*args|
         nvar = "@#{name}".intern
         current = instance_variable_get(nvar)
         envk    = "POLISHER_#{name.to_s.upcase}"
-        instance_variable_set(nvar, default)    unless current
-        instance_variable_set(nvar, ENV[envk])  if ENV.key?(envk)
-        instance_variable_set(nvar, args.first) unless args.empty?
+        if accumulate
+          instance_variable_set(nvar, []) unless current
+          current  = instance_variable_get(nvar)
+          current << default
+          current << ENV[envk]
+          current += args
+
+          current.uniq!
+          current.compact!
+          current.flatten!
+          instance_variable_set(nvar, current)
+
+        else
+          instance_variable_set(nvar, default)    unless current
+          instance_variable_set(nvar, ENV[envk])  if ENV.key?(envk)
+          instance_variable_set(nvar, args.first) unless args.empty?
+        end
         instance_variable_get(nvar)
       end
 
