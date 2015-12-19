@@ -10,8 +10,8 @@ module Polisher
   class Errata
     include ConfHelpers
 
-    conf_attr :advisory_url, ''
-    conf_attr :package_prefix, 'rubygem-'
+    conf_attr :advisory_url,   :default => ''
+    conf_attr :package_prefix, :default => 'rubygem-'
 
     # Initialize/return singleton curl handle to query errata
     def self.client
