@@ -9,14 +9,16 @@ require 'optparse'
 def gems2update_conf
   conf.merge!(default_conf)
       .merge!(targets_conf)
+      .merge!(profiles_conf)
       .merge!(sources_conf)
 end
 
 def gems2update_parser
   OptionParser.new do |opts|
-    default_options opts
-    targets_options opts
-    sources_options opts
+    default_options  opts
+    targets_options  opts
+    profiles_options opts
+    sources_options  opts
   end
 end
 
