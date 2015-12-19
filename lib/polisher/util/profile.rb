@@ -21,12 +21,12 @@ module Polisher
     conf_attr :profiles
     def self.profiles(profiles=nil)
       @profiles ||= profiles
-      profiles.each { |profile|
+      [profiles].flatten.compact.each { |profile|
         next unless conf_profiles[profile]
         base = conf_profiles[profile]['inherits']
-        profiles([base].flatten) if base
+        profiles(base) if base
         Config.set_targets conf_profiles[profile].except('inherits')
-      } unless profiles.nil?
+      }
       @profiles
     end
   end # class Profile
