@@ -18,11 +18,14 @@ module Polisher
       @conf_profiles ||=  File.exist?(CONF) ? YAML.load_file(CONF) : {}
     end
 
-    conf_attr :profiles
+    conf_attr :profiles, :accumulate => true
     def self.profiles(profiles=nil)
-      @profiles ||= profiles
+      @profiles ||= []
+      @profiles  += profiles unless profiles.nil?
+      @profiles.uniq!
+
       [profiles].flatten.compact.each { |profile|
-        next unless conf_profiles[profile]
+        next unless conf_profiles[profile] && !@profiles.include?(profile)
         base = conf_profiles[profile]['inherits']
         profiles(base) if base
         Config.set_targets conf_profiles[profile].except('inherits')
