@@ -5,6 +5,8 @@
 # Copyright (C) 2015 Red Hat, Inc.
 ###########################################################
 
+require 'polisher/util/profile'
+
 module Polisher
   module CLI
     def profiles_conf
