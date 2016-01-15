@@ -13,6 +13,7 @@ require 'polisher/cli/format'
 require 'polisher/cli/conf'
 require 'polisher/cli/status'
 require 'polisher/cli/deps'
+require 'polisher/cli/profiles'
 
 module Polisher
   module CLI

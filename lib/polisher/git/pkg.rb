@@ -23,11 +23,11 @@ module Polisher
       include PkgBuilder
       include PkgUpdater
 
-      conf_attr :rpm_prefix,   'rubygem-'
-      conf_attr :pkg_cmd,      '/usr/bin/fedpkg'
-      conf_attr :md5sum_cmd,   '/usr/bin/md5sum'
-      conf_attr :dist_git_url, 'git://pkgs.fedoraproject.org/'
-      conf_attr :fetch_tgt,    'master'
+      conf_attr :rpm_prefix,   :default => 'rubygem-'
+      conf_attr :pkg_cmd,      :default => '/usr/bin/fedpkg'
+      conf_attr :md5sum_cmd,   :default => '/usr/bin/md5sum'
+      conf_attr :dist_git_url, :default => 'git://pkgs.fedoraproject.org/'
+      conf_attr :fetch_tgt,    :default => 'master'
 
       def self.fetch_tgts
         [fetch_tgt].flatten

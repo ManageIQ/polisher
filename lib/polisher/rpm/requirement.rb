@@ -23,8 +23,8 @@ module Polisher
       # TODO: make this mixin optional depending on if requirement corresponds to gem
       include RequirementGemReference
 
-      conf_attr :rubygem_prefix, 'rubygem'
-      conf_attr :scl_prefix, '' # set to %{?scl_prefix} to enable scl's
+      conf_attr :rubygem_prefix, :default => 'rubygem'
+      conf_attr :scl_prefix,     :default => '' # set to %{?scl_prefix} to enable scl's
 
       def initialize(args = {})
         @br        = args[:br] || false

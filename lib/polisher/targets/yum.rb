@@ -9,7 +9,7 @@ module Polisher
   class Yum
     include ConfHelpers
 
-    conf_attr :yum_cmd, '/usr/bin/yum'
+    conf_attr :yum_cmd, :default => '/usr/bin/yum'
 
     # Retrieve version of gem available in yum
     #
