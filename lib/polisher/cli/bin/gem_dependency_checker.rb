@@ -59,14 +59,14 @@ module Polisher
 
     def print_gem_deps(gem)
       gem.versions(:recursive => true,
-                   :dev_deps  => conf[:devel_deps]) do |tgt, dep, versions|
+                   :dev_deps  => dev_deps?) do |tgt, dep, versions|
         print_dep(dep, tgt, versions)
       end
     end
 
     def print_gemfile_deps(gemfile)
       gemfile.dependency_versions :recursive => true,
-                                  :dev_deps  => conf[:devel_deps] do |tgt, dep, versions|
+                                  :dev_deps  => dev_deps? do |tgt, dep, versions|
         print_dep(dep, tgt, versions)
       end
     end

@@ -56,7 +56,7 @@ def check_gems2update(source)
           :color => :red
 
   source.dependency_tree(:recursive => true,
-                         :dev_deps  => conf[:devel_deps]) do |source, dep, resolved_dep|
+                         :dev_deps  => dev_deps?) do |source, dep, resolved_dep|
     waiting_msg "#{msg} #{source.name}(#{dep.name})"
 
     # XXX : need to nullify dep.type for this lookup

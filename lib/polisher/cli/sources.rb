@@ -59,6 +59,10 @@ module Polisher
       end
     end
 
+    def dev_deps?
+      !!conf[:devel_deps]
+    end
+
     def conf_gem?
       conf[:gemname] || conf[:gemspec]
     end
