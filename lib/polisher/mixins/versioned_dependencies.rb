@@ -3,6 +3,8 @@
 # Licensed under the MIT license
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
+require 'polisher/gem'
+
 module Polisher
   # Mixin included in components that contain lists of dependencies
   # which include version information
@@ -78,7 +80,7 @@ module Polisher
       states = {}
       deps.each do |dep|
         gem = Polisher::Gem.new :name => dep.name
-        states.merge dep.name => gem.state(:check => dep)
+        states.merge! dep.name => gem.state(:check => dep)
       end
       states
     end
