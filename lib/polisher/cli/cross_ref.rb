@@ -21,7 +21,7 @@ module Polisher
       else
         # XXX : need to nullify dep.type for this lookup
         dep.instance_variable_set(:@type, :runtime)
-        missing_deps.key?(dep.name) && missing_deps[name].any? { |gdep| gdep == dep }
+        missing_deps.key?(dep.name) && missing_deps[dep.name].any? { |gdep| gdep == dep }
       end
     end
 
