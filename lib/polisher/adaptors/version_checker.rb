@@ -32,6 +32,17 @@ module Polisher
       versions
     end
 
+    def self.known_versions_for(name, &bl)
+      versions = {}
+      versions_for(name) do |tgt, _name, target_versions|
+        unless target_versions.include?(:unknown)
+          bl.call tgt, name, versions unless bl.nil?
+          versions.merge! tgt => target_versions
+        end
+      end
+      versions
+    end
+
     # Return version of package most frequent references in each
     # configured target.
     def self.version_for(name)
@@ -55,7 +66,7 @@ module Polisher
 
     # Return versions matching dependency
     def self.matching_versions(dep)
-      versions = versions_for(dep.name).values.flatten.uniq.compact
+      versions = known_versions_for(dep.name).values.flatten.uniq.compact
       versions.select { |v| dep.match? dep.name, v }
     end
   end
