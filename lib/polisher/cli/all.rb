@@ -14,6 +14,7 @@ require 'polisher/cli/conf'
 require 'polisher/cli/status'
 require 'polisher/cli/deps'
 require 'polisher/cli/profiles'
+require 'polisher/cli/cross_ref'
 
 module Polisher
   module CLI
