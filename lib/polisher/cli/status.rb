@@ -8,7 +8,7 @@
 module Polisher
   module CLI
     def clear
-      puts `clear`
+      puts "\e[H\e[2J"
     end
 
     def num_elipses
