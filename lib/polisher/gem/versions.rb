@@ -21,7 +21,7 @@ module Polisher
         silence_warnings do
           @local_db ||= ::Gem::Specification.all
         end
-        versions = @local_db.select { |s| s.name == name }.collect { |s| s.version }
+        versions = @local_db.select { |s| s.name == name }.collect { |s| s.version.to_s }
         bl.call(:local_gem, name, versions) unless bl.nil?
         versions
       end
