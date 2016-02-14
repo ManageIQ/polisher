@@ -14,7 +14,7 @@ module Polisher
       include ConfHelpers
 
       # TODO: use ruby git api
-      conf_attr :git_cmd, '/usr/bin/git'
+      conf_attr :git_cmd, :default => '/usr/bin/git'
 
       attr_accessor :url
       attr_accessor :path

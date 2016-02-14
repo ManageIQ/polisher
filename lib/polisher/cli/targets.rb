@@ -78,7 +78,7 @@ module Polisher
       if conf[:check_koji]
         require 'polisher/targets/koji'
         Polisher::Koji.koji_url conf[:check_koji]   if conf[:check_koji].is_a?(String)
-        Polisher::Koji.koji_tag conf[:koji_tag]     if conf[:koji_tag]
+        Polisher::Koji.koji_tags conf[:koji_tags]   if conf[:koji_tags]
         Polisher::Koji.package_prefix conf[:prefix] if conf[:prefix]
       end
 

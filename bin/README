@@ -1,0 +1,32 @@
+Cross-Reference
+---
+- binary_gem_resolver - look up system packages that provide binary deps required by ruby packages *
+
+- check_ruby_spec - validate rpm spec against upstream source
+
+- gem_dependency_checker - retrieve downstream versions of upstream dependencies (by name)
+
+- gem_mapper - retrieve downstream versions matching upstream dependencies (by requirement)
+
+- missing_deps - print upstream dependencies which are not available downstream (by requirement)
+
+- gems2update - print versions of dependencies to update to downstream to satisfy upstream requirements
+
+- git_gem_diff - perform a diff of a rubygem against it's source stored in a git repo
+
+
+Conversion
+---
+- bundler2yum - generate yum repo for rpms represented in Gemfile *
+
+- git_gem_updater - checkout and update a gem in distgit to its latest rubygems equivalent
+
+- ruby_rpm_spec_updater - update the rpm spec of a gem to the specified or latest version upstream
+
+
+Misc
+---
+- polisher-config - get / set polisher config options
+
+
+* in development

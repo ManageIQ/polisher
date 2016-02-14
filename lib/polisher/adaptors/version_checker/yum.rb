@@ -17,7 +17,7 @@ module Polisher
       def yum_versions(name, &bl)
         require 'polisher/targets/yum'
         logger.debug "versions_for<yum>(#{name})..."
-        yum_versions = [Yum.version_for(name, &bl)]
+        yum_versions = [Yum.version_for(name, &bl)].compact
         logger.debug yum_versions
         yum_versions
       rescue

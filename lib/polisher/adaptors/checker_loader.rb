@@ -55,6 +55,7 @@ module Polisher
 
     # Return modules marked as default
     def default_modules
+      @target_modules ||= []
       @target_modules.select { |tm| tm.default? }
     end
 
@@ -71,7 +72,7 @@ module Polisher
 
     # Return bool indicating if target should be checked
     def should_check?(target)
-      @check_list ||= default_targets
+      @check_list ||= Array.new(default_targets)
       @check_list.include?(target)
     end
   end # module CheckerLoader

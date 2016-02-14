@@ -112,5 +112,5 @@ popd
 * Tue Jul 30 2013 Josef Stribny <jstribny@redhat.com> - 1:4.0.0-1
 - Update to ActiveSupport 4.0.0.
 
-* Tue Mar 19 2013 Vít Ondruch <vondruch@redhat.com> - 1:3.2.13-1
+* Tue Mar 19 2013 Vit Ondruch <vondruch@redhat.com> - 1:3.2.13-1
 - Update to ActiveSupport 3.2.13.

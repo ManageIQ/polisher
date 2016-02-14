@@ -19,18 +19,14 @@ module Polisher
     include KojiBuilder
     include KojiDiff
 
-    conf_attr :koji_url, 'koji.fedoraproject.org/kojihub'
-    conf_attr :koji_tag, 'f21'
-    conf_attr :package_prefix, 'rubygem-'
+    conf_attr :koji_url,       :default    => 'koji.fedoraproject.org/kojihub'
+    conf_attr :package_prefix, :default    => 'rubygem-'
+    conf_attr :koji_tags,      :accumulate => true
 
     # XXX don't like having to shell out to koji but quickest
     # way to get an authenticated session so as to launch builds
-    conf_attr :build_cmd, '/usr/bin/koji'
-    conf_attr :build_tgt,    'rawhide'
-
-    def self.koji_tags
-      [koji_tag].flatten
-    end
+    conf_attr :build_cmd, :default => '/usr/bin/koji'
+    conf_attr :build_tgt, :default => 'rawhide'
 
     def self.package_prefixes
       [package_prefix].flatten

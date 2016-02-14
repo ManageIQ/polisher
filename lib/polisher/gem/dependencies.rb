@@ -7,6 +7,7 @@ require 'polisher/adaptors/version_checker'
 
 module Polisher
   module GemDependencies
+    # Retrieve map of gems to dependencies (optionally recursively)
     def dependency_tree(args = {}, &bl)
       local_args        = Hash[args]
       recursive         = local_args[:recursive]
@@ -50,7 +51,13 @@ module Polisher
       end
       bl.call self, dep, resolved
 
-      resolved.nil? ? Polisher::Gem.latest_matching(dep) : resolved
+      return resolved unless resolved.nil?
+
+      begin
+        Polisher::Gem.latest_matching(dep)
+      rescue
+        Polisher::Gem.retrieve_latest(dep.name)
+      end
     end
   end # module GemVersions
 end # module Polisher

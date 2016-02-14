@@ -31,7 +31,7 @@ module Polisher
     include GemRetriever
     include GemDiff
 
-    conf_attr :diff_cmd, '/usr/bin/diff'
+    conf_attr :diff_cmd, :default => '/usr/bin/diff'
 
     def initialize(args = {})
       @spec     = args[:spec]

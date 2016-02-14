@@ -19,6 +19,7 @@ optparse.parse!
 Polisher::Logging.level = conf[:log_level]
 Polisher::Config.set
 set_targets       conf
+set_profiles      conf
 configure_targets conf
 
 begin
