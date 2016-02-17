@@ -96,7 +96,7 @@ The test suite is based on rspec, to run:
 
 ## Legal & Other
 
-Polisher is Licensed under the MIT License, Copyright (C) 2013-2014 Red Hat, Inc.
+Polisher is Licensed under the [MIT License](https://opensource.org/licenses/MIT), Copyright (C) 2013-2016 Red Hat, Inc.
 
 See the commit log for authors of the project. All feedback and contributions
 are more than welcome.
