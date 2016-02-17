@@ -32,6 +32,8 @@ module Polisher
         @condition = args[:condition]
         @version   = args[:version]
 
+        @spec_condition = args[:spec_condition]
+
         @name.strip!      unless @name.nil?
         @condition.strip! unless @condition.nil?
         @version.strip!   unless @version.nil?

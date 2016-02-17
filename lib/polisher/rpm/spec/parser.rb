@@ -15,6 +15,7 @@ module Polisher
       module ClassMethods
         def default_metadata
           {:contents          => "",
+           :conditions        => [],
            :requires          => [],
            :build_requires    => [],
            :pkg_excludes      => {},
@@ -35,6 +36,7 @@ module Polisher
           subpkg_name   = nil
           meta          = default_metadata.merge(:contents => spec)
           macros        = {}
+          condition_stack = []
           spec.each_line do |l|
             if l =~ RPM::Spec::COMMENT_MATCHER
 
@@ -62,11 +64,23 @@ module Polisher
               subpkg_name = $1.strip
               in_subpackage = true
 
+            elsif l =~ RPM::Spec::SPEC_CONDITION_MATCHER
+              condition_string = $1.strip
+              parent = condition_stack.empty? ? nil : condition_stack.first
+              condition = Condition.new(:str    => condition_string,
+                                        :parent => parent)
+              meta[:conditions] << condition if condition_stack.empty?
+              condition_stack.unshift condition
+
+
+            elsif l =~ RPM::Spec::SPEC_CONDITION_END_MATCHER
+              condition_stack.shift
+
             elsif l =~ RPM::Spec::SPEC_REQUIRES_MATCHER && !in_subpackage
-              meta[:requires] << RPM::Requirement.parse($1.strip)
+              meta[:requires] << RPM::Requirement.parse($1.strip, :spec_condition => condition_stack.first)
 
             elsif l =~ RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER && !in_subpackage
-              meta[:build_requires] << RPM::Requirement.parse($1.strip)
+              meta[:build_requires] << RPM::Requirement.parse($1.strip, :spec_condition => condition_stack.first)
 
             elsif l =~ RPM::Spec::SPEC_CHANGELOG_MATCHER
               in_changelog = true
