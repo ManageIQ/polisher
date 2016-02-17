@@ -26,7 +26,7 @@ end
 
 def print_deps(source)
   source.dependency_tree(:recursive => true,
-                         :dev_deps  => conf[:devel_deps],
+                         :dev_deps  => dev_deps?,
                          :matching  => conf[:matching]) do |gem, dep, resolved_dep|
     print_dep(gem, dep, resolved_dep)
   end

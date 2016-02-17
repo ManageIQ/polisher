@@ -20,9 +20,9 @@ include Polisher::CLI
     conf = git_gem_updater_conf
 optparse = git_gem_updater_option_parser
 optparse.parse!
-validate_args!
+validate_gems!
 
 Polisher::Config.set
 
 chdir
-process_gems
+update_gems

@@ -22,19 +22,16 @@ def gems2update_parser
   end
 end
 
-def check_missing(deps, alts)
-  deps.each { |name, gdeps|
-    versions = Polisher::Gem.remote_versions_for(name)
-    matching = versions.select { |v| gdeps.all? { |dep| dep.match?(name, v)} }
-    latest    = alts[name].max
+def check_missing
+  missing_deps.each { |name, deps|
+    latest   = latest_alt(name)
+    print "#{name}(#{latest}) #{deps.collect { |dep| dep.requirement.to_s }}: ".blue.bold
 
-    print "#{name}(#{latest}) #{gdeps.collect { |dep| dep.requirement.to_s }}: ".blue.bold
-
-    if matching.empty?
+    if !upstream_version?(name)
       puts "No matching upstream versions".red.bold
 
     else
-      updatable = latest.nil? ? matching : matching.select { |m| m > latest }
+      updatable = updatable_versions(name)
 
       if updatable.empty?
         puts "No matching upstream version > #{latest} (downstream)".red.bold
@@ -48,39 +45,17 @@ def check_missing(deps, alts)
 end
 
 def check_gems2update(source)
-  deps = {}
-  alts = {}
-
   msg = 'processing dependencies'
-  waiting :msg => msg,
-          :color => :red
+  waiting :msg => msg, :color => :red
 
   source.dependency_tree(:recursive => true,
-                         :dev_deps  => conf[:devel_deps]) do |source, dep, resolved_dep|
-    waiting_msg "#{msg} #{source.name}(#{dep.name})"
-
-    # XXX : need to nullify dep.type for this lookup
-    dep.instance_variable_set(:@type, :runtime)
-    name = dep.name
-    other_version_missing = deps.key?(name)
-    has_dep = other_version_missing && deps[name].any? { |gdep| gdep == dep }
-
-    unless has_dep
-      versions = Polisher::VersionChecker.matching_versions(dep)
-      missing_downstream = versions.empty?
-    end
-
-    if missing_downstream || other_version_missing
-      deps[name] ||= []
-      deps[name] << dep unless has_dep
-
-      alts[name] = Polisher::VersionChecker.versions_for(name).values.flatten unless alts.key?(name)
-    end
-
+                         :dev_deps  => dev_deps?) do |src, dep, resolved_dep|
+    waiting_msg "#{msg} #{src.is_a?(Polisher::Gemfile) ? "Gemfile" : src.name}(#{dep.name})"
+    check_missing_dep dep
   end
 
   end_waiting
-  check_missing(deps, alts)
+  check_missing
 end
 
 def check_gems(conf)

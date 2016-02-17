@@ -23,6 +23,8 @@ Conversion
 
 - ruby_rpm_spec_updater - update the rpm spec of a gem to the specified or latest version upstream
 
+- update_gems - analyze gem upstream dependency tree similar to gems2update and updates downstream
+                equivalents in same manner as git_gem_updater
 
 Misc
 ---
