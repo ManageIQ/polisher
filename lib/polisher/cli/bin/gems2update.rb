@@ -76,9 +76,7 @@ def check_gems2update(source)
 
       alts[name] = Polisher::VersionChecker.versions_for(name).values.flatten unless alts.key?(name)
     end
-
   end
-
   end_waiting
   check_missing(deps, alts)
 end

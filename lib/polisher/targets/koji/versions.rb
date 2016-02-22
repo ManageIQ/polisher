@@ -59,7 +59,6 @@ module Polisher
             client.call('listTagged', tag, nil,  true,   nil,   false,
                         "#{prefix}#{name}")
           end
-
         metadata.flatten.collect { |b| b['version'] }.uniq
       end
     end # module ClassMethods

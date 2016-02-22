@@ -25,12 +25,10 @@ module Polisher
       def download_gem(name, version)
         cached = GemCache.get(name, version)
         return cached unless cached.nil?
-
         client.url = "https://rubygems.org/gems/#{name}-#{version}.gem"
         client.follow_location = true
         client.http_get
         gemf = client.body_str
-
         GemCache.set(name, version, gemf)
         gemf
       end

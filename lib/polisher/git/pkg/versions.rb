@@ -30,7 +30,6 @@ module Polisher
               logger.warn "error retrieving #{name} from #{gitpkg.url}/#{tgt}(distgit): #{e}"
             end
           end
-
           bl.call(:git, name, versions) unless bl.nil?
           versions
         end

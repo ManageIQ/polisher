@@ -34,12 +34,10 @@ module Polisher
           if spec_reqs.nil?
             diff[d.name] = {:spec     => nil,
                             :upstream => d.requirement.to_s}
-
           elsif !spec_reqs.any? { |req| req.matches?(d) } ||
                 !self.has_all_requirements_for?(d)
             diff[d.name] = {:spec     => spec_reqs_specifier,
                             :upstream => d.requirement.to_s}
-
           elsif !diff.has_key?(d.name)
             same[d.name] = {:spec     => spec_reqs_specifier,
                             :upstream => d.requirement.to_s}
@@ -56,11 +54,9 @@ module Polisher
           if upstream_dep.nil?
             diff[req.gem_name] = {:spec     => req.specifier,
                                   :upstream => nil}
-
           elsif !req.matches?(upstream_dep)
             diff[req.gem_name] = {:spec     => req.specifier,
                                   :upstream => upstream_dep.requirement.to_s}
-
           elsif !diff.has_key?(req.gem_name)
             same[req.gem_name] = {:spec     => req.specifier,
                                   :upstream => upstream_dep.requirement.to_s}

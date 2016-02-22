@@ -11,7 +11,6 @@ require 'polisher/gemfile/deps'
 module Polisher
   class Gemfile
     include VersionedDependencies
-
     include GemfileAttributes
     include GemfileDeps
     include GemfileParser

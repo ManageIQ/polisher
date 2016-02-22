@@ -4,18 +4,15 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/util/conf_helpers'
-
 require 'polisher/rpm/requirement/attributes'
 require 'polisher/rpm/requirement/parser'
 require 'polisher/rpm/requirement/comparison'
-
 require 'polisher/rpm/requirement/gem_reference'
 
 module Polisher
   module RPM
     class Requirement
       include ConfHelpers
-
       include RequirementAttributes
       include RequirementParser
       include RequirementComparison
@@ -31,7 +28,6 @@ module Polisher
         @name      = args[:name]
         @condition = args[:condition]
         @version   = args[:version]
-
         @name.strip!      unless @name.nil?
         @condition.strip! unless @condition.nil?
         @version.strip!   unless @version.nil?

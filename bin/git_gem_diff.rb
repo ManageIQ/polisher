@@ -12,7 +12,7 @@ require 'polisher/cli/bin/git_gem_diff'
 
 include Polisher::CLI
 
-    conf = git_gem_diff_conf
+conf = git_gem_diff_conf
 optparse = git_gem_diff_option_parser
 optparse.parse!
 

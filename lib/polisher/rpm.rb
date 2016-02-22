@@ -10,7 +10,6 @@ module Polisher
     # Use rpmdev-packager if it's available
     def self.packager
       require 'awesome_spawn'
-
       @packager ||= AwesomeSpawn.run('/usr/bin/rpmdev-packager').output.chop
     rescue AwesomeSpawn::NoSuchFileError
     end

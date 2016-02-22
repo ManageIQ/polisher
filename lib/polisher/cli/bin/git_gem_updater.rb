@@ -121,7 +121,6 @@ module Polisher
         current_gem :name    =>    name,
                     :version => version,
                     :dep     =>     dep
-
         process_gem
         process_gem_deps if specified_gem_deps? && !skip_gem_deps?
       end
@@ -165,12 +164,10 @@ module Polisher
 
     def process_gem
       return if distgit_pkg.nil?
-
       update_git
       scratch_build
       verify_check_section
       git_commit
-
       print_results
     end
 

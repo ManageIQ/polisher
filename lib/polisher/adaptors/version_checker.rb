@@ -21,14 +21,12 @@ module Polisher
     # available for specified package
     def self.versions_for(name, &bl)
       versions = {}
-
       all_targets.each do |target|
         if should_check?(target)
           target_versions = send target_method(target), name, &bl
           versions.merge! target => target_versions
         end
       end
-
       versions
     end
 

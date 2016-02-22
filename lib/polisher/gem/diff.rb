@@ -32,7 +32,6 @@ module Polisher
         FileUtils.rm_rf other_dir unless  other_dir.nil? ||
                                          !other.is_a?(Polisher::Gem)
       end
-
       out
     end
   end # module GemDiff

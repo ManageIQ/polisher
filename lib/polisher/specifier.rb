@@ -8,6 +8,5 @@
 module Polisher
   EARLIEST_SPECIFIER  =  :earliest
   LATEST_SPECIFIER    =  :latest
-
   RELATIVE_SPECIFIERS = [EARLIEST_SPECIFIER, LATEST_SPECIFIER]
 end # module Polisher

@@ -81,7 +81,6 @@ module Polisher
         Polisher::Koji.koji_tags conf[:koji_tags]   if conf[:koji_tags]
         Polisher::Koji.package_prefix conf[:prefix] if conf[:prefix]
       end
-
       # TODO other target config
     end
   end # module CLI

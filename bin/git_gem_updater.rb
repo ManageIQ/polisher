@@ -11,13 +11,12 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/util/config'
-
 require 'polisher/cli/all'
 require 'polisher/cli/bin/git_gem_updater'
 
 include Polisher::CLI
 
-    conf = git_gem_updater_conf
+conf = git_gem_updater_conf
 optparse = git_gem_updater_option_parser
 optparse.parse!
 validate_args!

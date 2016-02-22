@@ -22,19 +22,16 @@ module Polisher
         # (path and alternate rubygems src)
         next unless dep.source.is_a?(Bundler::Source::Git)
         src = dep.source
-
         # retrieve gem
         gem = if src.version
                 Polisher::Gem.new(:name => dep.name, :version => src.version)
               else
                 Polisher::Gem.retrieve(dep.name)
               end
-
         # retrieve dep
         git = Polisher::Git::Repo.new :url => src.uri
         git.clone unless git.cloned?
         git.checkout src.ref if src.ref
-
         # diff gem against git
         gem.diff(git.path)
       end.compact!

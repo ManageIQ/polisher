@@ -29,7 +29,6 @@ def extconf
         break
       end
     end
-
     ec
   end
 end
@@ -214,4 +213,3 @@ def find_executable(bin, path = nil)
          :executable => bin  unless success
   success
 end
-

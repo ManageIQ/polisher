@@ -4,7 +4,6 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require 'polisher/util/conf_helpers'
-
 require 'polisher/targets/koji/rpc'
 require 'polisher/targets/koji/versions'
 require 'polisher/targets/koji/builder'
@@ -13,7 +12,6 @@ require 'polisher/targets/koji/diff'
 module Polisher
   class Koji
     include ConfHelpers
-
     include KojiRpc
     include KojiVersions
     include KojiBuilder
