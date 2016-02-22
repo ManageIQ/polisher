@@ -20,10 +20,7 @@ module Polisher
 
       def self.from(diff)
         return diff.collect { |d| from(d) } if diff.is_a?(Array)
-
         result = {}
-
-
         in_diff = nil
         diff_lines = ''
         diff.each_line do |line|
@@ -38,7 +35,6 @@ module Polisher
           end
         end
         result[in_diff] = diff_lines if in_diff
-
         result.collect { |t, c| new :title => t, :content => c }
       end
     end

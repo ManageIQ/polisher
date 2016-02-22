@@ -47,13 +47,11 @@ end
 def check_gems2update(source)
   msg = 'processing dependencies'
   waiting :msg => msg, :color => :red
-
   source.dependency_tree(:recursive => true,
                          :dev_deps  => dev_deps?) do |src, dep, resolved_dep|
     waiting_msg "#{msg} #{src.is_a?(Polisher::Gemfile) ? "Gemfile" : src.name}(#{dep.name})"
     check_missing_dep dep
   end
-
   end_waiting
   check_missing
 end

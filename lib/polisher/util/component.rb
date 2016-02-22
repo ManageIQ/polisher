@@ -22,7 +22,6 @@ module Polisher
       all_required = dependencies.all? do |dep|
         require_dependency(polisher_klass, dep)
       end
-
       yield if all_required
     end
 
@@ -32,7 +31,6 @@ module Polisher
     rescue LoadError
       klasses = polisher_klass.split("::")
       desired_namespace = Polisher
-
       klasses.each do |k|
         desired_namespace.const_set(k, Missing) unless desired_namespace.const_defined?(k, false)
         desired_namespace = "#{desired_namespace.name}::#{k}".constantize

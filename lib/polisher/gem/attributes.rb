@@ -10,7 +10,6 @@ module Polisher
     attr_accessor :version
     attr_accessor :deps
     attr_accessor :dev_deps
-
     attr_accessor :path
 
     def file_name

@@ -76,4 +76,4 @@ module Polisher
       @check_list.include?(target)
     end
   end # module CheckerLoader
-end
+end # module Polisher

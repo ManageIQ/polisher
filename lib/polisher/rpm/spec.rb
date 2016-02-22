@@ -4,16 +4,13 @@
 # Copyright (C) 2013-2014 Red Hat, Inc.
 
 require "active_support/core_ext/hash/except"
-
 require 'polisher/rpm/spec/requirements'
 require 'polisher/rpm/spec/files'
 require 'polisher/rpm/spec/subpackages'
 require 'polisher/rpm/spec/check'
-
 require 'polisher/rpm/spec/updater'
 require 'polisher/rpm/spec/parser'
 require 'polisher/rpm/spec/comparison'
-
 require 'polisher/rpm/spec/gem_files'
 require 'polisher/rpm/spec/gem_reference'
 require 'polisher/rpm/spec/gem_requirements'
