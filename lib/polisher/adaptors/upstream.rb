@@ -17,13 +17,10 @@ module Polisher
     def self.parse(source)
       if source.gem?
         Polisher::Gem.parse(:gem => source)
-
       elsif source.gemspec?
         Polisher::Gem.parse(:gemspec => source)
-
       elsif source.gemfile?
         Polisher::Gemfile.parse(source)
-
       end
     end
   end

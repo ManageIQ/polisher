@@ -43,7 +43,6 @@ module Polisher
     def resolve_tree_dep(args = {}, &bl)
       dep          = args[:dep]
       matching     = args[:matching]
-
       resolved = nil
       begin
         resolved = Polisher::Gem.matching(dep, matching)

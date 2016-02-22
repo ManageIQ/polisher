@@ -19,7 +19,6 @@ module Polisher
       include PkgAttributes
       include PkgRepo
       include PkgVersions
-
       include PkgBuilder
       include PkgUpdater
 

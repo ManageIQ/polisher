@@ -21,12 +21,10 @@ module Polisher
             name      = stra[1]
             condition = stra[2]
             version   = stra[3]
-
           else
             name      = stra[0]
             condition = stra[1]
             version   = stra[2]
-
           end
 
           req = new({:name      => name,

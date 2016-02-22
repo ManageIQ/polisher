@@ -17,13 +17,12 @@
 require 'polisher/gem'
 require 'polisher/gemfile'
 require 'polisher/util/config'
-
 require 'polisher/cli/all'
 require 'polisher/cli/bin/gem_dependency_checker'
 
 include Polisher::CLI
 
-    conf = gem_dependency_checker_conf
+conf = gem_dependency_checker_conf
 optparse = gem_dependency_checker_option_parser
 optparse.parse!
 validate_sources

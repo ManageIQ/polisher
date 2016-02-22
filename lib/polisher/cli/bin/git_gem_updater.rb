@@ -5,7 +5,6 @@
 ###########################################################
 
 require 'colored'
-
 require 'polisher/gem'
 require 'polisher/git/pkg'
 
@@ -30,7 +29,6 @@ module Polisher
 
     def validate_gems!
       conf[:gems] += user_gems
-
       if conf[:gems].empty?
         puts "must specify a gem or user name!".red
         exit 1

@@ -18,7 +18,6 @@ module Polisher
     # @returns [String] version of gem in yum or nil if not found
     def self.version_for(name, &bl)
       require 'awesome_spawn'
-
       require_cmd! yum_cmd
 
       version = nil

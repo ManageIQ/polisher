@@ -74,11 +74,9 @@ module Polisher
     def print_deps(conf)
       if conf_gem?
         print_gem_deps(conf_source)
-
       elsif conf_gemfile?
         print_gemfile_deps(conf_source)
       end
-
       puts last_dep # XXX
     end
   end # module CLI

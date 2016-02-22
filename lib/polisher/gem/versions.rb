@@ -105,7 +105,6 @@ module Polisher
 
         args[:versions] = versions
       end
-
       versions
     end
 
@@ -115,16 +114,13 @@ module Polisher
       recursive  = local_args[:recursive]
       dev_deps   = local_args[:dev_deps]
       versions   = local_args[:versions] || {}
-
       gem_versions = Polisher::VersionChecker.versions_for(name, &bl)
       versions.merge! name => gem_versions
       local_args[:versions] = versions
-
       if recursive
         versions.merge! dependency_versions local_args, &bl
         versions.merge! dependency_versions local_args.merge(:dev => true), &bl if dev_deps
       end
-
       versions
     end # module ClassMethods
   end # module GemVersions

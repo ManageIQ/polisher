@@ -69,15 +69,11 @@ module Polisher
       def parse(args = {})
         if args.is_a?(String)
           return from_json args
-
         elsif args.key?(:gemspec)
           return from_gemspec args[:gemspec]
-
         elsif args.key?(:gem)
           return from_gem args[:gem]
-
         end
-
         new
       end
     end # module ClassMethods

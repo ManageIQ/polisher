@@ -18,7 +18,7 @@ require 'polisher/cli/bin/binary_gem_resolver'
 
 include Polisher::CLI
 
- parse_args
+parse_args
 verify_args!
 
 # require the gem's extconf

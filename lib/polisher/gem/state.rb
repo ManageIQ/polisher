@@ -74,7 +74,6 @@ module Polisher
     # the specified gem dependency requirements
     def state(args = {})
       return :available if koji_state(args) == :available
-
       state = distgit_state(args)
       return :needs_repo   if state == :missing_repo
       return :needs_branch if state == :missing_branch

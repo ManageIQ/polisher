@@ -13,7 +13,7 @@ require 'polisher/cli/bin/missing_deps'
 
 include Polisher::CLI
 
-    conf = missing_deps_conf
+conf = missing_deps_conf
 optparse = missing_deps_parser
 optparse.parse!
 

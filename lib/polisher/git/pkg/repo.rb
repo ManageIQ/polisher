@@ -11,13 +11,11 @@ module Polisher
     module PkgRepo
       # Alias orig clone method to git_clone
       alias :git_clone :clone
-
       # Override clone to use PKG_PCMD
       # @override
       def clone
         require_dep! 'awesome_spawn'
         require_cmd! pkg_cmd
-
         clobber!
         Dir.mkdir path unless File.directory? path
         in_repo do
@@ -35,7 +33,6 @@ module Polisher
 
           FileUtils.rm_rf rpm_name
         end
-
         self
       end
 
@@ -47,7 +44,6 @@ module Polisher
         checkout target
         reset!
         pull
-
         self
       end
 
@@ -72,7 +68,6 @@ module Polisher
       def commit(msg = nil)
         require_dep! 'awesome_spawn'
         require_cmd! git_cmd
-
         in_repo { AwesomeSpawn.run "#{git_cmd} add #{pkg_files.join(' ')}" }
         super(msg.nil? ? "updated to #{version}" : msg)
         self

@@ -27,11 +27,9 @@ module Polisher
         builds2.each do |build|
           name = build['package_name']
           next if builds.key?(name)
-
           version = build['version']
           builds[name] = {tag1 => nil, tag2 => version}
         end
-
         builds
       end
     end # module ClassMethods

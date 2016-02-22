@@ -4,7 +4,6 @@
 # Copyright (C) 2015 Red Hat, Inc.
 
 require "active_support/core_ext/hash/except"
-
 require 'polisher/util/config'
 require 'polisher/util/conf_helpers'
 

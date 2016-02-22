@@ -48,7 +48,6 @@ module ConfHelpers
           current.compact!
           current.flatten!
           instance_variable_set(nvar, current)
-
         else
           instance_variable_set(nvar, default)    unless current
           instance_variable_set(nvar, ENV[envk])  if ENV.key?(envk)

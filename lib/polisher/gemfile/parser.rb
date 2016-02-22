@@ -18,7 +18,6 @@ module Polisher
         require 'bundler'
 
         groups = args[:groups]
-
         definition = nil
         path, gemfile = File.split(path)
         Dir.chdir(path) do
@@ -28,16 +27,13 @@ module Polisher
             raise ArgumentError, "invalid gemfile: #{path}"
           end
         end
-
         metadata = {}
         metadata[:deps] = definition.dependencies.select do |d|
           groups.nil? || groups.empty? ||                  # groups not specified
           groups.any? { |g| d.groups.include?(g.intern) }  # dep in any group
         end
-
         metadata[:dev_deps] = [] # TODO
         metadata[:definition] = definition
-
         new metadata
       end
     end # module ClassMethods

@@ -6,13 +6,12 @@
 
 require 'polisher/util/logger'
 require 'polisher/util/config'
-
 require 'polisher/cli/all'
 require 'polisher/cli/bin/gems2update'
 
 include Polisher::CLI
 
-    conf = gems2update_conf
+conf = gems2update_conf
 optparse = gems2update_parser
 optparse.parse!
 
@@ -23,6 +22,6 @@ set_profiles      conf
 configure_targets conf
 
 begin
-check_gems conf
+  check_gems conf
 rescue Exception => e
 end

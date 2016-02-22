@@ -14,11 +14,9 @@ module Polisher
       def build(args = {})
         require 'awesome_spawn'
         require_cmd! build_cmd
-
         target  = args[:target] || build_tgt
         srpm    = args[:srpm]
         scratch = args[:scratch] ? '--scratch' : ''
-
         cmd = "#{build_cmd} build #{scratch} #{target} #{srpm}"
         result = AwesomeSpawn.run(cmd)
         url = parse_url(result.output)
