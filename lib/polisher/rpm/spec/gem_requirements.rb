@@ -65,7 +65,7 @@ module Polisher
 
       # Return all gem build requirements _not_ in the specified gem
       def extra_gem_build_requirements(gem)
-        gem_reqs = gem.deps.collect { |d| requirements_for_gem(d.name) }.flatten
+        gem_reqs = gem.dev_deps.collect { |d| build_requirements_for_gem(d.name) }.flatten
         gem_build_requirements - gem_reqs
       end
     end # module SpecGemRequirements
