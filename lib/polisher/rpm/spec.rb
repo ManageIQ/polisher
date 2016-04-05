@@ -66,7 +66,7 @@ module Polisher
       SPEC_DESCRIPTION_MATCHER    = /^%description$/
 
       FILE_MACRO_MATCHERS         =
-        [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
+        [/^%doc\s/,     /^%license\s/, /^%config\s/,  /^%attr\s/,
          /^%verify\s/,  /^%docdir.*/,  /^%dir\s/, /^%defattr.*/,
          /^%{gem_instdir}\/+/, /^%{gem_cache}/, /^%{gem_spec}/, /^%{gem_docdir}/]
 
