@@ -180,7 +180,7 @@ module Polisher
         @metadata[:contents].slice!(fi...files_end_index) unless fei.nil?
 
         contents = new_files_contents_for(full_name) + "\n"   +
-                   excludes_contents_for(name)       + "\n\n" +
+                   excludes_contents_for(full_name)  + "\n\n" +
                    new_subpkg_files_contents
 
         @metadata[:contents].insert fi, contents
