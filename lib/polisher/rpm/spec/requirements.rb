@@ -1,7 +1,7 @@
-# RPM Has Requirements Mixin
+# RPM RPM Spec Requirements Mixin
 #
 # Licensed under the MIT license
-# Copyright (C) 2013-2014 Red Hat, Inc.
+# Copyright (C) 2013-2016 Red Hat, Inc.
 
 require 'polisher/rpm/requirement'
 

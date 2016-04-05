@@ -5,6 +5,7 @@
 
 require "active_support/core_ext/hash/except"
 
+require 'polisher/rpm/spec/conditions'
 require 'polisher/rpm/spec/requirements'
 require 'polisher/rpm/spec/files'
 require 'polisher/rpm/spec/subpackages'
@@ -21,6 +22,7 @@ require 'polisher/rpm/spec/gem_requirements'
 module Polisher
   module RPM
     class Spec
+      include SpecConditions
       include SpecRequirements
       include SpecFiles
       include SpecSubpackages
@@ -53,6 +55,8 @@ module Polisher
       SPEC_GEM_REQ_MATCHER        = /^.*\s*#{requirement_prefix}\((.*)\)(\s*(.*))?$/
       SPEC_SUBPACKAGE_MATCHER     = /^%package\s(.*)$/
       SPEC_DOC_SUBPACKAGE_MATCHER = /^%package\sdoc$/
+      SPEC_CONDITION_MATCHER      = /^%if(.*)$/
+      SPEC_CONDITION_END_MATCHER  = /^%endif(.*)$/
       SPEC_CHANGELOG_MATCHER      = /^%changelog$/
       SPEC_FILES_MATCHER          = /^%files$/
       SPEC_SUBPKG_FILES_MATCHER   = /^%files\s*(.*)$/
@@ -62,7 +66,7 @@ module Polisher
       SPEC_DESCRIPTION_MATCHER    = /^%description$/
 
       FILE_MACRO_MATCHERS         =
-        [/^%doc\s/,     /^%config\s/,  /^%attr\s/,
+        [/^%doc\s/,     /^%license\s/, /^%config\s/,  /^%attr\s/,
          /^%verify\s/,  /^%docdir.*/,  /^%dir\s/, /^%defattr.*/,
          /^%{gem_instdir}\/+/, /^%{gem_cache}/, /^%{gem_spec}/, /^%{gem_docdir}/]
 
