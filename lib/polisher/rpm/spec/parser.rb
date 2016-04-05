@@ -69,6 +69,7 @@ module Polisher
               parent = condition_stack.empty? ? nil : condition_stack.first
               condition = Condition.new(:str    => condition_string,
                                         :parent => parent)
+              parent.children << condition unless parent.nil?
               meta[:conditions] << condition if condition_stack.empty?
               condition_stack.unshift condition
 
@@ -77,10 +78,18 @@ module Polisher
               condition_stack.shift
 
             elsif l =~ RPM::Spec::SPEC_REQUIRES_MATCHER && !in_subpackage
-              meta[:requires] << RPM::Requirement.parse($1.strip, :spec_condition => condition_stack.first)
+              req_str   = $1.strip
+              condition = condition_stack.first
+              req       = RPM::Requirement.parse(req_str, :spec_condition => condition)
+              condition.requires << req unless condition.nil?
+              meta[:requires] << req
 
             elsif l =~ RPM::Spec::SPEC_BUILD_REQUIRES_MATCHER && !in_subpackage
-              meta[:build_requires] << RPM::Requirement.parse($1.strip, :spec_condition => condition_stack.first)
+              req_str   = $1.strip
+              condition = condition_stack.first
+              req       = RPM::Requirement.parse(req_str, :spec_condition => condition)
+              condition.build_requires << req unless condition.nil?
+              meta[:build_requires] << req
 
             elsif l =~ RPM::Spec::SPEC_CHANGELOG_MATCHER
               in_changelog = true
